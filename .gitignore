@@ -1,0 +1,10 @@
+.idea
+target
+*.data
+*.dim
+*.nc
+*.iml
+*.ipr
+*.iws
+*.config
+land-coverage-360.txt
