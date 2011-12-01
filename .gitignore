@@ -1,10 +1,11 @@
 .idea
 target
-*.data
-*.dim
-*.nc
 *.iml
 *.ipr
 *.iws
-*.config
-land-coverage-360.txt
+/*.data
+/*.dim
+/*.nc
+/*.config
+/land-coverage-360.txt
+
