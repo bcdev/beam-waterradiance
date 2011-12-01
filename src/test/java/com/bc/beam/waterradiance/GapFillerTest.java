@@ -1,4 +1,4 @@
-package com.bc.waterradiance;
+package com.bc.beam.waterradiance;
 
 import org.junit.Test;
 
