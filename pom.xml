@@ -6,20 +6,34 @@
 
     <groupId>org.esa.beam</groupId>
     <artifactId>beam-waterradiance</artifactId>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>beam-waterradiance-gapfiller</module>
+    </modules>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-core</artifactId>
-            <version>4.10-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-netcdf</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-core</artifactId>
+                <version>4.10-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-netcdf</artifactId>
+                <version>1.1-SNAPSHOT</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-    
+    <build>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>1.0-beta-7</version>
+            </extension>
+        </extensions>
+    </build>
 </project>

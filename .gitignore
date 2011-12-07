@@ -3,9 +3,4 @@ target
 *.iml
 *.ipr
 *.iws
-/*.data
-/*.dim
-/*.nc
-/*.config
-/land-coverage-360.txt
 
