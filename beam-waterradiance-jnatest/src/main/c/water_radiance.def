@@ -1,0 +1,4 @@
+LIBRARY "water_radiance"
+
+EXPORTS
+  compute_pixel
