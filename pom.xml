@@ -10,20 +10,40 @@
     <packaging>pom</packaging>
     <modules>
         <module>beam-waterradiance-gapfiller</module>
+        <module>beam-waterradiance-processor</module>
+        <module>beam-levitus-auxdata</module>
         <module>beam-waterradiance-jnatest</module>
     </modules>
 
+    <properties>
+        <beam.version>4.10-SNAPSHOT</beam.version>
+    </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
-                <version>4.10-SNAPSHOT</version>
+                <version>${beam.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-gpf</artifactId>
+                <version>${beam.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
                 <version>1.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-envisat-reader</artifactId>
+                <version>1.5-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-levitus-auxdata</artifactId>
+                <version>1.0-SNAPSHOT</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

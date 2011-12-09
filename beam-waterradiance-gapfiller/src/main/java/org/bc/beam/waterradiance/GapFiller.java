@@ -1,4 +1,4 @@
-package com.bc.beam.waterradiance;
+package org.bc.beam.waterradiance;
 
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;

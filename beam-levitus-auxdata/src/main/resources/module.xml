@@ -1,0 +1,22 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-levitus-auxdata</symbolicName>
+    <version>1.0</version>
+    <name>Levitus Salinity and Temperature maps</name>
+
+    <description>
+    Annual average of ocean salinity and temperature as provided by Levitus climatology maps (NOAA NODC LAS).
+    </description>
+
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2008 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <dependency>
+        <module>beam-netcdf</module>
+    </dependency>
+
+</module>

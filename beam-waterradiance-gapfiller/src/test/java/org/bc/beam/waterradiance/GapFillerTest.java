@@ -1,5 +1,6 @@
-package com.bc.beam.waterradiance;
+package org.bc.beam.waterradiance;
 
+import org.bc.beam.waterradiance.GapFiller;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
