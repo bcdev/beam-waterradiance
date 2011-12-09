@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-levitus-auxdata</artifactId>
+            <artifactId>beam-waterradiance-auxdata</artifactId>
         </dependency>
     </dependencies>
 

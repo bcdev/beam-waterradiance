@@ -1,7 +1,6 @@
 package org.esa.beam.levitus;
 
 import com.bc.ceres.core.ProgressMonitor;
-import com.sun.org.apache.bcel.internal.generic.NEW;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -18,7 +17,7 @@ import java.util.Calendar;
  */
 public class LevitusFactory {
 
-    private static final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-levitus-auxdata/auxdata");
+    private static final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-auxdata/auxdata");
     private static final String SALINITY_FILE_NAME = "Levitus-Annual-Salinity.nc";
     private static final String TEMPERATURE_FILE_NAME = "Levitus-Annual-Temperature.nc";
 
