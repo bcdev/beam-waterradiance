@@ -1,4 +1,4 @@
-This BEAM (https://github.com/bcdev/beam) module currently only contains the command-line tool
-GapFiller which is used to fill the gaps in Levitus ocean salinity and temperature climatologies
-retrieved from NOAA NODC LAS 7.3 (http://data.nodc.noaa.gov/las/getUI.do).
+The project *Waterradiance* is an extension to the BEAM toolbox (http://www.brockmann-consult.de/beam/).
+It provides a GPF operator that is used to retrieve water-leaving reflectances and water properties
+using a forward-model neural network whose output is optimised using the Levenberg-Marquardt method.
 
