@@ -26,7 +26,7 @@ public class LevitusFactory {
         URL sourceUrl = ResourceInstaller.getSourceUrl(LevitusFactory.class);
         ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
         try {
-            installer.install("*.nc", ProgressMonitor.NULL);
+            installer.install(".*.nc", ProgressMonitor.NULL);
         } catch (IOException e) {
             throw new RuntimeException("Unable to install auxdata of the beam-levitus-auxdata module");
         }
