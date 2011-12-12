@@ -1,6 +1,6 @@
 package org.esa.beam.waterradiance.levitus;
 
-import org.esa.beam.waterradiance.AuxdataDataProvider;
+import org.esa.beam.waterradiance.AuxdataProvider;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
@@ -14,7 +14,7 @@ import java.util.Calendar;
 /**
  * @author Marco Peters
  */
-public class LevitusDataProviderImpl implements AuxdataDataProvider {
+public class LevitusDataProviderImpl implements AuxdataProvider {
 
     public static final int LEVITUS_CENTER_DAY = 16;
     private GeoCoding salinityGeoCoding;

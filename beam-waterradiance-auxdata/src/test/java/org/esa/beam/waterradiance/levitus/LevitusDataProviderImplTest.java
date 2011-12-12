@@ -1,7 +1,7 @@
 package org.esa.beam.waterradiance.levitus;
 
-import org.esa.beam.waterradiance.AuxdataDataProvider;
-import org.esa.beam.waterradiance.AuxdataFactory;
+import org.esa.beam.waterradiance.AuxdataProvider;
+import org.esa.beam.waterradiance.AuxdataProviderFactory;
 import org.junit.Test;
 
 import java.util.Calendar;
@@ -17,7 +17,7 @@ public class LevitusDataProviderImplTest {
 
     @Test
     public void testGetSalinity() throws Exception {
-        AuxdataDataProvider dataProvider = AuxdataFactory.createDataProvider();
+        AuxdataProvider dataProvider = AuxdataProviderFactory.createDataProvider();
         Calendar calendar = createUTCCalendar();
         double lat = 53.5;
         double lon = 8.5;
@@ -39,7 +39,7 @@ public class LevitusDataProviderImplTest {
 
     @Test
     public void testGetTemperature() throws Exception {
-        AuxdataDataProvider dataProvider = AuxdataFactory.createDataProvider();
+        AuxdataProvider dataProvider = AuxdataProviderFactory.createDataProvider();
         Calendar calendar = createUTCCalendar();
         double lat = 53.5;
         double lon = 8.5;

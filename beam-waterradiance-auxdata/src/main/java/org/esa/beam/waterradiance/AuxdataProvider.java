@@ -5,7 +5,7 @@ import java.util.Calendar;
 /**
  * @author Marco Peters
  */
-public interface AuxdataDataProvider {
+public interface AuxdataProvider {
 
     /**
      * Gets the annual average salinity value at the specified geo-location.
