@@ -35,13 +35,13 @@ public class LevitusDataProviderImpl implements AuxdataDataProvider {
         temperatureGeoCoding = this.tempProduct.getGeoCoding();
     }
 
-    private static class DateDependentFields {
+    private static class DateDependentValues {
 
         private double linearFraction;
         private final int lowerMonth;
         private final int upperMonth;
 
-        private DateDependentFields(Calendar date) {
+        private DateDependentValues(Calendar date) {
             linearFraction = calculateLinearFraction(date);
             int day = date.get(Calendar.DAY_OF_MONTH);
             int month = date.get(Calendar.MONTH);
@@ -51,19 +51,19 @@ public class LevitusDataProviderImpl implements AuxdataDataProvider {
     }
 
     public double getSalinity(Calendar date, double lat, double lon) {
-        DateDependentFields dateDependentFields = new DateDependentFields(date);
+        DateDependentValues dateDependentValues = new DateDependentValues(date);
 
         PixelPos pixelPos = salinityGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
         int x = MathUtils.floorInt(pixelPos.x);
         int y = MathUtils.floorInt(pixelPos.y);
-        Band lowerBand = salinityProduct.getBandAt(dateDependentFields.lowerMonth);
-        Band upperBand = salinityProduct.getBandAt(dateDependentFields.upperMonth);
+        Band lowerBand = salinityProduct.getBandAt(dateDependentValues.lowerMonth);
+        Band upperBand = salinityProduct.getBandAt(dateDependentValues.upperMonth);
         try {
             double[] lowPixel = new double[1];
             double[] upperPixel = new double[1];
             lowerBand.readPixels(x, y, 1, 1, lowPixel);
             upperBand.readPixels(x, y, 1, 1, upperPixel);
-            return interpolate(lowPixel[0], upperPixel[0], dateDependentFields.linearFraction);
+            return interpolate(lowPixel[0], upperPixel[0], dateDependentValues.linearFraction);
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
@@ -71,16 +71,23 @@ public class LevitusDataProviderImpl implements AuxdataDataProvider {
     }
 
     public double getTemperature(Calendar date, double lat, double lon) {
-        DateDependentFields dateDependentFields = new DateDependentFields(date);
+        DateDependentValues dateDependentValues = new DateDependentValues(date);
 
         PixelPos pixelPos = temperatureGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
         int x = MathUtils.floorInt(pixelPos.x);
         int y = MathUtils.floorInt(pixelPos.y);
-        Band lowerBand = tempProduct.getBandAt(dateDependentFields.lowerMonth);
-        Band upperBand = tempProduct.getBandAt(dateDependentFields.upperMonth);
-        double lowerValue = lowerBand.getPixelDouble(x, y);
-        double upperValue = upperBand.getPixelDouble(x, y);
-        return interpolate(lowerValue, upperValue, dateDependentFields.linearFraction);
+        Band lowerBand = tempProduct.getBandAt(dateDependentValues.lowerMonth);
+        Band upperBand = tempProduct.getBandAt(dateDependentValues.upperMonth);
+        try {
+            double[] lowPixel = new double[1];
+            double[] upperPixel = new double[1];
+            lowerBand.readPixels(x, y, 1, 1, lowPixel);
+            upperBand.readPixels(x, y, 1, 1, upperPixel);
+            return interpolate(lowPixel[0], upperPixel[0], dateDependentValues.linearFraction);
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        return Double.NaN;
     }
 
     static double interpolate(double lowerValue, double upperValue, double fraction) {
