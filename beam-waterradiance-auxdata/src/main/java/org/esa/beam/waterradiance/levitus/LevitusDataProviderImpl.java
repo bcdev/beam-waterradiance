@@ -1,5 +1,6 @@
-package org.esa.beam.levitus;
+package org.esa.beam.waterradiance.levitus;
 
+import org.esa.beam.waterradiance.AuxdataDataProvider;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
@@ -13,14 +14,11 @@ import java.util.Calendar;
 /**
  * @author Marco Peters
  */
-class LevitusDataProviderImpl implements LevitusDataProvider {
+public class LevitusDataProviderImpl implements AuxdataDataProvider {
 
     public static final int LEVITUS_CENTER_DAY = 16;
-    private double linearFraction;
     private GeoCoding salinityGeoCoding;
     private GeoCoding temperatureGeoCoding;
-    private final int lowerMonth;
-    private final int upperMonth;
     private final Product salinityProduct;
     private Product tempProduct;
 
@@ -29,48 +27,60 @@ class LevitusDataProviderImpl implements LevitusDataProvider {
      *
      * @param salinityProduct the product containing the salinity data
      * @param tempProduct     the product containing the temperature data
-     * @param date            the date to retrieve the data for
      */
-    LevitusDataProviderImpl(Product salinityProduct, Product tempProduct, Calendar date) {
+    public LevitusDataProviderImpl(Product salinityProduct, Product tempProduct) {
         this.salinityProduct = salinityProduct;
         this.tempProduct = tempProduct;
         salinityGeoCoding = this.salinityProduct.getGeoCoding();
         temperatureGeoCoding = this.tempProduct.getGeoCoding();
-
-        linearFraction = calculateLinearFraction(date);
-        int day = date.get(Calendar.DAY_OF_MONTH);
-        int month = date.get(Calendar.MONTH);
-        lowerMonth = calculateLowerMonth(day, month);
-        upperMonth = calculateUpperMonth(day, month);
     }
 
-    public double getSalinity(double lat, double lon) {
+    private static class DateDependentFields {
+
+        private double linearFraction;
+        private final int lowerMonth;
+        private final int upperMonth;
+
+        private DateDependentFields(Calendar date) {
+            linearFraction = calculateLinearFraction(date);
+            int day = date.get(Calendar.DAY_OF_MONTH);
+            int month = date.get(Calendar.MONTH);
+            lowerMonth = calculateLowerMonth(day, month);
+            upperMonth = calculateUpperMonth(day, month);
+        }
+    }
+
+    public double getSalinity(Calendar date, double lat, double lon) {
+        DateDependentFields dateDependentFields = new DateDependentFields(date);
+
         PixelPos pixelPos = salinityGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
         int x = MathUtils.floorInt(pixelPos.x);
         int y = MathUtils.floorInt(pixelPos.y);
-        Band lowerBand = salinityProduct.getBandAt(lowerMonth);
-        Band upperBand = salinityProduct.getBandAt(upperMonth);
+        Band lowerBand = salinityProduct.getBandAt(dateDependentFields.lowerMonth);
+        Band upperBand = salinityProduct.getBandAt(dateDependentFields.upperMonth);
         try {
             double[] lowPixel = new double[1];
             double[] upperPixel = new double[1];
             lowerBand.readPixels(x, y, 1, 1, lowPixel);
             upperBand.readPixels(x, y, 1, 1, upperPixel);
-            return interpolate(lowPixel[0], upperPixel[0], linearFraction);
+            return interpolate(lowPixel[0], upperPixel[0], dateDependentFields.linearFraction);
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
         return Double.NaN;
     }
 
-    public double getTemperature(double lat, double lon) {
+    public double getTemperature(Calendar date, double lat, double lon) {
+        DateDependentFields dateDependentFields = new DateDependentFields(date);
+
         PixelPos pixelPos = temperatureGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
         int x = MathUtils.floorInt(pixelPos.x);
         int y = MathUtils.floorInt(pixelPos.y);
-        Band lowerBand = tempProduct.getBandAt(lowerMonth);
-        Band upperBand = tempProduct.getBandAt(upperMonth);
+        Band lowerBand = tempProduct.getBandAt(dateDependentFields.lowerMonth);
+        Band upperBand = tempProduct.getBandAt(dateDependentFields.upperMonth);
         double lowerValue = lowerBand.getPixelDouble(x, y);
         double upperValue = upperBand.getPixelDouble(x, y);
-        return interpolate(lowerValue, upperValue, linearFraction);
+        return interpolate(lowerValue, upperValue, dateDependentFields.linearFraction);
     }
 
     static double interpolate(double lowerValue, double upperValue, double fraction) {

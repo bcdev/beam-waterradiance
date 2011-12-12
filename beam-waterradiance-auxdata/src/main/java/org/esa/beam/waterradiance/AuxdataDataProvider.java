@@ -1,24 +1,31 @@
-package org.esa.beam.levitus;
+package org.esa.beam.waterradiance;
+
+import java.util.Calendar;
 
 /**
  * @author Marco Peters
  */
-public interface LevitusDataProvider {
+public interface AuxdataDataProvider {
 
     /**
      * Gets the annual average salinity value at the specified geo-location.
+     *
+     *
+     * @param date the date to retrieve the data for
      * @param lat the latitude value
      * @param lon the longitude value
      * @return the salinity value
      */
-    double getSalinity(double lat, double lon);
+    double getSalinity(Calendar date, double lat, double lon);
 
     /**
      * Gets the annual average temperature value at the specified geo-location.
+     *
+     * @param date the date to retrieve the data for
      * @param lat the latitude value
      * @param lon the longitude value
      * @return the temperature value
      */
-    double getTemperature(double lat, double lon);
+    double getTemperature(Calendar date, double lat, double lon);
 
 }

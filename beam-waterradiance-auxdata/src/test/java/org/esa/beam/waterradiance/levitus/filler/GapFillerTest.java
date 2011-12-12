@@ -1,6 +1,5 @@
-package org.bc.beam.waterradiance;
+package org.esa.beam.waterradiance.levitus.filler;
 
-import org.bc.beam.waterradiance.GapFiller;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

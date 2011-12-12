@@ -10,7 +10,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>beam-waterradiance-gapfiller</module>
         <module>beam-waterradiance-processor</module>
         <module>beam-waterradiance-auxdata</module>
         <module>beam-waterradiance-jnatest</module>

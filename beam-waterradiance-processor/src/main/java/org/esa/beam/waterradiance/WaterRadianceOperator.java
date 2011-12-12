@@ -12,7 +12,6 @@ import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
-import org.esa.beam.levitus.LevitusDataProvider;
 
 import java.util.Calendar;
 
@@ -31,7 +30,7 @@ public class WaterRadianceOperator extends PixelOperator {
 
 
     private double[] solarFluxes;
-    private LevitusDataProvider levitusDataProvider;
+    private AuxdataDataProvider levitusDataProvider;
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
@@ -55,7 +54,7 @@ public class WaterRadianceOperator extends PixelOperator {
         levitusDataProvider = createLevitusDataProvider(date);
     }
 
-    private LevitusDataProvider createLevitusDataProvider(ProductData.UTC date) {
+    private AuxdataDataProvider createLevitusDataProvider(ProductData.UTC date) {
         Calendar asCalendar = date.getAsCalendar();
         int day = asCalendar.get(Calendar.DAY_OF_MONTH);
         int month = asCalendar.get(Calendar.MONTH);
@@ -87,17 +86,17 @@ public class WaterRadianceOperator extends PixelOperator {
         }
     }
 
-    private class MyLevitusDataProvider implements LevitusDataProvider {
+    private class MyLevitusDataProvider implements AuxdataDataProvider {
 
         public MyLevitusDataProvider(int day, int month) {
 
         }
 
-        public double getSalinity(double lat, double lon) {
+        public double getSalinity(Calendar date, double lat, double lon) {
             return 0;
         }
 
-        public double getTemperature(double lat, double lon) {
+        public double getTemperature(Calendar date, double lat, double lon) {
             return 0;
         }
     }

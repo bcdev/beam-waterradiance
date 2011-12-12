@@ -1,6 +1,7 @@
-package org.esa.beam.levitus;
+package org.esa.beam.waterradiance.levitus;
 
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.waterradiance.AuxdataDataProvider;
+import org.esa.beam.waterradiance.AuxdataFactory;
 import org.junit.Test;
 
 import java.util.Calendar;
@@ -16,10 +17,24 @@ public class LevitusDataProviderImplTest {
 
     @Test
     public void testGetSalinity() throws Exception {
-        LevitusDataProvider dataProvider = LevitusFactory.createDataProvider(16, 0);
-        double salinity = dataProvider.getSalinity(8.5, 53.5);
-        // todo - not yet correct
-//        assertEquals(32.5769, salinity, 1.0E-6);
+        AuxdataDataProvider dataProvider = AuxdataFactory.createDataProvider();
+        Calendar calendar = createUTCCalendar();
+        double lat = 53.5;
+        double lon = 8.5;
+
+        calendar.set(2011, 0, 16);
+        double salinity0 = dataProvider.getSalinity(calendar, lat, lon);
+        assertEquals(32.5769, salinity0, 1.0E-6);
+
+        calendar.set(2011, 1, 16);
+        double salinity1 = dataProvider.getSalinity(calendar, lat, lon);
+        assertEquals(32.3815, salinity1, 1.0E-6);
+
+        calendar.set(2011, 0, 31);
+        double fract = LevitusDataProviderImpl.calculateLinearFraction(calendar);
+        double expected = LevitusDataProviderImpl.interpolate(salinity0, salinity1, fract);
+        double actual = dataProvider.getSalinity(calendar, lat, lon);
+        assertEquals(expected, actual, 1.0E-6);
     }
 
     @Test
@@ -32,7 +47,7 @@ public class LevitusDataProviderImplTest {
 
     @Test
     public void testCalculateLinearFraction() throws Exception {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        Calendar calendar = createUTCCalendar();
         calendar.set(2011, 2, 16);
         assertEquals(0.00, LevitusDataProviderImpl.calculateLinearFraction(calendar), 1.E-2);
         calendar.set(2011, 2, 31);
@@ -65,7 +80,7 @@ public class LevitusDataProviderImplTest {
 
     @Test
     public void testGetMaximumFieldValueOfCalendar() throws Exception {
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = createUTCCalendar();
         calendar.set(Calendar.YEAR, 2012);
 
         calendar.set(Calendar.MONTH, 1); // February
@@ -78,4 +93,9 @@ public class LevitusDataProviderImplTest {
         assertEquals(28, calendar.getLeastMaximum(Calendar.DAY_OF_MONTH));
         assertEquals(31, calendar.getMaximum(Calendar.DAY_OF_MONTH));
     }
+
+    private static Calendar createUTCCalendar() {
+        return Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+    }
+
 }

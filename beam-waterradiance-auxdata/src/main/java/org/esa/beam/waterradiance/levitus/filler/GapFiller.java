@@ -1,4 +1,4 @@
-package org.bc.beam.waterradiance;
+package org.esa.beam.waterradiance.levitus.filler;
 
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
