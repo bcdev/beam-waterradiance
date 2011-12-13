@@ -19,6 +19,7 @@ import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Calendar;
 
 /**
@@ -38,31 +39,38 @@ public class WaterRadianceOperator extends PixelOperator {
     @SourceProduct()
     private Product sourceProduct;
 
+    @SuppressWarnings("MismatchedReadAndWriteOfArray")
     private double[] solarFluxes;
     private AuxdataProvider auxdataProvider;
     private Calendar date;
 
+
+    @Override
+    protected void prepareInputs() throws OperatorException {
+        super.prepareInputs();
+        // todo validation of input product
+        solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES);
+        date = sourceProduct.getStartTime().getAsCalendar();
+        auxdataProvider = createAuxdataDataProvider();
+
+    }
+
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        int index = 0;
-        sampleConfigurer.defineSample(index++, EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
-        sampleConfigurer.defineSample(index++, EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
-        sampleConfigurer.defineSample(index++, EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME);
-        sampleConfigurer.defineSample(index++, EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME);
-        sampleConfigurer.defineSample(index++, "atm_press");
-        sampleConfigurer.defineSample(index++, "ozone");
-        sampleConfigurer.defineSample(index++, "merid_wind");
-        sampleConfigurer.defineSample(index++, "zonal_wind");
+        int index = -1;
+        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
+        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
+        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME);
+        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME);
+        sampleConfigurer.defineSample(++index, "atm_press");
+        sampleConfigurer.defineSample(++index, "ozone");
+        sampleConfigurer.defineSample(++index, "merid_wind");
+        sampleConfigurer.defineSample(++index, "zonal_wind");
 
-        String[] radBandNames = EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES;
-        for (String radBandName : radBandNames) {
-            sampleConfigurer.defineSample(index++, radBandName);
+        for (String radBandName : EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES) {
+            sampleConfigurer.defineSample(++index, radBandName);
         }
-        solarFluxes = getSolarFluxes(radBandNames);
-        ProductData.UTC date = sourceProduct.getStartTime();
-        this.date = date.getAsCalendar();
-
-        auxdataProvider = createAuxdataDataProvider();
+        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
     }
 
     @Override
@@ -223,7 +231,7 @@ public class WaterRadianceOperator extends PixelOperator {
     private double[] getSolarFluxes(String[] radBandNames) {
         double[] solarFluxes = new double[radBandNames.length];
         for (int i = 0; i < radBandNames.length; i++) {
-            solarFluxes[i] = sourceProduct.getBand(radBandNames[i]).getSolarFlux();
+            solarFluxes[i] = getSourceProduct().getBand(radBandNames[i]).getSolarFlux();
         }
         return solarFluxes;
     }
@@ -233,10 +241,11 @@ public class WaterRadianceOperator extends PixelOperator {
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         try {
             double[] input = createInputArray(x, y, sourceSamples);
+            int detectorIndex = sourceSamples[sourceSamples.length - 1].getInt();
 
-            double[] output = new double[72];
+            double[] output = new double[73];
             // call c-lib
-            // int levmar_nn(double input[], int input_length, double output[], int output_length);
+            // int levmar_nn(int detectorIndex, double input[], int input_length, double output[], int output_length);
             fillTargetSamples(targetSamples, output);
         } catch (Throwable t) {
             t.printStackTrace();
@@ -246,17 +255,18 @@ public class WaterRadianceOperator extends PixelOperator {
 
     private double[] createInputArray(int x, int y, Sample[] sourceSamples) {
         double[] input = new double[40];
+        Sample[] inputSamples = Arrays.copyOfRange(sourceSamples, 0, sourceSamples.length - 1);
         GeoCoding geoCoding = sourceProduct.getGeoCoding();
         GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
         for (int i = 0; i < 8; i++) {
-            input[i] = sourceSamples[i].getDouble();
+            input[i] = inputSamples[i].getDouble();
         }
         input[8] = auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
         input[9] = auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
-        for (int i = 8; i < sourceSamples.length; i++) {
-            input[i + 2] = sourceSamples[i].getDouble();
+        for (int i = 8; i < inputSamples.length; i++) {
+            input[i + 2] = inputSamples[i].getDouble();
         }
-        System.arraycopy(solarFluxes, 0, input, sourceSamples.length + 2, solarFluxes.length);
+        System.arraycopy(solarFluxes, 0, input, inputSamples.length + 2, solarFluxes.length);
 
         return input;
     }
