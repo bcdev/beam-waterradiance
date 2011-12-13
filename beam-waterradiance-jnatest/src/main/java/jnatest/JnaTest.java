@@ -27,7 +27,7 @@ public class JnaTest {
             reflec[2] = 0.2 * i;
             reflec[3] = 0.3 * i;
             reflec[7] = 0.2 * i;
-            sum += WaterRadianceLib.INSTANCE.compute_pixel(reflec, reflec.length, iop, iop.length);
+            sum += WaterRadianceLib.INSTANCE.levmar_nn(reflec, reflec.length, iop, iop.length);
         }
         long t2 = System.currentTimeMillis();
 
@@ -42,7 +42,7 @@ public class JnaTest {
             reflec[2] = 0.2 * i;
             reflec[3] = 0.3 * i;
             reflec[7] = 0.2 * i;
-            sum += compute_pixel(reflec, reflec.length, iop, iop.length);
+            sum += levmar_nn(reflec, reflec.length, iop, iop.length);
         }
         t2 = System.currentTimeMillis();
 
@@ -51,7 +51,7 @@ public class JnaTest {
         System.out.printf("Java: total %s s / %d pixels --> %s ms / pixel\n", delta / 1000.0, n, delta / n);
     }
 
-    static int compute_pixel(double[] reflec, int n_reflec, double[] iop, int n_iop) {
+    static int levmar_nn(double[] reflec, int n_reflec, double[] iop, int n_iop) {
         double sum;
         int i;
 

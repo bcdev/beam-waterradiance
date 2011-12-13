@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-int compute_pixel(double reflec[], int n_reflec, double iop[], int n_iop)
+__declspec(dllexport) int levmar_nn(double reflec[], int n_reflec, double iop[], int n_iop)
 {
     double sum;
 	int i;
@@ -18,6 +18,7 @@ int compute_pixel(double reflec[], int n_reflec, double iop[], int n_iop)
     return n_iop;
 }
 
+
 int main(int argc, char** argv)
 {
     int i;
@@ -27,4 +28,3 @@ int main(int argc, char** argv)
 	}
     return 0;
 }
-
