@@ -1,11 +1,11 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
-    <symbolicName>beam-levitus-auxdata</symbolicName>
+    <symbolicName>beam-waterradiance-auxdata</symbolicName>
     <version>1.0</version>
-    <name>Levitus Salinity and Temperature maps</name>
+    <name>Salinity and Temperature maps for waterradiance</name>
 
     <description>
-    Annual average of ocean salinity and temperature as provided by Levitus climatology maps (NOAA NODC LAS).
+        Annual average of ocean salinity and temperature as provided by Levitus climatology maps (NOAA NODC LAS).
     </description>
 
 
