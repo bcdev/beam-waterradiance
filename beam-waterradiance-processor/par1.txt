@@ -1,0 +1,12 @@
+# path to data
+./data/
+# input file
+MER_RR_1PTACR20051218_134225_000026242043_00282_19875_transect_20051218_2.txt
+# solar flux
+solarflux_20051218.txt
+# output file
+mer_20051218_trans_ut1.txt
+# &npix, &njump,&s_proc_para.maxwater_RL_toa14, &s_proc_para.maxland_RL_toa14, &s_proc_para.land_code, &s_proc_para.cloud_code);
+639 1 1.0 1.0 1.0 1.0
+# magic number
+12345

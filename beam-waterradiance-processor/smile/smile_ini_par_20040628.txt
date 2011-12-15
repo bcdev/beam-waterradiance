@@ -1,0 +1,13 @@
+% Parameter File for MERIS lookuptable Smile correction wavelength and Ed_toa day 95
+% name of this parameter file (smile_ini_par_20040628.txt) shall not be changed, because program is expecting this file
+% Doerffer 28. June 2004
+%
+% name of wavelength file
+MERIS_Wavelengths_RD_20040705.txt
+%
+% name of ed_toa File
+MERIS_Irradiances_RD_20040705.txt
+%
+% magic number
+20040628
+% end
