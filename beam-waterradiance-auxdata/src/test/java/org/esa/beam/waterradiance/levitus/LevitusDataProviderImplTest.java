@@ -1,5 +1,6 @@
 package org.esa.beam.waterradiance.levitus;
 
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.waterradiance.AuxdataProvider;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
 import org.junit.Test;
@@ -23,17 +24,18 @@ public class LevitusDataProviderImplTest {
         double lon = 8.5;
 
         calendar.set(2011, 0, 16);
-        double salinity0 = dataProvider.getSalinity(calendar, lat, lon);
+        double salinity0 = dataProvider.getSalinity(calendar.getTime(), lat, lon);
         assertEquals(32.5769, salinity0, 1.0E-4);
 
         calendar.set(2011, 1, 16);
-        double salinity1 = dataProvider.getSalinity(calendar, lat, lon);
+        double salinity1 = dataProvider.getSalinity(calendar.getTime(), lat, lon);
         assertEquals(32.3815, salinity1, 1.0E-4);
 
         calendar.set(2011, 0, 31);
-        double fract = LevitusDataProviderImpl.calculateLinearFraction(calendar);
+        double fract = LevitusDataProviderImpl.calculateLinearFraction(
+                ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar());
         double expected = LevitusDataProviderImpl.interpolate(salinity0, salinity1, fract);
-        double actual = dataProvider.getSalinity(calendar, lat, lon);
+        double actual = dataProvider.getSalinity(calendar.getTime(), lat, lon);
         assertEquals(expected, actual, 1.0E-6);
     }
 
@@ -45,17 +47,18 @@ public class LevitusDataProviderImplTest {
         double lon = 8.5;
 
         calendar.set(2011, 0, 16);
-        double temperature0 = dataProvider.getTemperature(calendar, lat, lon);
+        double temperature0 = dataProvider.getTemperature(calendar.getTime(), lat, lon);
         assertEquals(5.5981, temperature0, 1.0E-4);
 
         calendar.set(2011, 1, 16);
-        double temperature1 = dataProvider.getTemperature(calendar, lat, lon);
+        double temperature1 = dataProvider.getTemperature(calendar.getTime(), lat, lon);
         assertEquals(4.2726, temperature1, 1.0E-4);
 
         calendar.set(2011, 0, 31);
-        double fract = LevitusDataProviderImpl.calculateLinearFraction(calendar);
+        double fract = LevitusDataProviderImpl.calculateLinearFraction(
+                ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar());
         double expected = LevitusDataProviderImpl.interpolate(temperature0, temperature1, fract);
-        double actual = dataProvider.getTemperature(calendar, lat, lon);
+        double actual = dataProvider.getTemperature(calendar.getTime(), lat, lon);
         assertEquals(expected, actual, 1.0E-6);
     }
 
@@ -71,13 +74,17 @@ public class LevitusDataProviderImplTest {
     public void testCalculateLinearFraction() throws Exception {
         Calendar calendar = createUTCCalendar();
         calendar.set(2011, 2, 16);
-        assertEquals(0.00, LevitusDataProviderImpl.calculateLinearFraction(calendar), 1.E-2);
+        assertEquals(0.00, LevitusDataProviderImpl.calculateLinearFraction(
+                ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar()), 1.E-2);
         calendar.set(2011, 2, 31);
-        assertEquals(0.48, LevitusDataProviderImpl.calculateLinearFraction(calendar), 1.E-2);
+        assertEquals(0.48, LevitusDataProviderImpl.calculateLinearFraction(
+                ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar()), 1.E-2);
         calendar.set(2011, 3, 1);
-        assertEquals(0.53, LevitusDataProviderImpl.calculateLinearFraction(calendar), 1.E-2);
+        assertEquals(0.53, LevitusDataProviderImpl.calculateLinearFraction(
+                ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar()), 1.E-2);
         calendar.set(2011, 3, 15);
-        assertEquals(1.00, LevitusDataProviderImpl.calculateLinearFraction(calendar), 1.E-2);
+        assertEquals(1.00, LevitusDataProviderImpl.calculateLinearFraction(
+                ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar()), 1.E-2);
     }
 
     @Test

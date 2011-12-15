@@ -20,7 +20,7 @@ import org.esa.beam.framework.gpf.pointop.WritableSample;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Calendar;
+import java.util.Date;
 
 /**
  * An operator computing water IOPs starting from radiances.
@@ -34,7 +34,8 @@ public class WaterRadianceOperator extends PixelOperator {
 
     private static final int[] SPECTRAL_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
     private static final int[] SPECTRAL_WAVELENGTHS = new int[]{
-            412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865};
+            412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865
+    };
 
     @SourceProduct()
     private Product sourceProduct;
@@ -42,7 +43,7 @@ public class WaterRadianceOperator extends PixelOperator {
     @SuppressWarnings("MismatchedReadAndWriteOfArray")
     private double[] solarFluxes;
     private AuxdataProvider auxdataProvider;
-    private Calendar date;
+    private Date date;
 
 
     @Override
@@ -50,7 +51,7 @@ public class WaterRadianceOperator extends PixelOperator {
         super.prepareInputs();
         // todo validation of input product
         solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES);
-        date = sourceProduct.getStartTime().getAsCalendar();
+        date = sourceProduct.getStartTime().getAsDate();
         auxdataProvider = createAuxdataDataProvider();
 
     }
@@ -200,7 +201,8 @@ public class WaterRadianceOperator extends PixelOperator {
     }
 
     private void addPathBands(ProductConfigurer productConfigurer, final String namePrefix) {
-        addSpectralBands(productConfigurer, namePrefix + "_%d", "Water leaving radiance reflectance path at %d nm", "dxd");
+        addSpectralBands(productConfigurer, namePrefix + "_%d", "Water leaving radiance reflectance path at %d nm",
+                         "dxd");
     }
 
     private void addTosaBands(ProductConfigurer productConfigurer, final String namePrefix) {
@@ -261,8 +263,12 @@ public class WaterRadianceOperator extends PixelOperator {
         for (int i = 0; i < 8; i++) {
             input[i] = inputSamples[i].getDouble();
         }
-        input[8] = auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
-        input[9] = auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+        try {
+            input[8] = auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
+            input[9] = auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+        } catch (Exception e) {
+            throw new OperatorException(e);
+        }
         for (int i = 8; i < inputSamples.length; i++) {
             input[i + 2] = inputSamples[i].getDouble();
         }
