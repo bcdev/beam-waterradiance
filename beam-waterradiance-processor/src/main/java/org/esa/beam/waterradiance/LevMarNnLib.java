@@ -7,7 +7,7 @@ import com.sun.jna.Native;
  * @author Norman Fomferra
  */
 public interface LevMarNnLib extends Library {
-    LevMarNnLib INSTANCE = (LevMarNnLib) Native.loadLibrary("levmar_nn", LevMarNnLib.class);
+    LevMarNnLib INSTANCE = (LevMarNnLib) Native.loadLibrary("levmar4beam_dll", LevMarNnLib.class);
 
     /*
      * int levmar_nn(int detector, double *input, int input_length, double *output, int output_length);
@@ -46,5 +46,7 @@ public interface LevMarNnLib extends Library {
      output[73]=nn_at_data[97]; //kdmin;
      output[74]=nn_at_data[98]; //kd490;
      */
-    int levmar_nn(int detector, double[] input, int input_length, double[] output, int output_length);
+
+    //int levmar_nn(int detector, double *input, int input_length, double *output, int output_length, double *debug_dat)
+    int levmar_nn(int detector, double[] input, int input_length, double[] output, int output_length, double[] debug_dat);
 }

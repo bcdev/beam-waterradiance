@@ -74,6 +74,7 @@ public class LevMarNnLibTest {
             input[i + 25] = MERIS_SUN_SPECTRAL_FLUXES[i];
         }
         final double[] output = new double[75];
+        double[] debug_dat = new double[100];
 
         final LevMarNnLib lib = LevMarNnLib.INSTANCE;
 
@@ -82,8 +83,8 @@ public class LevMarNnLibTest {
         final int N = 100;
         final long t0 = System.currentTimeMillis();
         for (int i = 0; i < N; i++) {
-            input[10] += 0.001 * Math.random();
-            result = lib.levmar_nn(181, input, input.length, output, output.length);
+            input[10] += 0.0001 * Math.random();
+            result = lib.levmar_nn(181, input, input.length, output, output.length, debug_dat);
         }
         final long t1 = System.currentTimeMillis();
         System.out.println("time " + (t1 - t0) / 1000.0 + " s");
