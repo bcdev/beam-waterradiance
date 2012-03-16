@@ -1,5 +1,6 @@
 .idea
 target
+testdata
 *.iml
 *.ipr
 *.iws
