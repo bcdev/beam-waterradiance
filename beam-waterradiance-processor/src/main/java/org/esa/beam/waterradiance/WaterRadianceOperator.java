@@ -38,7 +38,7 @@ public class WaterRadianceOperator extends PixelOperator {
     private final LevMarNnLib lib = LevMarNnLib.INSTANCE;
 
     private final double[] input = new double[40];
-    private final double[] output = new double[76];
+    private final double[] output = new double[69];
     private final double[] debug_dat = new double[1000];
 
     @Override
@@ -124,15 +124,8 @@ public class WaterRadianceOperator extends PixelOperator {
         /*   64*/ addBand(productConfigurer, "a_part", ProductData.TYPE_FLOAT32, "m^-1", "todo - add description");
         /*   65*/ addBand(productConfigurer, "b_part", ProductData.TYPE_FLOAT32, "m^-1", "todo - add description");
         /*   66*/ addBand(productConfigurer, "b_wit", ProductData.TYPE_FLOAT32, "m^-1", "todo - add description");
-        /*   67*/ addBand(productConfigurer, "sum_sq", ProductData.TYPE_FLOAT32, "dl", "todo - add description");
-        /*   68*/ addBand(productConfigurer, "a_pig_stddev", ProductData.TYPE_FLOAT32, "", "Standard deviation of a_pig");
-        /*   69*/ addBand(productConfigurer, "a_ys_stddev", ProductData.TYPE_FLOAT32, "", "Standard deviation of a_ys");
-        /*   70*/ addBand(productConfigurer, "a_part_stddev", ProductData.TYPE_FLOAT32, "", "Standard deviation of a_part");
-        /*   71*/ addBand(productConfigurer, "b_part_stddev", ProductData.TYPE_FLOAT32, "", "Standard deviation of b_part");
-        /*   72*/ addBand(productConfigurer, "b_wit_stddev", ProductData.TYPE_FLOAT32, "", "Standard deviation of b_wit");
-        /*   73*/ addBand(productConfigurer, "kdmin", ProductData.TYPE_FLOAT32, "", "KD min");
-        /*   74*/ addBand(productConfigurer, "kd490", ProductData.TYPE_FLOAT32, "", "KD at 490 nm");
-        /*   75*/ addBand(productConfigurer, "info_5", ProductData.TYPE_FLOAT32, "", "");
+        /*   67*/ addBand(productConfigurer, "sum_sq", ProductData.TYPE_FLOAT32, "", "Square sums");
+        /*   68*/ addBand(productConfigurer, "num_iter", ProductData.TYPE_INT32, "", "Number of iterations in LM");
 
         String autoGrouping = String.format("%s:%s:%s:%s:%s", "rl_tosa", "rl_path", "reflec", "trans_down", "trans_up");
         final Product targetProduct = productConfigurer.getTargetProduct();

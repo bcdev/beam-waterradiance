@@ -38,15 +38,9 @@ public interface LevMarNnLib extends Library {
      output[65]=b_part
      output[66]=b_wit
      output[67]=sum_sq
-     output[68]=a_pig_stdev
-     output[69]=a_gelb_stdev
-     output[70]=a_part_stdev
-     output[71]=b_part_stdev
-     output[72]=b_wit_stedev
-     output[73]=nn_at_data[97]; //kdmin;
-     output[74]=nn_at_data[98]; //kd490;
+     output[68]=num_iter
      */
 
     //int levmar_nn(int detector, double *input, int input_length, double *output, int output_length, double *debug_dat)
-    int levmar_nn(int detector, double[] input, int input_length, double[] output, int output_length, double[] debug_dat);
+    int levmar_nn( int detector, double[] input, int input_length, double[] output, int output_length, double[] debug_dat);
 }
