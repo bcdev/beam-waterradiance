@@ -74,7 +74,7 @@ public class WaterRadianceOperator extends PixelOperator {
 
 
     @Override
-    protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+    protected synchronized void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
         if (sourceSamples[maskIndex].getBoolean()) {
             GeoCoding geoCoding = sourceProduct.getGeoCoding();
