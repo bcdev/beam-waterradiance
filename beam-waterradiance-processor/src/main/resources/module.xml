@@ -20,7 +20,10 @@
         <module>beam-gpf</module>
     </dependency>
     <dependency>
-        <module>beam-levitus-auxdata</module>
+        <module>beam-envisat-reader</module>
+    </dependency>
+    <dependency>
+        <module>beam-waterradiance-auxdata</module>
     </dependency>
     <dependency>
         <module>beam-visat-rcp</module>
