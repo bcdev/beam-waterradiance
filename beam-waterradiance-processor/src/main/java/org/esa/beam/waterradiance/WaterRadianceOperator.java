@@ -1,6 +1,8 @@
 package org.esa.beam.waterradiance;
 
 
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.runtime.internal.Platform;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -9,10 +11,12 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
-import org.esa.beam.jai.ImageManager;
+import org.esa.beam.util.ResourceInstaller;
+import org.esa.beam.util.SystemUtils;
 
-import java.awt.image.RenderedImage;
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Date;
 
 /**
@@ -29,6 +33,26 @@ public class WaterRadianceOperator extends PixelOperator {
     private static final int[] SPECTRAL_WAVELENGTHS = new int[]{
             412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865
     };
+
+
+    private static final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
+    static {
+        URL sourceUrl = ResourceInstaller.getSourceUrl(WaterRadianceOperator.class);
+        ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
+        try {
+            installer.install(".*", ProgressMonitor.NULL);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to install auxdata of the beam-waterradiance-processor module");
+        }
+        Platform currentPlatform = Platform.getCurrentPlatform();
+        Platform.ID id = currentPlatform.getId();
+        int numBits = currentPlatform.getBitCount();
+        String libDir = String.format("lib/%s%d/", id, numBits);
+        String absolutePath = new File(AUXDATA_DIR, libDir).getAbsolutePath();
+        System.out.println("absolutePath = " + absolutePath);
+        System.setProperty("jna.library.path", absolutePath);
+    }
+
 
     @SourceProduct
     private Product sourceProduct;

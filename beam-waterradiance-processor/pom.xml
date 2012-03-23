@@ -34,7 +34,7 @@
             <artifactId>jna</artifactId>
             <version>3.4.0</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/jna.jar</systemPath>
+            <systemPath>${basedir}/src/main/resources/lib/jna.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -42,7 +42,7 @@
             <artifactId>jna-platform</artifactId>
             <version>3.4.0</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/platform.jar</systemPath>
+            <systemPath>${basedir}/src/main/resources/lib/platform.jar</systemPath>
         </dependency>
 
     </dependencies>

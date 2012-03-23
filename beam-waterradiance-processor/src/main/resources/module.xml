@@ -5,7 +5,7 @@
     <name>BEAM WaterRadiance Processor</name>
 
     <description>
-    Processor calculating water IOPs.
+        Processor calculating water IOPs.
     </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
@@ -14,6 +14,8 @@
     <url>http://envisat.esa.int/beam</url>
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
+    <packaging>dir</packaging>
+
     <dependency>
         <module>beam-gpf</module>
     </dependency>
@@ -21,9 +23,20 @@
         <module>beam-levitus-auxdata</module>
     </dependency>
     <dependency>
-        <module>beam-ui</module>
+        <module>beam-visat-rcp</module>
         <optional>true</optional>
     </dependency>
 
+    <extension point="beam-ui:actions">
+        <action>
+            <id>waterRadianceId</id>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <parent>tools</parent>
+            <text>WaterRadiance (MERIS)...</text>
+            <operatorName>Meris.WaterRadiance</operatorName>
+            <dialogTitle>WaterRadiance (MERIS)</dialogTitle>
+            <targetProductNameSuffix>_water</targetProductNameSuffix>
+        </action>
+    </extension>
 
 </module>
