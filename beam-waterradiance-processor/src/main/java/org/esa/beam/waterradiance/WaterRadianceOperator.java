@@ -6,9 +6,12 @@ import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.jai.ImageManager;
 
+import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.util.Date;
 
@@ -18,7 +21,7 @@ import java.util.Date;
  * @author Marco Peters
  */
 @OperatorMetadata(alias = "Meris.WaterRadiance", version = "1.0",
-                  authors = "Roland Doerffer (HZG), Marco Peters (BC)",
+                  authors = "Olaf Danne, Roland Doerffer, Norman Fomferra, Marco Zühlke",
                   description = "An operator computing water IOPs starting from radiances.")
 public class WaterRadianceOperator extends PixelOperator {
 
@@ -27,8 +30,11 @@ public class WaterRadianceOperator extends PixelOperator {
             412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865
     };
 
-    @SourceProduct()
+    @SourceProduct
     private Product sourceProduct;
+    
+    @Parameter(defaultValue = "!l1_flags.INVALID && !l1_flags.BRIGHT && !l1_flags.LAND_OCEAN")
+    private String maskExpression;
 
     @SuppressWarnings("MismatchedReadAndWriteOfArray")
     private double[] solarFluxes;
@@ -40,32 +46,37 @@ public class WaterRadianceOperator extends PixelOperator {
     private final double[] input = new double[40];
     private final double[] output = new double[69];
     private final double[] debug_dat = new double[1000];
+    private int maskIndex;
+
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        GeoCoding geoCoding = sourceProduct.getGeoCoding();
-        GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
-        for (int i = 0; i < 8; i++) {
-            input[i] = sourceSamples[i].getDouble();
-        }
-        try {
-            input[8] = 20.0; // auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
-            input[9] = 12.0; // auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
-        } catch (Exception e) {
-            throw new OperatorException(e);
-        }
-        for (int i = 8; i < sourceSamples.length; i++) {
-            input[2 + i] = sourceSamples[i].getDouble();
-        }
-        System.arraycopy(solarFluxes, 0, input, 25, 15);
-
-        int detectorIndex = sourceSamples[sourceSamples.length - 1].getInt();
-
-        lib.levmar_nn( detectorIndex,  input, input.length,  output, output.length, debug_dat);
-
-        for (int i = 0; i < output.length; i++) {
-            targetSamples[i].set(output[i]);
+        if (sourceSamples[maskIndex].getBoolean()) {
+            GeoCoding geoCoding = sourceProduct.getGeoCoding();
+            GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
+            for (int i = 0; i < 8; i++) {
+                input[i] = sourceSamples[i].getDouble();
+            }
+            try {
+                input[8] = 20.0; // auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
+                input[9] = 12.0; // auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+            } catch (Exception e) {
+                throw new OperatorException(e);
+            }
+            for (int i = 8; i < sourceSamples.length; i++) {
+                input[2 + i] = sourceSamples[i].getDouble();
+            }
+            System.arraycopy(solarFluxes, 0, input, 25, 15);
+            int detectorIndex = sourceSamples[sourceSamples.length - 1].getInt();
+            lib.levmar_nn(detectorIndex, input, input.length, output, output.length, debug_dat);
+            for (int i = 0; i < output.length; i++) {
+                targetSamples[i].set(output[i]);
+            }
+        } else {
+            for (int i = 0; i < output.length; i++) {
+                targetSamples[i].set(Double.NaN);
+            }
         }
     }
 
@@ -73,11 +84,14 @@ public class WaterRadianceOperator extends PixelOperator {
     @Override
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
+
         // todo validation of input product
+
+        sourceProduct.addBand("_mask_", maskExpression);
+
         solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES);
         date = sourceProduct.getStartTime().getAsDate();
         auxdataProvider = createAuxdataDataProvider();
-
     }
 
     @Override
@@ -96,6 +110,9 @@ public class WaterRadianceOperator extends PixelOperator {
             sampleConfigurer.defineSample(++index, radBandName);
         }
         sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
+
+        maskIndex = ++index;
+        sampleConfigurer.defineSample(maskIndex, "_mask_");
     }
 
     @Override
@@ -112,20 +129,34 @@ public class WaterRadianceOperator extends PixelOperator {
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         super.configureTargetProduct(productConfigurer);
 
-        /* 0-11*/ addSpectralBands(productConfigurer, "rl_tosa" + "_%d", "sr^-1", "TOSA Reflectance at %d nm");
-        /*12-23*/ addSpectralBands(productConfigurer, "rl_path" + "_%d", "dxd", "Water leaving radiance reflectance path at %d nm");
-        /*24-35*/ addSpectralBands(productConfigurer, "reflec" + "_%d", "sr^-1", "Water leaving radiance reflectance at %d nm");
-        /*36-47*/ addSpectralBands(productConfigurer, "trans_down" + "_%d", "dl", "Downwelling radiance transmittance at %d nm");
-        /*48-59*/ addSpectralBands(productConfigurer, "trans_up" + "_%d", "dl", "Upwelling radiance transmittance at %d nm");
-        /*   60*/ addBand(productConfigurer, "aot_550", ProductData.TYPE_FLOAT32, "dl", "Aerosol Optical Thickness at 550 nm");
-        /*   61*/ addBand(productConfigurer, "ang_864_443", ProductData.TYPE_FLOAT32, "dl", "Aerosol Angstrom coefficient between 864 nm and 443 nm");
-        /*   62*/ addBand(productConfigurer, "a_pig", ProductData.TYPE_FLOAT32, "m^-1", "Pigment absorption coefficient at 443 nm");
-        /*   63*/ addBand(productConfigurer, "a_ys", ProductData.TYPE_FLOAT32, "m^-1", "Yellow substance absorption coefficient at 443 nm");
-        /*   64*/ addBand(productConfigurer, "a_part", ProductData.TYPE_FLOAT32, "m^-1", "todo - add description");
-        /*   65*/ addBand(productConfigurer, "b_part", ProductData.TYPE_FLOAT32, "m^-1", "todo - add description");
-        /*   66*/ addBand(productConfigurer, "b_wit", ProductData.TYPE_FLOAT32, "m^-1", "todo - add description");
-        /*   67*/ addBand(productConfigurer, "sum_sq", ProductData.TYPE_FLOAT32, "", "Square sums");
-        /*   68*/ addBand(productConfigurer, "num_iter", ProductData.TYPE_INT32, "", "Number of iterations in LM");
+        /* 0-11*/
+        addSpectralBands(productConfigurer, "rl_tosa" + "_%d", "sr^-1", "TOSA Reflectance at %d nm");
+        /*12-23*/
+        addSpectralBands(productConfigurer, "rl_path" + "_%d", "dxd", "Water leaving radiance reflectance path at %d nm");
+        /*24-35*/
+        addSpectralBands(productConfigurer, "reflec" + "_%d", "sr^-1", "Water leaving radiance reflectance at %d nm");
+        /*36-47*/
+        addSpectralBands(productConfigurer, "trans_down" + "_%d", "dl", "Downwelling radiance transmittance at %d nm");
+        /*48-59*/
+        addSpectralBands(productConfigurer, "trans_up" + "_%d", "dl", "Upwelling radiance transmittance at %d nm");
+        /*   60*/
+        addBand(productConfigurer, "aot_550", ProductData.TYPE_FLOAT32, "dl", "Aerosol Optical Thickness at 550 nm");
+        /*   61*/
+        addBand(productConfigurer, "ang_864_443", ProductData.TYPE_FLOAT32, "dl", "Aerosol Angstrom coefficient between 864 nm and 443 nm");
+        /*   62*/
+        addBand(productConfigurer, "a_pig", ProductData.TYPE_FLOAT32, "m^-1", "Pigment absorption coefficient at 443 nm");
+        /*   63*/
+        addBand(productConfigurer, "a_ys", ProductData.TYPE_FLOAT32, "m^-1", "Yellow substance absorption coefficient at 443 nm");
+        /*   64*/
+        addBand(productConfigurer, "a_part", ProductData.TYPE_FLOAT32, "m^-1", "todo - add description");
+        /*   65*/
+        addBand(productConfigurer, "b_part", ProductData.TYPE_FLOAT32, "m^-1", "todo - add description");
+        /*   66*/
+        addBand(productConfigurer, "b_wit", ProductData.TYPE_FLOAT32, "m^-1", "todo - add description");
+        /*   67*/
+        addBand(productConfigurer, "sum_sq", ProductData.TYPE_FLOAT32, "", "Square sums");
+        /*   68*/
+        addBand(productConfigurer, "num_iter", ProductData.TYPE_INT32, "", "Number of iterations in LM");
 
         String autoGrouping = String.format("%s:%s:%s:%s:%s", "rl_tosa", "rl_path", "reflec", "trans_down", "trans_up");
         final Product targetProduct = productConfigurer.getTargetProduct();
@@ -137,6 +168,7 @@ public class WaterRadianceOperator extends PixelOperator {
         Band band = productConfigurer.addBand(name, type);
         band.setDescription(description);
         band.setUnit(unit);
+        band.setNoDataValue(Float.NaN);
     }
 
     private void addSpectralBands(ProductConfigurer productConfigurer,
@@ -149,6 +181,7 @@ public class WaterRadianceOperator extends PixelOperator {
             band.setSpectralWavelength(wavelength);
             band.setDescription(String.format(descriptionFormat, wavelength));
             band.setUnit(unit);
+            band.setNoDataValue(Float.NaN);
         }
     }
 
