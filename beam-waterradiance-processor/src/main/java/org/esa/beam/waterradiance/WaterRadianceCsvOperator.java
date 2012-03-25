@@ -25,7 +25,7 @@ import java.net.URL;
  * Modified in order to use CSV input provided by H.Krasemann
  * // todo: lots of duplication from WaterRadianceOperator. discuss later how to handle this special case
  *
- * @author Marco Peters
+ * @author Olaf Danne
  */
 @OperatorMetadata(alias = "Meris.WaterRadianceCsv", version = "1.0",
         authors = "Olaf Danne, Roland Doerffer, Norman Fomferra, Marco Zühlke",
