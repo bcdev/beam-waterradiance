@@ -36,6 +36,7 @@ public class WaterRadianceOperator extends PixelOperator {
 
 
     private static final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
+
     static {
         URL sourceUrl = ResourceInstaller.getSourceUrl(WaterRadianceOperator.class);
         ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
@@ -56,7 +57,7 @@ public class WaterRadianceOperator extends PixelOperator {
 
     @SourceProduct
     private Product sourceProduct;
-    
+
     @Parameter(defaultValue = "!l1_flags.INVALID && !l1_flags.BRIGHT && !l1_flags.LAND_OCEAN")
     private String maskExpression;
 
@@ -143,11 +144,11 @@ public class WaterRadianceOperator extends PixelOperator {
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         Product targetProduct = getTargetProduct();
         String[] bandNames = targetProduct.getBandNames();
-        for (int i = 0; i < bandNames.length; i++) {
-            sampleConfigurer.defineSample(i, bandNames[i]);
+        for (int i = 0; i < output.length; i++) {
+            final String bandName = bandNames[i];
+            sampleConfigurer.defineSample(i, bandName);
         }
     }
-
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
@@ -182,10 +183,14 @@ public class WaterRadianceOperator extends PixelOperator {
         /*   68*/
         addBand(productConfigurer, "num_iter", ProductData.TYPE_INT32, "", "Number of iterations in LM");
 
+        productConfigurer.copyBands(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
+        productConfigurer.copyBands(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
+
         String autoGrouping = String.format("%s:%s:%s:%s:%s", "rl_tosa", "rl_path", "reflec", "trans_down", "trans_up");
         final Product targetProduct = productConfigurer.getTargetProduct();
         targetProduct.setAutoGrouping(autoGrouping);
         targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(), targetProduct.getSceneRasterHeight());
+
     }
 
     private void addBand(ProductConfigurer productConfigurer, String name, int type, String unit, String description) {
