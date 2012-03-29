@@ -78,16 +78,16 @@ public class WaterRadianceCsvOperator extends PixelOperator {
     @Override
     protected synchronized void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        int detectorIndex = sourceSamples[0].getInt();
+        int detectorIndex = sourceSamples[1].getInt();
 
-        input[0] = sourceSamples[3].getDouble(); // SZA
-        input[1] = sourceSamples[6].getDouble(); // SAA
-        input[2] = sourceSamples[4].getDouble(); // VZA
-        input[3] = sourceSamples[5].getDouble(); // VAA
-        input[4] = sourceSamples[10].getDouble(); // atm_press
-        input[5] = sourceSamples[11].getDouble(); // ozone
-        input[6] = sourceSamples[9].getDouble(); // ozone
-        input[7] = sourceSamples[8].getDouble(); // ozone
+        input[0] = sourceSamples[4].getDouble(); // SZA
+        input[1] = sourceSamples[7].getDouble(); // SAA
+        input[2] = sourceSamples[5].getDouble(); // VZA
+        input[3] = sourceSamples[6].getDouble(); // VAA
+        input[4] = sourceSamples[11].getDouble(); // atm_press
+        input[5] = sourceSamples[12].getDouble(); // ozone
+        input[6] = sourceSamples[10].getDouble(); // ozone
+        input[7] = sourceSamples[9].getDouble(); // ozone
 
         try {
             input[8] = 20.0; // auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
@@ -95,25 +95,28 @@ public class WaterRadianceCsvOperator extends PixelOperator {
         } catch (Exception e) {
             throw new OperatorException(e);
         }
-        for (int i = 13; i < 28; i++) {
-            input[i-3] = sourceSamples[i].getDouble();   // radiances
+        for (int i = 14; i < 29; i++) {
+            input[i-4] = sourceSamples[i].getDouble();   // radiances
         }
-        for (int i = 29; i < 44; i++) {
-            input[i-4] = sourceSamples[i].getDouble();   // solar fluxes
+        for (int i = 30; i < 45; i++) {
+            input[i-5] = sourceSamples[i].getDouble();   // solar fluxes
         }
 
         lib.levmar_nn(detectorIndex, input, input.length, output, output.length, debug_dat);
 
+        // copy row index to target product
+        double rowIndex = sourceSamples[0].getDouble();
+        targetSamples[0].set(rowIndex);
+
         // copy lat, lon to target product
-        double lat = sourceSamples[1].getDouble();
-        targetSamples[0].set(lat);
-        double lon = sourceSamples[2].getDouble();
-        targetSamples[1].set(lon);
+        double lat = sourceSamples[2].getDouble();
+        targetSamples[1].set(lat);
+        double lon = sourceSamples[3].getDouble();
+        targetSamples[2].set(lon);
 
         for (int i = 0; i < output.length; i++) {
-            targetSamples[i+2].set(output[i]);
+            targetSamples[i+3].set(output[i]);
         }
-        System.out.println();
     }
 
 
@@ -132,6 +135,7 @@ public class WaterRadianceCsvOperator extends PixelOperator {
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         int index = -1;
+        sampleConfigurer.defineSample(++index, "row_index");
         sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
         sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_LAT_DS_NAME);
         sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_LON_DS_NAME);
@@ -171,7 +175,8 @@ public class WaterRadianceCsvOperator extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
 
         /////
-        // take lat/lon from input
+        // take row_index and lat/lon from input
+        addBand(productConfigurer, "row_index", ProductData.TYPE_FLOAT32, "", "Latitude");
         addBand(productConfigurer, "lat", ProductData.TYPE_FLOAT32, "", "Latitude");
         addBand(productConfigurer, "lon", ProductData.TYPE_FLOAT32, "", "Latitude");
         /////
