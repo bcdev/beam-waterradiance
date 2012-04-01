@@ -17,7 +17,6 @@ import org.esa.beam.util.SystemUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Date;
 
 /**
  * An operator computing water IOPs starting from radiances.
@@ -34,10 +33,23 @@ public class WaterRadianceOperator extends PixelOperator {
             412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865
     };
 
-
-    private static final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
+    private static final int SRC_SZA = 0;
+    private static final int SRC_SAA = 1;
+    private static final int SRC_VZA = 2;
+    private static final int SRC_VAA = 3;
+    private static final int SRC_PRESS = 4;
+    private static final int SRC_OZ = 5;
+    private static final int SRC_MWIND = 6;
+    private static final int SRC_ZWIND = 7;
+    private static final int SRC_RAD_OFFSET = 8;
+    private static final int SRC_DETECTOR = 23;
+    private static final int SRC_MASK = 24;
+    private static final int SRC_SOL_FLUXX_OFFSET = 25;
+    private static final int SRC_LAT = 40;
+    private static final int SRC_LON = 41;
 
     static {
+        final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
         URL sourceUrl = ResourceInstaller.getSourceUrl(WaterRadianceOperator.class);
         ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
         try {
@@ -50,50 +62,59 @@ public class WaterRadianceOperator extends PixelOperator {
         int numBits = currentPlatform.getBitCount();
         String libDir = String.format("lib/%s%d/", id, numBits);
         String absolutePath = new File(AUXDATA_DIR, libDir).getAbsolutePath();
-        System.out.println("absolutePath = " + absolutePath);
         System.setProperty("jna.library.path", absolutePath);
     }
 
-
     @SourceProduct
     private Product sourceProduct;
-
     @Parameter(defaultValue = "!l1_flags.INVALID && !l1_flags.BRIGHT && !l1_flags.LAND_OCEAN")
     private String maskExpression;
 
-    @SuppressWarnings("MismatchedReadAndWriteOfArray")
+    // solar_flux from bands
+    // copy lat, lon, row_index to target
+    private boolean csvMode = false;
+
     private double[] solarFluxes;
-    private AuxdataProvider auxdataProvider;
-    private Date date;
-
+    //private AuxdataProvider auxdataProvider;
+    //private Date date;
     private final LevMarNnLib lib = LevMarNnLib.INSTANCE;
-
     private final double[] input = new double[40];
     private final double[] output = new double[69];
     private final double[] debug_dat = new double[1000];
-    private int maskIndex;
-
 
     @Override
     protected synchronized void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        if (sourceSamples[maskIndex].getBoolean()) {
-            GeoCoding geoCoding = sourceProduct.getGeoCoding();
-            GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
-            for (int i = 0; i < 8; i++) {
-                input[i] = sourceSamples[i].getDouble();
-            }
+        if (sourceSamples[SRC_MASK].getBoolean()) {
+            input[0] = sourceSamples[SRC_SZA].getDouble();
+            input[1] = sourceSamples[SRC_SAA].getDouble();
+            input[2] = sourceSamples[SRC_VZA].getDouble();
+            input[3] = sourceSamples[SRC_VAA].getDouble();
+            input[4] = sourceSamples[SRC_PRESS].getDouble();
+            input[5] = sourceSamples[SRC_OZ].getDouble();
+            input[6] = sourceSamples[SRC_MWIND].getDouble();
+            input[7] = sourceSamples[SRC_ZWIND].getDouble();
             try {
-                input[8] = 20.0; // auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
-                input[9] = 12.0; // auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+                //GeoCoding geoCoding = sourceProduct.getGeoCoding();
+                //GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
+                input[8] = 15.0; // auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
+                input[9] = 35.0; // auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
             } catch (Exception e) {
                 throw new OperatorException(e);
             }
-            for (int i = 8; i < sourceSamples.length; i++) {
-                input[2 + i] = sourceSamples[i].getDouble();
+            for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
+                input[10 + i] = sourceSamples[SRC_RAD_OFFSET + i].getDouble();
+            }
+            if (solarFluxes == null) {
+                double[] bandSolarFluxes = new double[EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length];
+                for (int i = 0; i < bandSolarFluxes.length; i++) {
+                    bandSolarFluxes[i] = sourceSamples[SRC_SOL_FLUXX_OFFSET + i].getDouble();
+                }
+                solarFluxes = bandSolarFluxes;
             }
             System.arraycopy(solarFluxes, 0, input, 25, 15);
-            int detectorIndex = sourceSamples[sourceSamples.length - 1].getInt();
+            int detectorIndex = sourceSamples[SRC_DETECTOR].getInt();
+
             lib.levmar_nn(detectorIndex, input, input.length, output, output.length, debug_dat);
             for (int i = 0; i < output.length; i++) {
                 targetSamples[i].set(output[i]);
@@ -111,33 +132,40 @@ public class WaterRadianceOperator extends PixelOperator {
         super.prepareInputs();
 
         // todo validation of input product
-
+        if (sourceProduct.containsBand("solar_flux_1")) {
+            csvMode = true;
+        }
+        if (!csvMode) {
+            solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES);
+        }
         sourceProduct.addBand("_mask_", maskExpression);
-
-        solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES);
-        date = sourceProduct.getStartTime().getAsDate();
-        auxdataProvider = createAuxdataDataProvider();
+        //date = sourceProduct.getStartTime().getAsDate();
+        //auxdataProvider = createAuxdataDataProvider();
     }
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        int index = -1;
-        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
-        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
-        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME);
-        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME);
-        sampleConfigurer.defineSample(++index, "atm_press");
-        sampleConfigurer.defineSample(++index, "ozone");
-        sampleConfigurer.defineSample(++index, "merid_wind");
-        sampleConfigurer.defineSample(++index, "zonal_wind");
+        sampleConfigurer.defineSample(SRC_SZA, EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
+        sampleConfigurer.defineSample(SRC_SAA, EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
+        sampleConfigurer.defineSample(SRC_VZA, EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME);
+        sampleConfigurer.defineSample(SRC_VAA, EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME);
+        sampleConfigurer.defineSample(SRC_PRESS, "atm_press");
+        sampleConfigurer.defineSample(SRC_OZ, "ozone");
+        sampleConfigurer.defineSample(SRC_MWIND, "merid_wind");
+        sampleConfigurer.defineSample(SRC_ZWIND, "zonal_wind");
 
-        for (String radBandName : EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES) {
-            sampleConfigurer.defineSample(++index, radBandName);
+        for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
+            sampleConfigurer.defineSample(SRC_RAD_OFFSET + i, EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]);
         }
-        sampleConfigurer.defineSample(++index, EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
-
-        maskIndex = ++index;
-        sampleConfigurer.defineSample(maskIndex, "_mask_");
+        sampleConfigurer.defineSample(SRC_DETECTOR, EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
+        sampleConfigurer.defineSample(SRC_MASK, "_mask_");
+        if (csvMode) {
+            for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
+                sampleConfigurer.defineSample(SRC_SOL_FLUXX_OFFSET + i, "solar_flux_" + (i + 1));
+            }
+            sampleConfigurer.defineSample(SRC_LAT, EnvisatConstants.MERIS_LAT_DS_NAME);
+            sampleConfigurer.defineSample(SRC_LON, EnvisatConstants.MERIS_LON_DS_NAME);
+        }
     }
 
     @Override
@@ -155,15 +183,15 @@ public class WaterRadianceOperator extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
 
         /* 0-11*/
-        addSpectralBands(productConfigurer, "rl_tosa" + "_%d", "sr^-1", "TOSA Reflectance at %d nm");
+        addSpectralBands(productConfigurer, "rl_tosa_%d", "sr^-1", "TOSA Reflectance at %d nm");
         /*12-23*/
-        addSpectralBands(productConfigurer, "rl_path" + "_%d", "dxd", "Water leaving radiance reflectance path at %d nm");
+        addSpectralBands(productConfigurer, "rl_path_%d", "dxd", "Water leaving radiance reflectance path at %d nm");
         /*24-35*/
-        addSpectralBands(productConfigurer, "reflec" + "_%d", "sr^-1", "Water leaving radiance reflectance at %d nm");
+        addSpectralBands(productConfigurer, "reflec_%d", "sr^-1", "Water leaving radiance reflectance at %d nm");
         /*36-47*/
-        addSpectralBands(productConfigurer, "trans_down" + "_%d", "dl", "Downwelling radiance transmittance at %d nm");
+        addSpectralBands(productConfigurer, "trans_down_%d", "dl", "Downwelling radiance transmittance at %d nm");
         /*48-59*/
-        addSpectralBands(productConfigurer, "trans_up" + "_%d", "dl", "Upwelling radiance transmittance at %d nm");
+        addSpectralBands(productConfigurer, "trans_up_%d", "dl", "Upwelling radiance transmittance at %d nm");
         /*   60*/
         addBand(productConfigurer, "aot_550", ProductData.TYPE_FLOAT32, "dl", "Aerosol Optical Thickness at 550 nm");
         /*   61*/
@@ -186,11 +214,17 @@ public class WaterRadianceOperator extends PixelOperator {
         productConfigurer.copyBands(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
         productConfigurer.copyBands(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
 
+        if (csvMode) {
+            //copy row_index and lat/lon from input
+            productConfigurer.copyBands("row_index");
+            productConfigurer.copyBands("lat");
+            productConfigurer.copyBands("lon");
+        }
+
         String autoGrouping = String.format("%s:%s:%s:%s:%s", "rl_tosa", "rl_path", "reflec", "trans_down", "trans_up");
         final Product targetProduct = productConfigurer.getTargetProduct();
         targetProduct.setAutoGrouping(autoGrouping);
         targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(), targetProduct.getSceneRasterHeight());
-
     }
 
     private void addBand(ProductConfigurer productConfigurer, String name, int type, String unit, String description) {
@@ -230,13 +264,9 @@ public class WaterRadianceOperator extends PixelOperator {
         return solarFluxes;
     }
 
-
-    @SuppressWarnings({"UnusedDeclaration"})
     public static class Spi extends OperatorSpi {
-
         public Spi() {
             super(WaterRadianceOperator.class);
         }
     }
-
 }
