@@ -81,6 +81,7 @@ public class WaterRadianceOperator extends PixelOperator {
     private final double[] input = new double[40];
     private final double[] output = new double[69];
     private final double[] debug_dat = new double[1000];
+    private boolean firstLibraryCall = true;
 
     @Override
     protected synchronized void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -105,16 +106,20 @@ public class WaterRadianceOperator extends PixelOperator {
             for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
                 input[10 + i] = sourceSamples[SRC_RAD_OFFSET + i].getDouble();
             }
-            if (solarFluxes == null) {
-                double[] bandSolarFluxes = new double[EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length];
-                for (int i = 0; i < bandSolarFluxes.length; i++) {
-                    bandSolarFluxes[i] = sourceSamples[SRC_SOL_FLUXX_OFFSET + i].getDouble();
+            if (csvMode) {
+                for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
+                    input[25 + i] = sourceSamples[SRC_SOL_FLUXX_OFFSET + i].getDouble();
                 }
-                solarFluxes = bandSolarFluxes;
+            } else {
+                System.arraycopy(solarFluxes, 0, input, 25, 15);
             }
-            System.arraycopy(solarFluxes, 0, input, 25, 15);
             int detectorIndex = sourceSamples[SRC_DETECTOR].getInt();
 
+            if (firstLibraryCall) {
+                // at first call twice into the c-code to initialize everything properly
+                lib.levmar_nn(detectorIndex, input, input.length, output, output.length, debug_dat);
+                firstLibraryCall = false;
+            }
             lib.levmar_nn(detectorIndex, input, input.length, output, output.length, debug_dat);
             for (int i = 0; i < output.length; i++) {
                 targetSamples[i].set(output[i]);
@@ -134,8 +139,8 @@ public class WaterRadianceOperator extends PixelOperator {
         // todo validation of input product
         if (sourceProduct.containsBand("solar_flux_1")) {
             csvMode = true;
-        }
-        if (!csvMode) {
+            maskExpression = "true";
+        } else {
             solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES);
         }
         sourceProduct.addBand("_mask_", maskExpression);
@@ -217,8 +222,8 @@ public class WaterRadianceOperator extends PixelOperator {
         if (csvMode) {
             //copy row_index and lat/lon from input
             productConfigurer.copyBands("row_index");
-            productConfigurer.copyBands("lat");
-            productConfigurer.copyBands("lon");
+            productConfigurer.copyBands(EnvisatConstants.MERIS_LAT_DS_NAME);
+            productConfigurer.copyBands(EnvisatConstants.MERIS_LON_DS_NAME);
         }
 
         String autoGrouping = String.format("%s:%s:%s:%s:%s", "rl_tosa", "rl_path", "reflec", "trans_down", "trans_up");
