@@ -17,6 +17,7 @@ import org.esa.beam.util.SystemUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Date;
 
 /**
  * An operator computing water IOPs starting from radiances.
@@ -32,6 +33,9 @@ public class WaterRadianceOperator extends PixelOperator {
     private static final int[] SPECTRAL_WAVELENGTHS = new int[]{
             412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865
     };
+
+    private static final double TEMPERATURE_DEFAULT = 15.0;
+    private static final double SALINITY_DEFAULT = 15.0;
 
     private static final int SRC_SZA = 0;
     private static final int SRC_SAA = 1;
@@ -75,8 +79,8 @@ public class WaterRadianceOperator extends PixelOperator {
     private boolean csvMode = false;
 
     private double[] solarFluxes;
-    //private AuxdataProvider auxdataProvider;
-    //private Date date;
+    private AuxdataProvider auxdataProvider = null;
+    private Date date = null;
     private final LevMarNnLib lib = LevMarNnLib.INSTANCE;
     private final double[] input = new double[40];
     private final double[] output = new double[69];
@@ -96,10 +100,15 @@ public class WaterRadianceOperator extends PixelOperator {
             input[6] = sourceSamples[SRC_MWIND].getDouble();
             input[7] = sourceSamples[SRC_ZWIND].getDouble();
             try {
-                //GeoCoding geoCoding = sourceProduct.getGeoCoding();
-                //GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
-                input[8] = 15.0; // auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
-                input[9] = 35.0; // auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+                if (auxdataProvider != null) {
+                    GeoCoding geoCoding = sourceProduct.getGeoCoding();
+                    GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
+                    input[8] = auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
+                    input[9] = auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+                } else {
+                    input[8] = TEMPERATURE_DEFAULT;
+                    input[9] = SALINITY_DEFAULT;
+                }
             } catch (Exception e) {
                 throw new OperatorException(e);
             }
@@ -124,8 +133,10 @@ public class WaterRadianceOperator extends PixelOperator {
             for (int i = 0; i < output.length; i++) {
                 targetSamples[i].set(output[i]);
             }
+            targetSamples[output.length].set(input[8]);
+            targetSamples[output.length + 1].set(input[9]);
         } else {
-            for (int i = 0; i < output.length; i++) {
+            for (int i = 0; i < output.length + 2; i++) {
                 targetSamples[i].set(Double.NaN);
             }
         }
@@ -144,8 +155,11 @@ public class WaterRadianceOperator extends PixelOperator {
             solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES);
         }
         sourceProduct.addBand("_mask_", maskExpression);
-        //date = sourceProduct.getStartTime().getAsDate();
-        //auxdataProvider = createAuxdataDataProvider();
+        ProductData.UTC startTime = sourceProduct.getStartTime();
+        if (startTime != null) {
+            date = startTime.getAsDate();
+            auxdataProvider = createAuxdataDataProvider();
+        }
     }
 
     @Override
@@ -177,7 +191,7 @@ public class WaterRadianceOperator extends PixelOperator {
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         Product targetProduct = getTargetProduct();
         String[] bandNames = targetProduct.getBandNames();
-        for (int i = 0; i < output.length; i++) {
+        for (int i = 0; i < output.length + 2; i++) {
             final String bandName = bandNames[i];
             sampleConfigurer.defineSample(i, bandName);
         }
@@ -215,6 +229,9 @@ public class WaterRadianceOperator extends PixelOperator {
         addBand(productConfigurer, "sum_sq", ProductData.TYPE_FLOAT32, "", "Square sums");
         /*   68*/
         addBand(productConfigurer, "num_iter", ProductData.TYPE_INT32, "", "Number of iterations in LM");
+
+        addBand(productConfigurer, "temperature", ProductData.TYPE_INT32, "", "Temperature");
+        addBand(productConfigurer, "salinity", ProductData.TYPE_INT32, "", "Salinity");
 
         productConfigurer.copyBands(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
         productConfigurer.copyBands(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
