@@ -246,7 +246,10 @@ public class WaterRadianceOperator extends PixelOperator {
         String autoGrouping = String.format("%s:%s:%s:%s:%s", "rl_tosa", "rl_path", "reflec", "trans_down", "trans_up");
         final Product targetProduct = productConfigurer.getTargetProduct();
         targetProduct.setAutoGrouping(autoGrouping);
-        targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(), targetProduct.getSceneRasterHeight());
+        if (csvMode) {
+            targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
+                                               targetProduct.getSceneRasterHeight());
+        }
     }
 
     private void addBand(ProductConfigurer productConfigurer, String name, int type, String unit, String description) {
