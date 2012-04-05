@@ -34,9 +34,6 @@ public class WaterRadianceOperator extends PixelOperator {
             412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865
     };
 
-    private static final double TEMPERATURE_DEFAULT = 15.0;
-    private static final double SALINITY_DEFAULT = 15.0;
-
     private static final int SRC_SZA = 0;
     private static final int SRC_SAA = 1;
     private static final int SRC_VZA = 2;
@@ -73,6 +70,12 @@ public class WaterRadianceOperator extends PixelOperator {
     private Product sourceProduct;
     @Parameter(defaultValue = "!l1_flags.INVALID && !l1_flags.BRIGHT && !l1_flags.LAND_OCEAN")
     private String maskExpression;
+    @Parameter(defaultValue = "true", description = "Enables/disables the usage of the climatology")
+    private boolean useClimatology;
+    @Parameter(defaultValue = "15.0", description = "Use this value, if the climatology is disabled")
+    private double temperature;
+    @Parameter(defaultValue = "35.0", description = "Use this value, if the climatology is disabled")
+    private double salinity;
 
     // solar_flux from bands
     // copy lat, lon, row_index to target
@@ -106,8 +109,8 @@ public class WaterRadianceOperator extends PixelOperator {
                     input[8] = auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
                     input[9] = auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
                 } else {
-                    input[8] = TEMPERATURE_DEFAULT;
-                    input[9] = SALINITY_DEFAULT;
+                    input[8] = temperature;
+                    input[9] = salinity;
                 }
             } catch (Exception e) {
                 throw new OperatorException(e);
@@ -156,7 +159,7 @@ public class WaterRadianceOperator extends PixelOperator {
         }
         sourceProduct.addBand("_mask_", maskExpression);
         ProductData.UTC startTime = sourceProduct.getStartTime();
-        if (startTime != null) {
+        if (startTime != null && useClimatology) {
             date = startTime.getAsDate();
             auxdataProvider = createAuxdataDataProvider();
         }
