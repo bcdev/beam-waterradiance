@@ -1,0 +1,4 @@
+LIBRARY "levmar_nn"
+
+EXPORTS
+  levmar_nn
