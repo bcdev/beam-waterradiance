@@ -16,7 +16,7 @@
     </modules>
 
     <properties>
-        <beam.version>4.10-SNAPSHOT</beam.version>
+        <beam.version>4.10</beam.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <repositories>
@@ -70,7 +70,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.1-SNAPSHOT</version>
+                <version>1.1</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
@@ -80,7 +80,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>1.5-SNAPSHOT</version>
+                <version>1.5</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
