@@ -36,12 +36,20 @@ public class LevitusDataProviderImpl implements AuxdataProvider {
         temperatureGeoCoding = this.tempProduct.getGeoCoding();
     }
 
+    private static boolean productContainsPixel(Product product, int x, int y) {
+        return x >= 0 && x < product.getSceneRasterWidth() &&
+                y >= 0 && y < product.getSceneRasterHeight();
+    }
+
     public double getSalinity(Date date, double lat, double lon) throws Exception {
         DateDependentValues dateDependentValues = new DateDependentValues(date);
 
         PixelPos pixelPos = salinityGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
         int x = MathUtils.floorInt(pixelPos.x);
         int y = MathUtils.floorInt(pixelPos.y);
+        if (!productContainsPixel(salinityProduct, x, y)) {
+            return Double.NaN;
+        }
         Band lowerBand = salinityProduct.getBandAt(dateDependentValues.lowerMonth);
         Band upperBand = salinityProduct.getBandAt(dateDependentValues.upperMonth);
         double[] lowPixel = new double[1];
@@ -57,6 +65,10 @@ public class LevitusDataProviderImpl implements AuxdataProvider {
         PixelPos pixelPos = temperatureGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
         int x = MathUtils.floorInt(pixelPos.x);
         int y = MathUtils.floorInt(pixelPos.y);
+        if (!productContainsPixel(tempProduct, x, y)) {
+            return Double.NaN;
+        }
+
         Band lowerBand = tempProduct.getBandAt(dateDependentValues.lowerMonth);
         Band upperBand = tempProduct.getBandAt(dateDependentValues.upperMonth);
         double[] lowPixel = new double[1];
