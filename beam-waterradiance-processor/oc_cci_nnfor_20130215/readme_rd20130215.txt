@@ -1,0 +1,25 @@
+Forward NNs for OC-CCI
+
+for_logrw_logiop_20130213:
+  includes NN for computing log_rw of 29 bands from angles, log_IOPs and T, S,
+  the NN is based on simulations at 20130213, which should cover case 1 and extreme case 2 waters (coastcolour)
+
+ac_rhopath29_20120903
+ac_tdown29_20120903
+ac_tup29_20120903
+
+includes NNs for the atmosphere based on R. Santer model to compute rho_path and the downward and upward transmittance tdown, tup
+for 29 bands, using sun zenith angle in degree, observation angle in x,yz, aerosol optical thickness at 560 nm, angstrom, wind, T, S
+assumed surface pressure is 1013.25 hPa, no ozone
+
+ac_rhopath29_20121127
+ac_tdown29_20121127
+ac_tup29_20121127
+
+includes NNs for the atmosphere based on R. Santer model to compute rho_path and the downward and upward transmittance tdown, tup
+for 29 bands, using cosine of sun zenith angle in degree, observation angle in x,yz, aerosol optical thickness at 560 nm, angstrom, wind, T, S
+assumed surface pressure is 1013.25 hPa, no ozone, 
+difference ot NNs of 20120903 that simulations were performed with cosine of sun zenith angle and the sun glint was not divided by cosine of solar zenith angle, since sun glint contriubtion seemed to be too high in version 20120903
+
+
+R. Doerffer, 20130215
