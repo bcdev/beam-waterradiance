@@ -21,7 +21,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 
 #define MINMAX 0
@@ -35,7 +34,7 @@
 
 #include "levmar.h"
 #include "a_ffbpnn.h"
-//#include "levmar_nn_dll.h"
+#include "levmar_nn_dll.h"
 
 #ifndef LM_DBL_PREC
 #error Example program assumes that levmar has been compiled with double precision, see LM_DBL_PREC!
@@ -124,7 +123,7 @@ void use_the_nn(a_nn *aa_net, double *innet, double *outnet);
 void make_alphatab(void);
 void nn_water(double *conc, double *rlw_nn, int m, int n, void *nn_data);
 void nn_atmo_wat(double *conc_all, double *rtosa_nn, int m, int n, void *nn_data);
-FILE* open_auxfile(const char* fileName);
+
 
 /* Gaussian noise with mean m and variance s, uses the Box-Muller transformation */
 double gNoise(double m, double s)
@@ -241,9 +240,15 @@ void nn_atmo_wat(double *conc_all, double *rtosa_nn, int m, int n, void *nn_data
 	//char *tdown_net_name  ={"./for_21bands_20120112/tdown/27x17_202.6.net"};
 	//char *tup_net_name    ={"./for_21bands_20120112/tup/27x17_181.6.net"};
 
-	char *rhopath_net_name={"./oc_cci_20120222/ac_forward_all/ac_rhopath_b29/27x27_32.7.net"};
-	char *tdown_net_name  ={"./oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
-	char *tup_net_name    ={"./oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
+	//char *rhopath_net_name={"./oc_cci_20120222/ac_forward_all/ac_rhopath_b29/27x27_32.7.net"};
+	//char *tdown_net_name  ={"./oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
+	//char *tup_net_name    ={"./oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
+
+	// new nets, RD 20130308:
+	char *rhopath_net_name={"./oc_cci_20121127/ac_forward_all/ac_rhopath_b29/17x37x31_121.8.net"};
+	char *tdown_net_name  ={"./oc_cci_20121127/ac_forward_all/t_down_b29/17x37x31_89.4.net"};
+	char *tup_net_name    ={"./oc_cci_20121127/ac_forward_all/ac_tup_b29/17x37x31_83.8.net"};
+
 
 	static a_nn *atm_net_for, *rhopath_net, *tdown_net, *tup_net;
 
@@ -275,13 +280,23 @@ void nn_atmo_wat(double *conc_all, double *rtosa_nn, int m, int n, void *nn_data
 	log_conc_min = conc_all[6];
 	log_conc_wit = conc_all[7];
 
-	innet[0] = sun_thet;
+	// innet[0] = sun_thet;
+	// CHANGED for new nets, RD 20130308:
+	innet[0] = cos(deg2rad * sun_thet);
+
 	innet[1] = x;
 	innet[2] = y;
 	innet[3] = z; 
-	innet[4] = log_aot;
-	innet[5] = log_ang;
-	innet[6] = log_wind;
+
+	//innet[4] = log_aot;
+	//innet[5] = log_ang;
+	//innet[6] = log_wind;
+
+	// CHANGED for new nets, RD 20130308:
+	innet[4] = exp(log_aot);
+	innet[5] = exp(log_ang);
+	innet[6] = exp(log_wind);
+
 	innet[7] = temperature;
 	innet[8] = salinity;
 
@@ -421,7 +436,11 @@ int levmar_nn(int detector, double *input, int input_length, double *output, int
 
 
 		/* table with nominal wavelengths and solar flux */
-                fp_tab=open_auxfile(nominal_lam_sun_name);
+
+		if((fp_tab=fopen(nominal_lam_sun_name,"r"))==0){
+			printf("Can't find Parameter  file: %s\n",nominal_lam_sun_name);
+			exit(0);
+		}
 		for(i=0;i<15;i++){
 			fscanf(fp_tab,"%lf%lf",&nomi_lam[i],&nomi_sun[i]);
 		}
