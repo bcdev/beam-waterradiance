@@ -34,7 +34,7 @@
 
 #include "levmar.h"
 #include "a_ffbpnn.h"
-#include "levmar_nn_dll.h"
+//#include "levmar_nn_dll.h"
 
 #ifndef LM_DBL_PREC
 #error Example program assumes that levmar has been compiled with double precision, see LM_DBL_PREC!
@@ -123,7 +123,7 @@ void use_the_nn(a_nn *aa_net, double *innet, double *outnet);
 void make_alphatab(void);
 void nn_water(double *conc, double *rlw_nn, int m, int n, void *nn_data);
 void nn_atmo_wat(double *conc_all, double *rtosa_nn, int m, int n, void *nn_data);
-
+FILE* open_auxfile(const char* fileName);
 
 /* Gaussian noise with mean m and variance s, uses the Box-Muller transformation */
 double gNoise(double m, double s)
@@ -436,11 +436,7 @@ int levmar_nn(int detector, double *input, int input_length, double *output, int
 
 
 		/* table with nominal wavelengths and solar flux */
-
-		if((fp_tab=fopen(nominal_lam_sun_name,"r"))==0){
-			printf("Can't find Parameter  file: %s\n",nominal_lam_sun_name);
-			exit(0);
-		}
+        fp_tab=open_auxfile(nominal_lam_sun_name);
 		for(i=0;i<15;i++){
 			fscanf(fp_tab,"%lf%lf",&nomi_lam[i],&nomi_sun[i]);
 		}
@@ -549,7 +545,7 @@ int levmar_nn(int detector, double *input, int input_length, double *output, int
 
 	for (ilam = 0; ilam < nlam; ilam++) {
 		ix=merband12_index[ilam];
-		tau_rayl_standard[ilam] = 0.008735 * pow(merband12[ilam] / 1000.0, -4.08);/* lam in µm */
+		tau_rayl_standard[ilam] = 0.008735 * pow(merband12[ilam] / 1000.0, -4.08);/* lam in ï¿½m */
 		tau_rayl_toa_tosa[ilam] = tau_rayl_standard[ilam] * rayl_rel_mass_toa_tosa;
 		//tau_rayl_toa_tosa[ilam] = tau_rayl_standard[ilam] * rayl_mass_toa_tosa; // RD20120105
 		L_rayl_toa_tosa[ilam]   = Ed_toa[ix]* tau_rayl_toa_tosa[ilam]* phase_rayl_min / (4 * M_PI) * (1.0/cos_teta_view );
