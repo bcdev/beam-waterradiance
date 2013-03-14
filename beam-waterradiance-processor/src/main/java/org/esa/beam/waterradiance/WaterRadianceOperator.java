@@ -50,20 +50,7 @@ public class WaterRadianceOperator extends PixelOperator {
     private static final int SRC_LON = 41;
 
     static {
-        final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
-        URL sourceUrl = ResourceInstaller.getSourceUrl(WaterRadianceOperator.class);
-        ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
-        try {
-            installer.install(".*", ProgressMonitor.NULL);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to install auxdata of the beam-waterradiance-processor module");
-        }
-        Platform currentPlatform = Platform.getCurrentPlatform();
-        Platform.ID id = currentPlatform.getId();
-        int numBits = currentPlatform.getBitCount();
-        String libDir = String.format("lib/%s%d/", id, numBits);
-        String absolutePath = new File(AUXDATA_DIR, libDir).getAbsolutePath();
-        System.setProperty("jna.library.path", absolutePath);
+        installAuxdataAndLibrary();
     }
 
     @SourceProduct
@@ -89,6 +76,24 @@ public class WaterRadianceOperator extends PixelOperator {
     private final double[] output = new double[69];
     private final double[] debug_dat = new double[1000];
     private boolean firstLibraryCall = true;
+
+    public static void installAuxdataAndLibrary() {
+        final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
+        URL sourceUrl = ResourceInstaller.getSourceUrl(WaterRadianceOperator.class);
+        ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
+        try {
+            installer.install(".*", ProgressMonitor.NULL);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to install auxdata of the beam-waterradiance-processor module");
+        }
+        Platform currentPlatform = Platform.getCurrentPlatform();
+        Platform.ID id = currentPlatform.getId();
+        int numBits = currentPlatform.getBitCount();
+        // date included inn lib directory to force installation by ResourceInstaller
+        String libDir = String.format("lib_20130314/%s%d/", id, numBits);
+        String absolutePath = new File(AUXDATA_DIR, libDir).getAbsolutePath();
+        System.setProperty("jna.library.path", absolutePath);
+    }
 
     @Override
     protected synchronized void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
