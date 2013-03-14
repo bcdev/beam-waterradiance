@@ -16,12 +16,25 @@
 
 package org.esa.beam.waterradiance;
 
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.runtime.internal.Platform;
+import org.esa.beam.util.ResourceInstaller;
+import org.esa.beam.util.SystemUtils;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 /**
  * @author Norman Fomferra
  */
 public class LevMarNnLibTest {
+
+    static {
+        WaterRadianceOperator.installAuxdataAndLibrary();
+    }
+
     final double[] MERIS_SUN_SPECTRAL_FLUXES = {
             1773.03,
             1942.73,
