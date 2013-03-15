@@ -21,6 +21,10 @@ FILE* open_auxfile(const char* fileName) {
     char* mapred_home = "/home/mapred";
     FILE* fd;
 
+#ifdef WIN32
+ 	home = getenv("HOMEPATH");
+#endif
+
     printf("Home: '%s'\n", home);
     path = concat_path(home, fileName);
 

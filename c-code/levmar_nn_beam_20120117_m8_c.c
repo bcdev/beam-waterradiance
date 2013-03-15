@@ -34,7 +34,10 @@
 
 #include "levmar.h"
 #include "a_ffbpnn.h"
-//#include "levmar_nn_dll.h"
+
+#ifdef WIN32
+#include "levmar_nn_dll.h"
+#endif
 
 #ifndef LM_DBL_PREC
 #error Example program assumes that levmar has been compiled with double precision, see LM_DBL_PREC!
