@@ -1,4 +1,4 @@
-package org.esa.beam.waterradiance.levitus.filler;
+package org.esa.beam.gapfill;
 
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
@@ -10,7 +10,11 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StreamTokenizer;
 import java.util.Properties;
 
 /**
@@ -58,6 +62,10 @@ public class GapFiller {
             if (w == -1) {
                 w = band.getSceneRasterWidth();
                 h = band.getSceneRasterHeight();
+            } else {
+                if (w != band.getSceneRasterWidth() || h != band.getSceneRasterHeight()) {
+                    throw new IllegalArgumentException("inputs have varying dimensions, expected");
+                }
             }
             buffers[z] = new float[w * h];
             band.readPixels(0, 0, w, h, buffers[z]);
@@ -93,7 +101,8 @@ public class GapFiller {
                                             GapFiller.class.getSimpleName() + "." + bandName, w, h);
         product.setGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, w, h, -180, 90, 1, 1, 0, 0));
         for (int z = 0; z < inputFiles.length; z++) {
-            final Band band = product.addBand(bandName + "_" + (z + 1), ProductData.TYPE_FLOAT32);
+            final String newBandName = inputFiles.length > 1 ? bandName + "_" + (z + 1) : bandName;
+            final Band band = product.addBand(newBandName, ProductData.TYPE_FLOAT32);
             band.setNoDataValueUsed(true);
             band.setNoDataValue(Float.NaN);
             band.setRasterData(ProductData.createInstance(results[z]));

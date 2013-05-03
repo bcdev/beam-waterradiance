@@ -13,6 +13,7 @@
         <module>beam-waterradiance-processor</module>
         <module>beam-waterradiance-auxdata</module>
         <module>beam-waterradiance-jnatest</module>
+        <module>beam-gapfiller</module>
     </modules>
 
     <properties>

@@ -1,4 +1,4 @@
-package org.esa.beam.waterradiance.levitus.filler;
+package org.esa.beam.gapfill;
 
 import org.junit.Test;
 
@@ -17,10 +17,10 @@ public class GapFillerTest {
         final float[][] input = new float[d][w * h];
 
         for (int i = 0; i < w * h; i++) {
-            input[0][i]= 1.0F;
+            input[0][i] = 1.0F;
         }
         for (int i = 0; i < w * h; i++) {
-            input[1][i]= Float.NaN;
+            input[1][i] = Float.NaN;
         }
 
         final int maxIter = 100;
@@ -28,7 +28,7 @@ public class GapFillerTest {
         final float[][] output = GapFiller.fillGaps(3, 3, input, maxIter, true, null);
 
         for (int i = 0; i < w * h; i++) {
-             assertEquals(1.0F, output[1][i], 1e-6F);
+            assertEquals(1.0F, output[1][i], 1e-6F);
         }
 
     }
