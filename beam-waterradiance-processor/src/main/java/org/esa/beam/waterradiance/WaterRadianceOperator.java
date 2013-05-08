@@ -90,7 +90,7 @@ public class WaterRadianceOperator extends PixelOperator {
         Platform.ID id = currentPlatform.getId();
         int numBits = currentPlatform.getBitCount();
         // date included inn lib directory to force installation by ResourceInstaller
-        String libDir = String.format("lib_20130314/%s%d/", id, numBits);
+        String libDir = String.format("lib_20130508/%s%d/", id, numBits);
         String absolutePath = new File(AUXDATA_DIR, libDir).getAbsolutePath();
         System.setProperty("jna.library.path", absolutePath);
     }
