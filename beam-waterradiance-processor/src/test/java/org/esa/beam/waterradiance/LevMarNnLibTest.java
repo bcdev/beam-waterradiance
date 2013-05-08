@@ -16,15 +16,10 @@
 
 package org.esa.beam.waterradiance;
 
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.core.runtime.internal.Platform;
-import org.esa.beam.util.ResourceInstaller;
-import org.esa.beam.util.SystemUtils;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Norman Fomferra
@@ -35,7 +30,7 @@ public class LevMarNnLibTest {
         WaterRadianceOperator.installAuxdataAndLibrary();
     }
 
-    final double[] MERIS_SUN_SPECTRAL_FLUXES = {
+    private static final double[] MERIS_SUN_SPECTRAL_FLUXES = {
             1773.03,
             1942.73,
             1993.86,
@@ -53,11 +48,10 @@ public class LevMarNnLibTest {
             925.89
     };
 
+    private static double[] expected = new double[]{0.05106093416816374, 0.04016991778889496, 0.02909920769222207, 0.02572070343095661, 0.02011765458709306, 0.012768282032716158, 0.010003103221994807, 0.009281329685685624, 0.00797110510189507, 0.006325542223074678, 0.005709368943107607, 0.004271587237326763, 0.1624973099755441, 0.12595583100329133, 0.08650862387487807, 0.07475306287696568, 0.05331361808572474, 0.0372790477983821, 0.029419369370368254, 0.027168281071752634, 0.023989072817804387, 0.02003337547448819, 0.01833730308478722, 0.014420431517833246, 0.0012778766948638813, 0.0015750932296141002, 0.0021290065625050314, 0.0018271732725580782, 0.0012669662524066433, 2.585147245134416E-4, 1.532371210091965E-4, 1.3862355065286021E-4, 1.0628718620169615E-4, 3.901543902158368E-5, 3.768225163471599E-5, 1.6834009702789792E-5, 0.8309826770032178, 0.8662276540566973, 0.9053840448295283, 0.9174105406933322, 0.9398856985727462, 0.9570527535617652, 0.9656945300353932, 0.9680997059610024, 0.9716275644656794, 0.9761296536617454, 0.9781070201344053, 0.9827647076987795, 0.8449310287964144, 0.8780478030781262, 0.9144468473439091, 0.9255657593076188, 0.9461675997246516, 0.9618695152376522, 0.9696751966654038, 0.971882807458226, 0.9750929774273647, 0.9791703563115154, 0.9809125316626273, 0.9851024686164649, 0.05973076286291826, 0.29766715775438746, 7.759718155157483E-9, 0.0015022583098090291, 1.8841773357640426, 1.650875536051587E-5, 3.3138010791243407E-7, 1.2909261739892807E-4, 7.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
     @Test
     public void testLib() throws Exception {
-
-        // final double latitude = 55.106583;
-        // final double longitude = 18.03734;
         final double solar_zenith = 38.532475;
         final double solar_azimuth = 142.5679;
         final double view_zenith = 23.14311;
@@ -107,18 +101,8 @@ public class LevMarNnLibTest {
 
         final LevMarNnLib lib = LevMarNnLib.INSTANCE;
 
-
-        int result;
-        final int N = 100;
-        final long t0 = System.currentTimeMillis();
-        for (int i = 0; i < N; i++) {
-            input[10] += 0.0001 * Math.random();
-            result = lib.levmar_nn(181, input, input.length, output, output.length, debug_dat);
-        }
-        final long t1 = System.currentTimeMillis();
-        System.out.println("time " + (t1 - t0) / 1000.0 + " s");
-
-
-        //assertEquals(0, i);
+        int result = lib.levmar_nn(181, input, input.length, output, output.length, debug_dat);
+        assertEquals(0, result);
+        assertArrayEquals(expected, output, 1e-8);
     }
 }
