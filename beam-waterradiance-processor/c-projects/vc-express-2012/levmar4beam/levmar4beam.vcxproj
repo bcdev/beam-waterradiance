@@ -68,13 +68,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\src\main\resources\auxdata\lib_20130508\win32</OutDir>
+    <OutDir>$(USERPROFILE)\.beam\beam-waterradiance-processor\auxdata\lib_20130508\win32</OutDir>
     <TargetName>levmar4beam_dll</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>levmar4beam_dll</TargetName>
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\src\main\resources\auxdata\lib_20130508\win64</OutDir>
+    <OutDir>$(USERPROFILE)\.beam\beam-waterradiance-processor\auxdata\lib_20130508\win64</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
