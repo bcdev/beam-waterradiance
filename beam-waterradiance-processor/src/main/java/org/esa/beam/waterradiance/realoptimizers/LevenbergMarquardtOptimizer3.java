@@ -113,7 +113,7 @@ public class LevenbergMarquardtOptimizer3 {
                 break;  // gradient too small
             }
             if (numberOfIterations == 0) {
-                if (lowerBounds != null & upperBounds != null) {
+                if (lowerBounds == null && upperBounds == null) {
                     double largestElementOfDiagonalOfJacobianTransposedJacobianMatrix = Double.MIN_VALUE;
                     for (int i = 0; i < numberOfVariables; i++) {
                         if (diagonalOfJacobianTransposedJacobianMatrix[i] >
@@ -170,7 +170,7 @@ public class LevenbergMarquardtOptimizer3 {
                         double dF = 0;
                         if (dL > 0) {
                             dF = squaredTotalError - updatedTotalSignalError;
-                            double temp = 2d * dF / (dL - 1);
+                            double temp = 2d * dF / dL - 1d;
                             temp = 1 - temp * temp * temp;
                             dampingConstant = dampingConstant * Math.max(temp, (1d / 3d));
                         } else {
@@ -186,6 +186,7 @@ public class LevenbergMarquardtOptimizer3 {
                         }
                         squaredTotalError = updatedTotalSignalError;
                         previousGradientTaken = 0;
+                        break;
                     }
                 } else {    // is NOT solved
                     dampingConstant *= nu;
@@ -333,8 +334,12 @@ public class LevenbergMarquardtOptimizer3 {
 
     private double[] fitToBounds(double[] updatedParameters, double[] lowerBounds, double[] upperBounds) {
         for (int i = updatedParameters.length - 1; i >= 0; --i) {
-            updatedParameters[i] = Math.max(updatedParameters[i], lowerBounds[i]);
-            updatedParameters[i] = Math.min(updatedParameters[i], upperBounds[i]);
+            if (lowerBounds != null) {
+                updatedParameters[i] = Math.max(updatedParameters[i], lowerBounds[i]);
+            }
+            if (upperBounds != null) {
+                updatedParameters[i] = Math.min(updatedParameters[i], upperBounds[i]);
+            }
         }
         return updatedParameters;
     }
