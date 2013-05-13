@@ -30,7 +30,5 @@ public class WaterRadianceOperatorTest {
         assertNotNull(target.getStartTime());
         assertNotNull(target.getEndTime());
         assertEquals(73, target.getNumBands());
-
-
     }
 }
