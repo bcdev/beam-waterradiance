@@ -1,46 +1,35 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
-import Jama.Matrix;
-
 import java.io.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: tonio
- * Date: 08.05.13
- * Time: 11:31
- * To change this template use File | Settings | File Templates.
- */
+
 public class LevMarNN {
 
-    int FR_TAB = 3700;
-    int RR_TAB = 925;
+    private static final int FR_TAB = 3700;
+    private static final int RR_TAB = 925;
+
+    private static final double DEG_2_RAD = (Math.PI / 180.0);
 
     private double[][] frlam = new double[FR_TAB][15];
     private double[][] fredtoa = new double[FR_TAB][15];
     private double[][] rrlam = new double[FR_TAB][15];
     private double[][] rredtoa = new double[FR_TAB][15];
 
-    int N_ALPHA = 100000;
-    double ALPHA_ANF = -10.0;
-    double[] alpha_tab = new double[N_ALPHA];
-    double rec_delta_alpha;
-
     private static final int NLAM = 40;
-    private static final int LM_OPTS_SZ = 5; /* max(4, 5) */
     private static final int LM_INFO_SZ = 10;
-    private static int LM_ERROR = -1;
-    private static double LM_INIT_MU = 1E-03;
-    private static double LM_STOP_THRESH = 1E-7; // was 1E-17
-    private static double LM_DIFF_DELTA = 1E-02; // was 1E-06
-    private static double deg2rad = (Math.PI / 180.0);
+
+    private static final double[] H_2_O_COR_POLY = new double[]{0.3832989, 1.6527957, -1.5635101, 0.5311913};
+
+    private static final double[] MERBAND_12 = {412.3, 442.3, 489.7, 509.6, 559.5, 619.4, 664.3, 680.6, 708.1, 753.1, 778.2, 864.6};
+    private static final int[] MERBAND_12_INDEX = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12};
+    private static final int[] MERIS_11_OUTOF_12_IX = new int[]{0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11};
+
     double M_PI = 3.1416;
 
     static int[] lam29_meris11_ix = {1, 2, 4, 6, 11, 12, 15, 20, 22, 24, 25};
     static int[] lam29_meris12_ix = {1, 2, 4, 6, 11, 12, 15, 19, 20, 22, 24, 25};
     double[] ozon_meris12 = {0.0002179, 0.002814, 0.02006, 0.04081, 0.104, 0.109, 0.0505, 0.03526, 0.01881, 0.008897, 0.007693, 0.002192}; // L.Bourg 2010
-    static double[] merband12 = {412.3, 442.3, 489.7, 509.6, 559.5, 619.4, 664.3, 680.6, 708.1, 753.1, 778.2, 864.6};
-    int[] merband12_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12};
+
 
     private final NnResources nnResources;
     private final a_nn norm_net;
@@ -49,6 +38,8 @@ public class LevMarNN {
     private final double[] rl_toa;
 
     private double[] x;
+    private final AlphaTab alphaTab;
+
 
     public LevMarNN() throws IOException {
         x = new double[NLAM];
@@ -57,56 +48,29 @@ public class LevMarNN {
         rl_toa = new double[NLAM];
 
         nnResources = new NnResources();
+        alphaTab = new AlphaTab();
 
         norm_net = prepare_a_nn(nnResources.getNormNetPath());
 
         smile_tab_ini();
-
     }
 
-    public int levmar_nn(int detector, double[] input, int input_length, double[] output, int output_length, double[] debug_dat) {
+    public int levmar_nn(int detector, double[] input, double[] output) {
         int FIRST = 1;
-        double h2o_cor_poly[] = {0.3832989, 1.6527957, -1.5635101, 0.5311913}; // polynom coefficients for band708 correction
-        int merband12_index[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12};
-        int meris11_outof_12_ix[] = {0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11};
-        int lam21_meris12_ix[] = {0, 1, 2, 3, 8, 9, 10, 13, 14, 16, 18, 19};
 
         double[] p = new double[8];
-        double[] opts = new double[LM_OPTS_SZ];
         double[] info = new double[LM_INFO_SZ];
         double[] x11 = new double[11];
-        double[] x11_vor = new double[11];
         double[] p_alt = new double[8];
         // @todo 1 tb/** these two are never written, only read from ... tb 2013-05-14
         double[] rw1 = new double[NLAM];
         double[] rw2 = new double[NLAM];
-        double log_apart, log_agelb, log_apig, log_bpart, log_bwit, sun_thet, view_zeni, azi_diff_hl, temperature, salinity, ozone;
-        double log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min, log_conc_wit, aot_550, ang_865_443, a_pig, a_gelb, a_part, b_part, b_wit;
-        double a_pig_stdev, a_part_stdev, a_gelb_stdev, b_part_stdev, b_wit_stdev;
+        double sun_thet, view_zeni, azi_diff_hl, temperature, salinity, ozone;
 
-        double dif, difp, agelb, btot;
-        double[] nn_data = new double[60];
-        double prepare, ang, aot, wind;
+        // @todo 2 tb/** can this be a field - check when all tests run green tb 2013-05-14
         s_nn_atdata nn_at_data = new s_nn_atdata();
-        int i, j;
-        int n, m, ret, SMILE;
+        int m, SMILE;
 
-        double pixel_x, pixel_y, sun_azi, view_azi, azi_diff_deg;
-        double[] sun_spec = new double[15];
-        double[] sun_lam = new double[15];
-
-        char[] procver = new char[80];
-        char[] site = new char[80];
-        char[] pi = new char[80];
-        char[] time_is = new char[80];
-        char[] pqc = new char[80];
-        char[] mqc = new char[80];
-        char[] time_is1 = new char[80];
-        char[] time_is_2 = new char[80];
-        char[] time = new char[80];
-        char[] resolution = new char[4];
-        int land, cloud, ice_haze, white_scatter, high_glint, medium_glint, pcd_1_13, pde_14, pcd_15, pcd_16, pcd_17, pcd_18, pcd_19, oadb, absoa_dust, bpac_on, case2_s, case2_anom;
-        int detectorIndex = -1;
         int na_flag, isite, pixel_valid;
         double lat_is, lon_is, thetas_is, chl_is, aot_870_is_1, aot_870_is_2, alpha_is_1, alpha_is_2, lat, lon, delta_azimuth, scatt_angle, windm, press_ecmwf, ozon_ecmwf, vapour_ecmwf;
         double altitude, chl1, chl2, spm, odoc, vapr, tau_aer_05, tau_aer_13, aer_1, aer_2, aer_mix;
@@ -137,11 +101,6 @@ public class LevMarNN {
         double[] lb = {0.001, 0.001, 0.001, -13.96, -15.42, -16.38, -15.87, 0.0};
         double[] ub = {1.0, 2.2, 10.0, 3.9, 2.294, 1.599, 4.594, 1.1};
         double lub;
-
-        char[] errmsg = new char[1024];
-//        a_nn[] prepare_a_nn(char *filename); //todo instead of a_nn*: call prepare_a_nn
-//        void use_the_nn(a_nn *norm_net, double *innet, double *outnet);
-//        void make_alphatab(void);
 
         double[] nn_in = new double[40];
         double[] nn_out = new double[40];
@@ -184,7 +143,6 @@ public class LevMarNN {
         /***********************************************/
         if (FIRST == 1) {
             /** network for normalisation */
-            make_alphatab();
             /*********** tables for smile correction **************/
             nn_at_data.prepare = -1; // prepare neural networks only once
 
@@ -204,9 +162,9 @@ public class LevMarNN {
         temperature = input[8];
         salinity = input[9];
 
-        cos_sun_zenith = Math.cos(sun_zenith * deg2rad);
+        cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
 
-        for (i = 0; i < 15; i++) {
+        for (int i = 0; i < 15; i++) {
             L_toa[i] = input[i + 10];
             solar_flux[i] = input[i + 25];
 
@@ -225,50 +183,44 @@ public class LevMarNN {
         nn_at_data.temperature = temperature;
         nn_at_data.salinity = salinity;
 
-
-        //nn_at_data[0]= -1.0;
-        if (nn_data[0] < 1.0)
-            nn_data[0] = 0.0;  //if < 1.2345 then NN has to be created
         m = 8;
-        n = 12;
-
         /* ++++ angles ++++ */
 
-        cos_teta_sun = Math.cos(sun_zenith * deg2rad);
-        cos_teta_view = Math.cos(view_zenith * deg2rad);
-        sin_teta_sun = Math.sin(sun_zenith * deg2rad);
-        sin_teta_view = Math.sin(view_zenith * deg2rad);
-        cos_azi_diff = Math.cos(delta_azimuth * deg2rad);
-        teta_view_rad = view_zenith * deg2rad;
-        teta_sun_rad = sun_zenith * deg2rad;
+        cos_teta_sun = Math.cos(sun_zenith * DEG_2_RAD);
+        cos_teta_view = Math.cos(view_zenith * DEG_2_RAD);
+        sin_teta_sun = Math.sin(sun_zenith * DEG_2_RAD);
+        sin_teta_view = Math.sin(view_zenith * DEG_2_RAD);
+        cos_azi_diff = Math.cos(delta_azimuth * DEG_2_RAD);
+        teta_view_rad = view_zenith * DEG_2_RAD;
+        teta_sun_rad = sun_zenith * DEG_2_RAD;
         conc_ozon = ozone;
 
        /*+++ ozone correction +++*/
 
         nlam = 12;
-        for (i = 0; i < nlam; i++) {
+        for (int i = 0; i < nlam; i++) {
             //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
             trans_ozond[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
             trans_ozonu[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
             trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
         }
 
-        for (i = 0; i < 12; ++i) {
-            ix = merband12_index[i];
+        for (int i = 0; i < 12; ++i) {
+            ix = MERBAND_12_INDEX[i];
             L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
         }
 
         /*+++ ozone correction +++*/
         nlam = 12;
-        for (i = 0; i < nlam; i++) {
+        for (int i = 0; i < nlam; i++) {
             //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
             trans_ozond[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
             trans_ozonu[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
             trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
         }
 
-        for (i = 0; i < 12; ++i) {
-            ix = merband12_index[i];
+        for (int i = 0; i < 12; ++i) {
+            ix = MERBAND_12_INDEX[i];
             L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
         }
 
@@ -276,7 +228,7 @@ public class LevMarNN {
 
         //X2=rho_900/rho_885;
         X2 = rl_toa[14] / rl_toa[13];
-        trans708 = h2o_cor_poly[0] + h2o_cor_poly[1] * X2 + h2o_cor_poly[2] * X2 * X2 + h2o_cor_poly[3] * X2 * X2 * X2;
+        trans708 = H_2_O_COR_POLY[0] + H_2_O_COR_POLY[1] * X2 + H_2_O_COR_POLY[2] * X2 * X2 + H_2_O_COR_POLY[3] * X2 * X2 * X2;
 
         L_toa[8] /= trans708;
 
@@ -297,8 +249,8 @@ public class LevMarNN {
         	/* calculate optical thickness of rayleigh for correction layer, lam in micrometer */
 
         for (ilam = 0; ilam < nlam; ilam++) {
-            ix = merband12_index[ilam];
-            tau_rayl_standard[ilam] = 0.008735 * Math.pow(merband12[ilam] / 1000.0, -4.08);/* lam in �m */
+            ix = MERBAND_12_INDEX[ilam];
+            tau_rayl_standard[ilam] = 0.008735 * Math.pow(MERBAND_12[ilam] / 1000.0, -4.08);/* lam in �m */
             tau_rayl_toa_tosa[ilam] = tau_rayl_standard[ilam] * rayl_rel_mass_toa_tosa;
             //tau_rayl_toa_tosa[ilam] = tau_rayl_standard[ilam] * rayl_mass_toa_tosa; // RD20120105
             L_rayl_toa_tosa[ilam] = Ed_toa[ix] * tau_rayl_toa_tosa[ilam] * phase_rayl_min / (4 * M_PI) * (1.0 / cos_teta_view);
@@ -310,9 +262,8 @@ public class LevMarNN {
         	/* calculate rayleigh for correction of smile, lam in micrometer */
 
         for (ilam = 0; ilam < nlam; ilam++) {
-            ix = merband12_index[ilam];
-            detectorIndex = detector;
-            smile_lam = rrlam[detectorIndex][ix];
+            ix = MERBAND_12_INDEX[ilam];
+            smile_lam = rrlam[detector][ix];
             tau_rayl_smile[ilam] = 0.008735 * Math.pow(smile_lam / 1000.0, -4.08);
             L_rayl_smile[ilam] = Ed_toa[ix] * (tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * phase_rayl_min / (4 * M_PI) * (1.0 / cos_teta_view);
             trans_rayl_smile[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view + 1.0 / cos_teta_sun));
@@ -322,15 +273,15 @@ public class LevMarNN {
 
             /* +++++ Esun smile correction ++++++ */
         for (ilam = 0; ilam < nlam; ilam++) {
-            ix = merband12_index[ilam];
-            Ed_toa_smile_rat[ilam] = rredtoa[detectorIndex][ix];///nomi_sun[ix];
+            ix = MERBAND_12_INDEX[ilam];
+            Ed_toa_smile_rat[ilam] = rredtoa[detector][ix];///nomi_sun[ix];
             Ed_toa_smile_corr[ilam] = Ed_toa[ix] * Ed_toa_smile_rat[ilam]; // RD20120105 geaendert von / in *, wieder zurueck 20120119
         }
         SMILE = 1;
         if (SMILE == 1) {
         /* subtract all correcting radiances */
             for (ilam = 0; ilam < nlam; ilam++) {
-                ix = merband12_index[ilam];
+                ix = MERBAND_12_INDEX[ilam];
                 // L_tosa[ilam] = ((L_toa[ix]-L_rayl_smile[ilam])-L_rayl_toa_tosa[ilam])/(trans_ozon[ilam]*trans_rayl_smile[ilam]);
                 L_tosa[ilam] = L_toa[ix] / (trans_ozon[ilam] * trans_rayl_press[ilam]/**trans_rayl_smile[ilam]*/) - L_rayl_toa_tosa[ilam] + L_rayl_smile[ilam];//*trans_rayl_smile[ilam]);
                 Ed_tosa[ilam] = Ed_toa_smile_corr[ilam];//*trans_rayl_smiled[ilam]*trans_rayl_pressd[ilam];
@@ -339,7 +290,7 @@ public class LevMarNN {
             }
         } else { /* subtract only correction for ozone */
             for (ilam = 0; ilam < nlam; ilam++) {
-                ix = merband12_index[ilam];
+                ix = MERBAND_12_INDEX[ilam];
                 L_tosa[ilam] = L_toa[ix] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 Ed_tosa[ilam] = Ed_toa[ix];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
@@ -392,7 +343,7 @@ public class LevMarNN {
         ub[7] = 4.599; // bwit
 
         if (FIRST == 1) {
-            for (i = 0; i < m; i++) {
+            for (int i = 0; i < m; i++) {
                 if (lb[i] < 0.0)
                     p[i] = lb[i] - lb[i] * 0.2;
                 else
@@ -406,7 +357,7 @@ public class LevMarNN {
 		}
 		*/
         } else {
-            for (i = 0; i < m; i++) {
+            for (int i = 0; i < m; i++) {
                 lub = Math.abs(ub[i] - lb[i]);
             /*
             if(lb[i]<0.0)
@@ -430,22 +381,23 @@ public class LevMarNN {
         }
 
         // select the 11 bands for iterations
-        for (i = 0; i < 11; i++) {
-            ix = meris11_outof_12_ix[i];
-            x11[i] = x11_vor[i] = x[ix];
+        for (int i = 0; i < 11; i++) {
+            ix = MERIS_11_OUTOF_12_IX[i];
+            x11[i] = x[ix];
         }
         m = 8;
-        n = 11;
-
-        	/* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
+            /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
         //  opts[0]=LM_INIT_MU; opts[1]=1E-15; opts[2]=1E-15; opts[3]=1E-20;
-        opts[0] = LM_INIT_MU;
-        opts[1] = 1E-10;
-        opts[2] = 1E-10;
-        opts[3] = 1E-10;
-        //  opts[4]=LM_DIFF_DELTA; // relevant only if the finite difference Jacobian version is used
-        //  opts[4]= 0.2; // relevant only if the finite difference Jacobian version is used
-        opts[4] = -0.1; // relevant only if the finite difference Jacobian version is used
+//        final double LM_INIT_MU = 1E-03;
+//        final int LM_OPTS_SZ = 5; /* max(4, 5) */
+//        final double[] opts = new double[LM_OPTS_SZ];
+//        opts[0] = LM_INIT_MU;
+//        opts[1] = 1E-10;
+//        opts[2] = 1E-10;
+//        opts[3] = 1E-10;
+//        //  opts[4]=LM_DIFF_DELTA; // relevant only if the finite difference Jacobian version is used
+//        //  opts[4]= 0.2; // relevant only if the finite difference Jacobian version is used
+//        opts[4] = -0.1; // relevant only if the finite difference Jacobian version is used
 
         	/* invoke the optimization function */
 //        ret = dlevmar_bc_dif(nn_atmo_wat, p, x11, m, n, lb, ub, 150, opts, info, NULL, & covar_out[0][0],&nn_at_data)
@@ -457,17 +409,15 @@ public class LevMarNN {
         LevenbergMarquardtOptimizer3 optimizer = new LevenbergMarquardtOptimizer3();
         p = optimizer.solveConstrainedLevenbergMarquardt(model, new CostFunctionImpl(), p, x11, breakingCriterion, lb, ub);
 
-        for (i = 0; i < m; i++) {
+        for (int i = 0; i < m; i++) {
             conc_at[i] = p[i];
             p_alt[i] = p[i];
         }
 
-        n = 11;
         model.init(x11, nn_at_data);
         x11 = model.getModeledSignal(conc_at);
         nn_at_data = model.getNn_data();
 
-        n = 29;
         model.init(x, nn_at_data);
         x = model.getModeledSignal(conc_at);
         nn_at_data = model.getNn_data();
@@ -477,7 +427,7 @@ public class LevMarNN {
         /* normalize water leaving radiance reflectances */
 
         // requires first to make RLw again
-        for (i = 0; i < 12; i++) {
+        for (int i = 0; i < 12; i++) {
             rlw1[i] = rw1[i] / M_PI;
             rlw2[i] = rw2[i] / M_PI;
             if (rlw2[i] < 0.0)
@@ -489,22 +439,22 @@ public class LevMarNN {
         nn_in[2] = azi_diff_hl;
         nn_in[3] = temperature;
         nn_in[4] = salinity;
-        for (i = 5; i < 17; i++) {
+        for (int i = 5; i < 17; i++) {
             nn_in[i] = rlw1[i - 5];
         }
 
         nn_out = use_the_nn(norm_net, nn_in, nn_out);
 
-        for (i = 0; i < 12; i++) {
+        for (int i = 0; i < 12; i++) {
             rwn1[i] = nn_out[i] * M_PI;
         }
 
-        for (i = 5; i < 17; i++)
+        for (int i = 5; i < 17; i++)
             nn_in[i] = rlw2[i - 5];
 
         nn_out = use_the_nn(norm_net, nn_in, nn_out);
 
-        for (i = 0; i < 12; i++) {
+        for (int i = 0; i < 12; i++) {
             rwn2[i] = nn_out[i] * M_PI;
         }
 
@@ -514,7 +464,7 @@ public class LevMarNN {
 
         // put all results into output
         nlam = 12;
-        for (i = 0; i < nlam; i++) {
+        for (int i = 0; i < nlam; i++) {
             ix = lam29_meris12_ix[i];
             output[i] = rho_tosa_corr[i] / M_PI;
             output[i + nlam] = nn_at_data.rpath_nn[ix];
@@ -522,35 +472,17 @@ public class LevMarNN {
             output[i + nlam * 3] = nn_at_data.tdown_nn[ix];
             output[i + nlam * 4] = nn_at_data.tup_nn[ix];
         }
-        output[60] = aot_550 = Math.exp(p[0]);
-        output[61] = ang_865_443 = Math.exp(p[1]);
-        output[62] = a_pig = Math.exp(p[3]);
-        output[63] = a_part = Math.exp(p[4]);
-        output[64] = a_gelb = Math.exp(p[5]);
-        output[65] = b_part = Math.exp(p[6]);
-        output[66] = b_wit = Math.exp(p[7]);
-        output[67] = info[1]; // sum_sq
-        output[68] = (double) info[5];
+        output[60] = Math.exp(p[0]);    // aot_550
+        output[61] = Math.exp(p[1]);    // ang_865_443
+        output[62] = Math.exp(p[3]);    // a_pig
+        output[63] = Math.exp(p[4]);    // a_part
+        output[64] = Math.exp(p[5]);    // a_gelb
+        output[65] = Math.exp(p[6]);    // b_part
+        output[66] = Math.exp(p[7]);    // b_part
+        output[67] = info[1];           // sum_sq
+        output[68] = info[5];
 
         return (0);
-
-    }
-
-    private void make_alphatab() {
-        double sum, delta;
-        int i;
-
-        delta = -2. * ALPHA_ANF / (N_ALPHA - 1);
-        sum = ALPHA_ANF + delta / 2.;
-        for (i = 0; i < N_ALPHA; i++) {
-            alpha_tab[i] = calpha(sum);
-            sum += delta;
-        }
-        rec_delta_alpha = 1. / delta;
-    }
-
-    private double calpha(double x) {
-        return (1. / (1. + Math.exp(-x)));
     }
 
     private a_nn prepare_a_nn(String filename) {
@@ -837,7 +769,7 @@ public class LevMarNN {
             double value = (nn_in[i] - a_net.getInmin()[i]) / (a_net.getInmax()[i] - a_net.getInmin()[i]);
             a_net.getNn().setInput(i, value);
         /*printf("%ld %lf %lf %lf %lf\n",
-			i,nn_in[i],a_net->nn.input[i],
+            i,nn_in[i],a_net->nn.input[i],
 			a_net->inmin[i],a_net->inmax[i]);*/
         }
         ff_proc(a_net.getNn());
@@ -859,7 +791,8 @@ public class LevMarNN {
         int i, pl;
         for (pl = 0; pl < ff.nplanes - 1; pl++) {
             for (i = 0; i < ff.size[pl + 1]; i++) {
-                ff.act[pl + 1][i] = alpha(ff.bias[pl][i] + scp(ff.wgt[pl][i], ff.act[pl], ff.size[pl]));
+                final double x = ff.bias[pl][i] + scp(ff.wgt[pl][i], ff.act[pl], ff.size[pl]);
+                ff.act[pl + 1][i] = alphaTab.get(x);
             }
         }
     }
@@ -870,15 +803,6 @@ public class LevMarNN {
         for (i = 0; i < n; i++)
             sum += x[i] * y[i];
         return sum;
-    }
-
-    private double alpha(double x) {
-        int ind = (int) ((x - ALPHA_ANF) * rec_delta_alpha);
-        if (ind < 0)
-            ind = 0;
-        if (ind >= N_ALPHA)
-            ind = N_ALPHA - 1;
-        return alpha_tab[ind];
     }
 
     /**
@@ -932,7 +856,6 @@ public class LevMarNN {
         innet[9] = log_bwit;
 
         if (prepare < 0.0) {
-            make_alphatab();
             prepare = prepare + 2;
             nn_at_data.setPrepare(prepare);
         }
@@ -1051,8 +974,8 @@ public class LevMarNN {
             temperature = nn_at_data.getTemperature();
             salinity = nn_at_data.getSalinity();
 
-            azimuth = deg2rad * azi_diff_hl;
-            elevation = deg2rad * view_zeni;
+            azimuth = DEG_2_RAD * azi_diff_hl;
+            elevation = DEG_2_RAD * view_zeni;
             x = Math.sin(elevation) * Math.cos(azimuth);
             y = Math.sin(elevation) * Math.sin(azimuth);
             z = Math.cos(elevation);
@@ -1069,7 +992,7 @@ public class LevMarNN {
 
             // innet[0] = sun_thet;
             // CHANGED for new nets, RD 20130308:
-            innet[0] = Math.cos(deg2rad * sun_thet);
+            innet[0] = Math.cos(DEG_2_RAD * sun_thet);
 
             innet[1] = x;
             innet[2] = y;
@@ -1086,10 +1009,6 @@ public class LevMarNN {
 
             innet[7] = temperature;
             innet[8] = salinity;
-
-            if (prepare < 0.0) {
-                make_alphatab();
-            }
 
             rhopath_net = prepare_a_nn(nnResources.getAcForwardNetPath(rhopath_net_name));
             tdown_net = prepare_a_nn(nnResources.getAcForwardNetPath(tdown_net_name));

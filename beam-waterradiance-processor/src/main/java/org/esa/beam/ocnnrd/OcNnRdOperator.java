@@ -100,7 +100,7 @@ public class OcNnRdOperator extends PixelOperator {
             copySolarFluxes(sourceSamples);
 
             final int detectorIndex = getDetectorIndex(sourceSamples);
-            final int result = levMarNN.levmar_nn(detectorIndex, input, input.length, output, output.length, debug_dat);
+            final int result = levMarNN.levmar_nn(detectorIndex, input, output);
 
             // @todo 2 tb/tb extract method and test tb 2013-05-13
             for (int i = 0; i < output.length; i++) {

@@ -104,9 +104,8 @@ public class LevMarNNTest {
                 toa_radiances,
                 SUN_SPECTRAL_FLUXES_NORMAN);
         final double[] output = new double[75];
-        final double[] debug_dat = new double[100];
 
-        int result = levMarNN.levmar_nn(181, input, input.length, output, output.length, debug_dat);
+        int result = levMarNN.levmar_nn(181, input, output);
         assertEquals(0, result);
         assertArrayEquals(expected_Norman, output, 1e-8);
     }
@@ -157,9 +156,8 @@ public class LevMarNNTest {
                 SUN_SPECTRAL_FLUXES_20060116);
 
         final double[] output = new double[75];
-        final double[] debug_dat = new double[100];
 
-        int result = levMarNN.levmar_nn(873, input, input.length, output, output.length, debug_dat);
+        int result = levMarNN.levmar_nn(873, input, output);
         assertEquals(0, result);
         assertArrayEquals(expected_20060116_ocean, output, 1e-8);
     }
@@ -210,9 +208,8 @@ public class LevMarNNTest {
                 SUN_SPECTRAL_FLUXES_20060116);
 
         final double[] output = new double[75];
-        final double[] debug_dat = new double[100];
 
-        int result = levMarNN.levmar_nn(748, input, input.length, output, output.length, debug_dat);
+        int result = levMarNN.levmar_nn(748, input, output);
         assertEquals(0, result);
         assertArrayEquals(expected_20060116_cloud, output, 1e-8);
     }
@@ -263,9 +260,8 @@ public class LevMarNNTest {
                 SUN_SPECTRAL_FLUXES_20060116);
 
         final double[] output = new double[75];
-        final double[] debug_dat = new double[100];
 
-        int result = levMarNN.levmar_nn(723, input, input.length, output, output.length, debug_dat);
+        int result = levMarNN.levmar_nn(723, input, output);
         assertEquals(0, result);
         assertArrayEquals(expected_20060116_land, output, 1e-8);
     }
