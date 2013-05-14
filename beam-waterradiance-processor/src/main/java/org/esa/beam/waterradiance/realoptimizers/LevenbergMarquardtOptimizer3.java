@@ -12,6 +12,7 @@ import Jama.Matrix;
 public class LevenbergMarquardtOptimizer3 {
 
     private static final double eps1 = 1e-17;
+    private static final double eps2_sq = 1e-20;
     private final static double tau = 1e-3;
     private final static int blockSize = 32;
     private final static int squaredBlockSize = blockSize * blockSize;
@@ -31,7 +32,6 @@ public class LevenbergMarquardtOptimizer3 {
             e[i] = x[i] - hx[i];
             p_eL2 += Math.pow(e[i], 2);
         }
-//        final double initialSquaredTotalError = p_eL2;
         Matrix jacTjac = new Matrix(m, m);
         double[] jacTe = new double[m];
         int numberOfIterations = 0;
@@ -43,12 +43,12 @@ public class LevenbergMarquardtOptimizer3 {
         boolean breaknested = false;
         double[] diag_jacTjac = new double[m];
         double eps3 = 1e-10;
-        while (!criterion.isMet(p_eL2, numberOfIterations) && !breaknested) {
-//            if (numberOfIterations % 1 == 0) {
+        int stop = 0;
+        while (!criterion.isMet(p_eL2, numberOfIterations) && !breaknested && stop == 0) {
             System.out.println("Iteration " + numberOfIterations + ":");
             System.out.println("Current total error: " + p_eL2);
-//            }
             if (p_eL2 <= eps3) {
+                stop = 6;
                 break;
             }
             // It is also possible to derive a jacobian matrix from center differences.
@@ -108,6 +108,7 @@ public class LevenbergMarquardtOptimizer3 {
             }
             if (numActive == jReplacement && jacTe_inf < eps1) {
                 Dp_L2 = 0;
+                stop = 1;
                 break;  // gradient too small
             }
             if (numberOfIterations == 0) {
@@ -141,10 +142,12 @@ public class LevenbergMarquardtOptimizer3 {
                         Dp_L2 += Math.pow(Dp[i], 2);
                     }
                     if (Dp_L2 <= eps1 * eps1 * p_L2) {
+                        stop = 2;
                         break;  // stopped by small Dp
                     }
                     double epsilon = calculateMachineEpsilonDouble();
                     if (Dp_L2 >= (p_L2 + (eps1 * eps1)) / (epsilon * epsilon)) {
+                        stop = 4;
                         break;  //singular (or almost singular) matrix
                     }
                     hx = model.getModeledSignal(pDp);
@@ -154,6 +157,7 @@ public class LevenbergMarquardtOptimizer3 {
                         pDp_eL2 += Math.pow(hx[i], 2);
                     }
                     if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) || !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
+                        stop = 7;
                         break;
                     }
                     double gamma_sq = Math.pow(0.99995, 2);
@@ -186,6 +190,7 @@ public class LevenbergMarquardtOptimizer3 {
                 } else {    // is NOT solved
                     mu *= nu;
                     if (2 * nu < nu) {
+                        stop = 5;
                         break;
                     }
                     nu *= 2;
@@ -215,8 +220,8 @@ public class LevenbergMarquardtOptimizer3 {
                             pDp_eL2 += Math.pow(hx[i], 2);
                         }
                         if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) || !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
+                            stop = 7;
                             gradproj = false;
-                            break;
                         } else {
                             if (pDp_eL2 <= p_eL2 + 2 * t * alpha * jacTeDp) {
                                 break;
@@ -238,15 +243,14 @@ public class LevenbergMarquardtOptimizer3 {
                         t = t0;
                     }
                     boolean terminatePGLS = false;
+                    alpha = 0.0001;
                     while (t > 1e-18 && !breaknested && !terminatePGLS) {
                         for (int i = 0; i < m; ++i) {
                             pDp[i] = p[i] - t * jacTe[i];
                         }
                         pDp = fitToBounds(pDp, lb, ub);
-                        Dp_L2 = 0;
                         for (int i = 0; i < m; ++i) {
                             Dp[i] = pDp[i] - p[i];
-                            Dp_L2 += Dp[i] * Dp[i];
                         }
                         hx = model.getModeledSignal(pDp);
                         pDp_eL2 = 0;
@@ -260,15 +264,16 @@ public class LevenbergMarquardtOptimizer3 {
                             break;
                         }
                         if (!breaknested) {
-                            jacTeDp = 0;
+                            temp = 0;
                             for (int i = 0; i < m; ++i) {
-                                jacTeDp += jacTe[i] * Dp[i];
+                                temp += jacTe[i] * Dp[i];
                             }
-                            if (gprevtaken == 1 && pDp_eL2 <= p_eL2 + 2 * 0.99999 * jacTeDp) {
+                            if (gprevtaken == 1 && pDp_eL2 <= p_eL2 + 2 * 0.99999 * temp) {
                                 t = t0;
                                 gprevtaken = 0;
+                                continue;
                             }
-                            if (pDp_eL2 <= p_eL2 + 2 * alpha * jacTeDp) {
+                            if (pDp_eL2 <= p_eL2 + 2 * alpha * temp) {
                                 terminatePGLS = true;
                             }
                         }
@@ -287,8 +292,8 @@ public class LevenbergMarquardtOptimizer3 {
                         double temp = pDp[i] - p[i];
                         Dp_L2 += temp * temp;
                     }
-                    if (Dp_L2 <= eps1 * eps1 * p_L2) {
-//                        stop = 2
+                    if (Dp_L2 <= eps2_sq * p_L2) {
+                        stop = 2;
                         break;
                     }
                     for (int i = 0; i < m; ++i) {
