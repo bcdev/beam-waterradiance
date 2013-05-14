@@ -4,6 +4,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -53,12 +55,12 @@ public class LevMarNNTest {
     private LevMarNN levMarNN;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         levMarNN = new LevMarNN();
     }
 
     @Test
-    @Ignore
+   @Ignore
     public void testL1b_testDataNorman() throws Exception {
         final double solar_zenith = 38.532475;
         final double solar_azimuth = 142.5679;

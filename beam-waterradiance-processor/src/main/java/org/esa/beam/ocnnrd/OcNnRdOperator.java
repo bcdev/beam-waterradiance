@@ -244,7 +244,11 @@ public class OcNnRdOperator extends PixelOperator {
             auxdataProvider = createAuxdataDataProvider();
         }
 
-        levMarNN = new LevMarNN();
+        try {
+            levMarNN = new LevMarNN();
+        } catch (IOException e) {
+            throw new OperatorException(e.getMessage());
+        }
     }
 
     // package access for testing only tb 2013-05-13

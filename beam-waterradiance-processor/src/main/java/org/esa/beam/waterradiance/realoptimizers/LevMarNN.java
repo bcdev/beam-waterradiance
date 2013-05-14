@@ -2,11 +2,7 @@ package org.esa.beam.waterradiance.realoptimizers;
 
 import Jama.Matrix;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -30,9 +26,9 @@ public class LevMarNN {
     double[] alpha_tab = new double[N_ALPHA];
     double rec_delta_alpha;
 
-    private static int NLAM = 40;
-    private static int LM_OPTS_SZ = 5; /* max(4, 5) */
-    private static int LM_INFO_SZ = 10;
+    private static final int NLAM = 40;
+    private static final int LM_OPTS_SZ = 5; /* max(4, 5) */
+    private static final int LM_INFO_SZ = 10;
     private static int LM_ERROR = -1;
     private static double LM_INIT_MU = 1E-03;
     private static double LM_STOP_THRESH = 1E-7; // was 1E-17
@@ -47,9 +43,25 @@ public class LevMarNN {
     int[] merband12_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12};
 
     private final NnResources nnResources;
+    private final a_nn norm_net;
+    private final double[] trans_ozon;
+    private final double[] solar_flux;
+    private final double[] rl_toa;
 
-    public LevMarNN() {
+    private double[] x;
+
+    public LevMarNN() throws IOException {
+        x = new double[NLAM];
+        trans_ozon = new double[NLAM];
+        solar_flux = new double[NLAM];
+        rl_toa = new double[NLAM];
+
         nnResources = new NnResources();
+
+        norm_net = prepare_a_nn(nnResources.getNormNetPath());
+
+        smile_tab_ini();
+
     }
 
     public int levmar_nn(int detector, double[] input, int input_length, double[] output, int output_length, double[] debug_dat) {
@@ -60,19 +72,14 @@ public class LevMarNN {
         int lam21_meris12_ix[] = {0, 1, 2, 3, 8, 9, 10, 13, 14, 16, 18, 19};
 
         double[] p = new double[8];
-        double[] x = new double[NLAM];
-        double[] xb = new double[NLAM];
-        double[] xr = new double[NLAM];
         double[] opts = new double[LM_OPTS_SZ];
         double[] info = new double[LM_INFO_SZ];
         double[] x11 = new double[11];
         double[] x11_vor = new double[11];
         double[] p_alt = new double[8];
+        // @todo 1 tb/** these two are never written, only read from ... tb 2013-05-14
         double[] rw1 = new double[NLAM];
         double[] rw2 = new double[NLAM];
-        double[] rw_2flow = new double[NLAM];
-        double[] rw_min = new double[NLAM];
-        double[] rw_max = new double[NLAM];
         double log_apart, log_agelb, log_apig, log_bpart, log_bwit, sun_thet, view_zeni, azi_diff_hl, temperature, salinity, ozone;
         double log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min, log_conc_wit, aot_550, ang_865_443, a_pig, a_gelb, a_part, b_part, b_wit;
         double a_pig_stdev, a_part_stdev, a_gelb_stdev, b_part_stdev, b_wit_stdev;
@@ -117,16 +124,9 @@ public class LevMarNN {
         double[] rho_w_c2 = new double[4];
         double sun_zenith, view_zenith, alpha, cos_teta_sun, sin_teta_sun, cos_teta_view, sin_teta_view, cos_azi_diff;
         double sun_azimuth, view_azimuth, surf_pressure, ozhone, wind_x, wind_y, cos_sun_zenith;
-        double[] trans_ozon = new double[NLAM];
-        double[] rho_toa_ocz = new double[NLAM];
-        double[] solar_flux = new double[NLAM];
-        double[] RL_toa = new double[NLAM];
-        char[] buffer = new char[3600];
-        long icas, ncas, orbit;
+        long icas;
         int nlam, ilam, ilami, ix;
         File fp_tab;
-
-        Matrix covar_out = new Matrix(8, 8);
 
         double[] conc_at = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         double[] conc_at_min = new double[8];
@@ -139,7 +139,6 @@ public class LevMarNN {
         double lub;
 
         char[] errmsg = new char[1024];
-        a_nn norm_net = null;
 //        a_nn[] prepare_a_nn(char *filename); //todo instead of a_nn*: call prepare_a_nn
 //        void use_the_nn(a_nn *norm_net, double *innet, double *outnet);
 //        void make_alphatab(void);
@@ -153,10 +152,6 @@ public class LevMarNN {
         double trans708, X2;
         int flag1, flag2, flag3, flag4, flag5;
 
-        double[] nomi_lam = new double[15];
-        double[] nomi_sun = new double[15];
-        double[] nomi_lam12 = new double[15];
-        double[] nomi_sun12 = new double[15];
         double smile_lam;
         double tau_rayl_smile_rat, cos_gamma_plus, rayleigh_reflect, teta_view_rad, teta_sun_rad, conc_ozon;
         double[] L_toa = new double[15];
@@ -190,32 +185,9 @@ public class LevMarNN {
         if (FIRST == 1) {
             /** network for normalisation */
             make_alphatab();
-            norm_net = prepare_a_nn(nnResources.getNormNetPath());
             /*********** tables for smile correction **************/
-            smile_tab_ini();
             nn_at_data.prepare = -1; // prepare neural networks only once
 
-
-		/* table with nominal wavelengths and solar flux */
-            fp_tab = open_auxfile(nnResources.getNominalLamSunPath());
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(fp_tab));
-                for (int count = 0; count < 15; count++) {
-                    String line = reader.readLine();
-                    final String[] tableLine = line.split("\t");
-                    nomi_lam[count] = Double.parseDouble(tableLine[0]);
-                    nomi_sun[count] = Double.parseDouble(tableLine[1]);
-                }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            } catch (IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-            for (i = 0; i < 12; i++) {
-                ilami = merband12_index[i];
-                nomi_lam12[i] = nomi_lam[ilami];
-                nomi_sun12[i] = nomi_sun[ilami];
-            }
             //FIRST=0; //do this later down
         } // end of FIRST
         /***********************************************/
@@ -239,7 +211,7 @@ public class LevMarNN {
             solar_flux[i] = input[i + 25];
 
             Ed_toa[i] = solar_flux[i] * cos_sun_zenith;
-            RL_toa[i] = L_toa[i] / Ed_toa[i];
+            rl_toa[i] = L_toa[i] / Ed_toa[i];
         }
         // end of input data
 
@@ -303,7 +275,7 @@ public class LevMarNN {
         /* +++ water vapour correction for band 9 +++++ */
 
         //X2=rho_900/rho_885;
-        X2 = RL_toa[14] / RL_toa[13];
+        X2 = rl_toa[14] / rl_toa[13];
         trans708 = h2o_cor_poly[0] + h2o_cor_poly[1] * X2 + h2o_cor_poly[2] * X2 * X2 + h2o_cor_poly[3] * X2 * X2 * X2;
 
         L_toa[8] /= trans708;
@@ -363,7 +335,7 @@ public class LevMarNN {
                 L_tosa[ilam] = L_toa[ix] / (trans_ozon[ilam] * trans_rayl_press[ilam]/**trans_rayl_smile[ilam]*/) - L_rayl_toa_tosa[ilam] + L_rayl_smile[ilam];//*trans_rayl_smile[ilam]);
                 Ed_tosa[ilam] = Ed_toa_smile_corr[ilam];//*trans_rayl_smiled[ilam]*trans_rayl_pressd[ilam];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
-                x[ilam] = xb[ilam] = rho_tosa_corr[ilam];
+                x[ilam] = rho_tosa_corr[ilam];
             }
         } else { /* subtract only correction for ozone */
             for (ilam = 0; ilam < nlam; ilam++) {
@@ -371,7 +343,7 @@ public class LevMarNN {
                 L_tosa[ilam] = L_toa[ix] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 Ed_tosa[ilam] = Ed_toa[ix];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
-                x[ilam] = xb[ilam] = rho_tosa_corr[ilam];
+                x[ilam] = rho_tosa_corr[ilam];
             }
         }
 
@@ -428,7 +400,7 @@ public class LevMarNN {
             }
             FIRST = 0;
                     /*
-		} else{
+        } else{
 		for(i=0;i<m;i++)
 		p[i]=p_alt[i];
 		}
@@ -436,8 +408,8 @@ public class LevMarNN {
         } else {
             for (i = 0; i < m; i++) {
                 lub = Math.abs(ub[i] - lb[i]);
-			/*
-			if(lb[i]<0.0)
+            /*
+            if(lb[i]<0.0)
 				p[i]=lb[i]-lb[i]*0.2;
 			else
 				p[i]=lb[i]+lb[i]*0.2;
@@ -502,7 +474,7 @@ public class LevMarNN {
 
         /**********************************************************/
 //        if (NORMALIZE) {
-		/* normalize water leaving radiance reflectances */
+        /* normalize water leaving radiance reflectances */
 
         // requires first to make RLw again
         for (i = 0; i < 12; i++) {
@@ -767,7 +739,7 @@ public class LevMarNN {
         return bias;
     }
 
-    private void smile_tab_ini() {
+    private void smile_tab_ini() throws IOException {
         File fp_ini, fp_tab;
         char[] name = new char[500];
         char[] buf = new char[500];
@@ -779,87 +751,65 @@ public class LevMarNN {
         /* read the tables */
         fp_tab = open_auxfile(nnResources.getCentralWavelengthFrPath());
         BufferedReader reader;
-        try {
-            reader = new BufferedReader(new FileReader(fp_tab));
-            String line = reader.readLine(); // header
-            for (int count = 0; count < FR_TAB; count++) {
-                line = reader.readLine();
-                final String[] tableLine = line.split("\t");
-                for (int count2 = 0; count2 < 15; count2++) {
-                    frlam[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
-                }
+
+        reader = new BufferedReader(new FileReader(fp_tab));
+        String line = reader.readLine(); // header
+        for (int count = 0; count < FR_TAB; count++) {
+            line = reader.readLine();
+            final String[] tableLine = line.split("\t");
+            for (int count2 = 0; count2 < 15; count2++) {
+                frlam[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
+
 
         fp_tab = open_auxfile(nnResources.getSunSpectralFluxFrPath());
-        try {
-            reader = new BufferedReader(new FileReader(fp_tab));
-            String line = reader.readLine(); // header
-            for (int count = 0; count < FR_TAB; count++) {
-                line = reader.readLine();
-                final String[] tableLine = line.split("\t");
-                for (int count2 = 0; count2 < 15; count2++) {
-                    fredtoa[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
-                }
+        reader = new BufferedReader(new FileReader(fp_tab));
+        line = reader.readLine(); // header
+        for (int count = 0; count < FR_TAB; count++) {
+            line = reader.readLine();
+            final String[] tableLine = line.split("\t");
+            for (int count2 = 0; count2 < 15; count2++) {
+                fredtoa[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
+
 
         fp_tab = open_auxfile(nnResources.getCentralWavelengthRrPath());
-        try {
-            reader = new BufferedReader(new FileReader(fp_tab));
-            String line = reader.readLine(); // header
-            for (int count = 0; count < RR_TAB; count++) {
-                line = reader.readLine();
-                final String[] tableLine = line.split("\t");
-                for (int count2 = 0; count2 < 15; count2++) {
-                    rrlam[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
-                }
+        reader = new BufferedReader(new FileReader(fp_tab));
+        line = reader.readLine(); // header
+        for (int count = 0; count < RR_TAB; count++) {
+            line = reader.readLine();
+            final String[] tableLine = line.split("\t");
+            for (int count2 = 0; count2 < 15; count2++) {
+                rrlam[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
+
 
         fp_tab = open_auxfile(nnResources.getSunSpectralFluxRrPath());
-        try {
-            reader = new BufferedReader(new FileReader(fp_tab));
-            String line = reader.readLine(); // header
-            for (int count = 0; count < RR_TAB; count++) {
-                line = reader.readLine();
-                final String[] tableLine = line.split("\t");
-                for (int count2 = 0; count2 < 15; count2++) {
-                    rredtoa[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
-                }
+
+        reader = new BufferedReader(new FileReader(fp_tab));
+        line = reader.readLine(); // header
+        for (int count = 0; count < RR_TAB; count++) {
+            line = reader.readLine();
+            final String[] tableLine = line.split("\t");
+            for (int count2 = 0; count2 < 15; count2++) {
+                rredtoa[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
+
         fp_tab = open_auxfile(nnResources.getNominalLamSunPath());
-        try {
-            reader = new BufferedReader(new FileReader(fp_tab));
-            for (int count = 0; count < 15; count++) {
-                String line = reader.readLine();
-                final String[] tableLine = line.split("\t");
-                nomi_lam[count] = Double.parseDouble(tableLine[0]);
-                nomi_sun[count] = Double.parseDouble(tableLine[1]);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+
+        reader = new BufferedReader(new FileReader(fp_tab));
+        for (int count = 0; count < 15; count++) {
+            line = reader.readLine();
+            final String[] tableLine = line.split("\t");
+            nomi_lam[count] = Double.parseDouble(tableLine[0]);
+            nomi_sun[count] = Double.parseDouble(tableLine[1]);
         }
+
 
         /* make ed ratio tab, i.e. compute the ratio between the ed_toa for each pixel relative to ed-toa at the mean pixel for each camera */
 
@@ -886,7 +836,7 @@ public class LevMarNN {
         for (i = 0; i < anetNnin; i++) {
             double value = (nn_in[i] - a_net.getInmin()[i]) / (a_net.getInmax()[i] - a_net.getInmin()[i]);
             a_net.getNn().setInput(i, value);
-		/*printf("%ld %lf %lf %lf %lf\n",
+        /*printf("%ld %lf %lf %lf %lf\n",
 			i,nn_in[i],a_net->nn.input[i],
 			a_net->inmin[i],a_net->inmax[i]);*/
         }
