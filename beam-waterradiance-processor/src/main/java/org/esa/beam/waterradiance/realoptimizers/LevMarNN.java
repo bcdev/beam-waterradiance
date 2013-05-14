@@ -9,6 +9,7 @@ public class LevMarNN {
     private static final int RR_TAB = 925;
 
     private static final double DEG_2_RAD = (Math.PI / 180.0);
+    private final CostFunctionImpl costFunction;
 
     private double[][] frlam = new double[FR_TAB][15];
     private double[][] fredtoa = new double[FR_TAB][15];
@@ -30,7 +31,6 @@ public class LevMarNN {
     static int[] lam29_meris12_ix = {1, 2, 4, 6, 11, 12, 15, 19, 20, 22, 24, 25};
     double[] ozon_meris12 = {0.0002179, 0.002814, 0.02006, 0.04081, 0.104, 0.109, 0.0505, 0.03526, 0.01881, 0.008897, 0.007693, 0.002192}; // L.Bourg 2010
 
-
     private final NnResources nnResources;
     private final a_nn norm_net;
     private final double[] trans_ozon;
@@ -39,6 +39,12 @@ public class LevMarNN {
 
     private double[] x;
     private final AlphaTab alphaTab;
+    private final double[] lb;
+    private final double[] ub;
+    private final BreakingCriterion breakingCriterion;
+    private final nn_atmo_watForwardModel model;
+    private final LevenbergMarquardtOptimizer3 optimizer;
+    private double[] p;
 
 
     public LevMarNN() throws IOException {
@@ -47,18 +53,26 @@ public class LevMarNN {
         solar_flux = new double[NLAM];
         rl_toa = new double[NLAM];
 
+        // lower and upper boundary for variables aot, ang, wind, log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min
+        lb = new double[]{0.001, 0.001, 0.001, -13.96, -15.42, -16.38, -15.87, 0.0};
+        ub = new double[]{1.0, 2.2, 10.0, 3.9, 2.294, 1.599, 4.594, 1.1};
+
         nnResources = new NnResources();
         alphaTab = new AlphaTab();
 
         norm_net = prepare_a_nn(nnResources.getNormNetPath());
 
         smile_tab_ini();
+        breakingCriterion = new BreakingCriterionImpl(150, 1e-10);
+        costFunction = new CostFunctionImpl();
+        model = new nn_atmo_watForwardModel();
+        optimizer = new LevenbergMarquardtOptimizer3();
+        p = new double[8];
     }
 
     public int levmar_nn(int detector, double[] input, double[] output) {
         int FIRST = 1;
 
-        double[] p = new double[8];
         double[] info = new double[LM_INFO_SZ];
         double[] x11 = new double[11];
         double[] p_alt = new double[8];
@@ -71,36 +85,11 @@ public class LevMarNN {
         s_nn_atdata nn_at_data = new s_nn_atdata();
         int m, SMILE;
 
-        int na_flag, isite, pixel_valid;
-        double lat_is, lon_is, thetas_is, chl_is, aot_870_is_1, aot_870_is_2, alpha_is_1, alpha_is_2, lat, lon, delta_azimuth, scatt_angle, windm, press_ecmwf, ozon_ecmwf, vapour_ecmwf;
-        double altitude, chl1, chl2, spm, odoc, vapr, tau_aer_05, tau_aer_13, aer_1, aer_2, aer_mix;
-        double[] rho_wn_is = new double[15];
-        double[] rho_wn_isme = new double[15];
-        double[] rn = new double[15];
-        double[] rho_wn = new double[15];
-        double[] toar = new double[15];
-        double[] rho_toa = new double[15];
-        double[] rho_gc = new double[15];
-        double[] rho_ray = new double[15];
-        double[] rho_aer = new double[15];
-        double[] t_down = new double[15];
-        double[] t_up = new double[15];
-        double[] rho_w_c2 = new double[4];
-        double sun_zenith, view_zenith, alpha, cos_teta_sun, sin_teta_sun, cos_teta_view, sin_teta_view, cos_azi_diff;
-        double sun_azimuth, view_azimuth, surf_pressure, ozhone, wind_x, wind_y, cos_sun_zenith;
-        long icas;
-        int nlam, ilam, ilami, ix;
-        File fp_tab;
+        double sun_zenith, view_zenith, cos_teta_sun, sin_teta_sun, cos_teta_view, sin_teta_view, cos_azi_diff;
+        double sun_azimuth, view_azimuth, surf_pressure;
+        int nlam, ilam, ix;
 
         double[] conc_at = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        double[] conc_at_min = new double[8];
-        double[] conc_at_max = new double[8];
-        double[] stdev = new double[8];
-
-        // lower and upper boundary for variables aot, ang, wind, log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min
-        double[] lb = {0.001, 0.001, 0.001, -13.96, -15.42, -16.38, -15.87, 0.0};
-        double[] ub = {1.0, 2.2, 10.0, 3.9, 2.294, 1.599, 4.594, 1.1};
-        double lub;
 
         double[] nn_in = new double[40];
         double[] nn_out = new double[40];
@@ -109,21 +98,18 @@ public class LevMarNN {
         double[] rlw1 = new double[40];
         double[] rlw2 = new double[40];
         double trans708, X2;
-        int flag1, flag2, flag3, flag4, flag5;
 
         double smile_lam;
-        double tau_rayl_smile_rat, cos_gamma_plus, rayleigh_reflect, teta_view_rad, teta_sun_rad, conc_ozon;
         double[] L_toa = new double[15];
         double[] Ed_toa = new double[15];
         double[] L_toa_ocz = new double[15];
-        double surf_press, rayl_rel_mass_tosa, rayl_rel_mass_toa_tosa, rayl_mass_toa_tosa;
-        double cos_scat_ang, phase_rayl_min, phase_rayl_plus;
+        double surf_press, rayl_rel_mass_toa_tosa;
+        double cos_scat_ang, phase_rayl_min;
         double[] tau_rayl_standard = new double[15];
         double[] tau_rayl_toa_tosa = new double[15];
         double[] tau_rayl_smile = new double[15];
         double[] L_rayl_toa_tosa = new double[15];
         double[] L_rayl_smile = new double[15];
-        double[] L_toa_corr = new double[15];
         double[] rho_tosa_corr = new double[15];
         double[] Ed_toa_smile_rat = new double[15];
         double[] Ed_toa_smile_corr = new double[15];
@@ -138,12 +124,9 @@ public class LevMarNN {
         double[] trans_rayl_smileu = new double[15];
         double[] trans_ozond = new double[15];
         double[] trans_ozonu = new double[15];
-//        void smile_tab_ini();
 
         /***********************************************/
         if (FIRST == 1) {
-            /** network for normalisation */
-            /*********** tables for smile correction **************/
             nn_at_data.prepare = -1; // prepare neural networks only once
 
             //FIRST=0; //do this later down
@@ -157,13 +140,10 @@ public class LevMarNN {
         view_azimuth = input[3];
         surf_pressure = input[4];
         ozone = input[5];
-        wind_x = input[6];
-        wind_y = input[7];
         temperature = input[8];
         salinity = input[9];
 
-        cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
-
+        final double cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
         for (int i = 0; i < 15; i++) {
             L_toa[i] = input[i + 10];
             solar_flux[i] = input[i + 25];
@@ -173,8 +153,10 @@ public class LevMarNN {
         }
         // end of input data
 
-        delta_azimuth = Math.abs(view_azimuth - sun_azimuth);
-        if (delta_azimuth > 180.0) delta_azimuth = 180.0 - delta_azimuth;
+        double delta_azimuth = Math.abs(view_azimuth - sun_azimuth);
+        if (delta_azimuth > 180.0) {
+            delta_azimuth = 180.0 - delta_azimuth;
+        }
 
         // nn_at_data[0]= -1.0; // prepare
         nn_at_data.sun_thet = sun_thet = sun_zenith;
@@ -191,9 +173,6 @@ public class LevMarNN {
         sin_teta_sun = Math.sin(sun_zenith * DEG_2_RAD);
         sin_teta_view = Math.sin(view_zenith * DEG_2_RAD);
         cos_azi_diff = Math.cos(delta_azimuth * DEG_2_RAD);
-        teta_view_rad = view_zenith * DEG_2_RAD;
-        teta_sun_rad = sun_zenith * DEG_2_RAD;
-        conc_ozon = ozone;
 
        /*+++ ozone correction +++*/
 
@@ -236,14 +215,10 @@ public class LevMarNN {
 
 	/* calculate relative airmass rayleigh correction for correction layer*/
         surf_press = surf_pressure;
-        rayl_rel_mass_tosa = surf_press / 1013.2;
         rayl_rel_mass_toa_tosa = (surf_press - 1013.2) / 1013.2; //?? oder rayl_mass_toa_tosa =surf_press - 1013.2; // RD20120105
-        rayl_mass_toa_tosa = surf_press - 1013.2; // RD20120105
 
 	/* calculate phase function for rayleigh path radiance*/
         cos_scat_ang = -cos_teta_view * cos_teta_sun - sin_teta_view * sin_teta_sun * cos_azi_diff; // this is the scattering angle without fresnel reflection
-        cos_gamma_plus = cos_teta_view * cos_teta_sun - sin_teta_view * sin_teta_sun * cos_azi_diff; // for fresnel reflection
-        phase_rayl_plus = 0.75 * (1.0 + cos_gamma_plus * cos_gamma_plus);
         phase_rayl_min = 0.75 * (1.0 + cos_scat_ang * cos_scat_ang);
 
         	/* calculate optical thickness of rayleigh for correction layer, lam in micrometer */
@@ -312,8 +287,6 @@ public class LevMarNN {
 //            xb[11] = x[11];
 //        }
 
-        	/* initial parameters estimate: */
-        icas = -1L;
     /*
     input  5 is log_aot in [-4.605000,0.000000]
 	input  6 is log_angstrom in [-3.817000,0.788500]
@@ -358,17 +331,18 @@ public class LevMarNN {
 		*/
         } else {
             for (int i = 0; i < m; i++) {
-                lub = Math.abs(ub[i] - lb[i]);
-            /*
-            if(lb[i]<0.0)
-				p[i]=lb[i]-lb[i]*0.2;
-			else
-				p[i]=lb[i]+lb[i]*0.2;
-				*/
-                if (ub[i] < 0.0)
+                double lub = Math.abs(ub[i] - lb[i]);
+                    /*
+                    if(lb[i]<0.0)
+                        p[i]=lb[i]-lb[i]*0.2;
+                    else
+                        p[i]=lb[i]+lb[i]*0.2;
+                        */
+                if (ub[i] < 0.0) {
                     p[i] = ub[i] - lub * 0.2;
-                else
+                } else {
                     p[i] = ub[i] - lub * 0.2;
+                }
             }
             p[0] = Math.log(0.1);   // tau550
             p[1] = Math.log(1.0);   // ang
@@ -403,11 +377,8 @@ public class LevMarNN {
 //        ret = dlevmar_bc_dif(nn_atmo_wat, p, x11, m, n, lb, ub, 150, opts, info, NULL, & covar_out[0][0],&nn_at_data)
 //        ; // without Jacobian
 
-        nn_atmo_watForwardModel model = new nn_atmo_watForwardModel();
         model.init(x11, nn_at_data);
-        BreakingCriterion breakingCriterion = new BreakingCriterionImpl(150, 1e-10);
-        LevenbergMarquardtOptimizer3 optimizer = new LevenbergMarquardtOptimizer3();
-        p = optimizer.solveConstrainedLevenbergMarquardt(model, new CostFunctionImpl(), p, x11, breakingCriterion, lb, ub);
+        p = optimizer.solveConstrainedLevenbergMarquardt(model, costFunction, p, x11, breakingCriterion, lb, ub);
 
         for (int i = 0; i < m; i++) {
             conc_at[i] = p[i];
@@ -570,17 +541,6 @@ public class LevMarNN {
 ////        path = concat_path(home, fileName);
 
         return new File(fileName);
-    }
-
-    private char[] concat_path(char[] homeDir, char[] fileName) {
-        char[] auxPath = ".beam/beam-waterradiance-processor/auxdata".toCharArray();
-        StringBuilder buf = new StringBuilder();
-        buf.append(homeDir);
-        buf.append("/");
-        buf.append(auxPath);
-        buf.append("/");
-        buf.append(fileName);
-        return buf.toString().toCharArray();
     }
 
     private feedforward make_ff_from_file(String filename) {
@@ -781,7 +741,7 @@ public class LevMarNN {
             nn_out[i] = a_net.getNn().getOutput()[i] * (a_net.getOutmax()[i] - a_net.getOutmin()[i]) + a_net.getOutmin()[i];
 
 		/*printf("%ld %lf %lf %lf %lf\n",
-			i,nn_in[i],a_net->nn.input[i],
+            i,nn_in[i],a_net->nn.input[i],
 			a_net->inmin[i],a_net->inmax[i]);*/
         }
         return nn_out;
@@ -902,7 +862,7 @@ public class LevMarNN {
         public double[] getModeledSignal(double[] variables) {
             final NNReturnData nnReturnData = nn_atmo_wat(variables, rtosa_nn.clone(), variables.length, rtosa_nn.length, nn_data);
             nn_data = nnReturnData.getNn_atdata();
-            return nnReturnData.getOutputValues();  //To change body of implemented methods use File | Settings | File Templates.
+            return nnReturnData.getOutputValues();
         }
 
         @Override
@@ -960,7 +920,7 @@ public class LevMarNN {
             final String tup_net_name = "ac_tup_b29/17x37x31_83.8.net";
 
 
-            a_nn atm_net_for, rhopath_net, tdown_net, tup_net;
+            a_nn rhopath_net, tdown_net, tup_net;
 
             s_nn_atdata nn_at_data = nn_data;
 
@@ -984,11 +944,11 @@ public class LevMarNN {
             log_aot = conc_all[0];
             log_ang = conc_all[1];
             log_wind = conc_all[2];
-            log_conc_chl = conc_all[3];
-            log_conc_det = conc_all[4];
-            log_conc_gelb = conc_all[5];
-            log_conc_min = conc_all[6];
-            log_conc_wit = conc_all[7];
+//            log_conc_chl = conc_all[3];
+//            log_conc_det = conc_all[4];
+//            log_conc_gelb = conc_all[5];
+//            log_conc_min = conc_all[6];
+//            log_conc_wit = conc_all[7];
 
             // innet[0] = sun_thet;
             // CHANGED for new nets, RD 20130308:
@@ -1053,10 +1013,8 @@ public class LevMarNN {
                     nn_at_data.setRw_nn(ilam, rw_nn[ilam]);
                 }
             }
-            NNReturnData res = new NNReturnData(rtosa_nn, nn_data);
-            return res;
+            return new NNReturnData(rtosa_nn, nn_data);
         }
-
     }
 
     private class NNReturnData {
@@ -1073,18 +1031,8 @@ public class LevMarNN {
             return outputValues;
         }
 
-//        private void setOutputValues(double[] outputValues) {
-//            this.outputValues = outputValues;
-//        }
-
         private s_nn_atdata getNn_atdata() {
             return nn_atdata;
         }
-
-//        private void setNn_atdata(s_nn_atdata nn_atdata) {
-//            this.nn_atdata = nn_atdata;
-//        }
-
     }
-
 }
