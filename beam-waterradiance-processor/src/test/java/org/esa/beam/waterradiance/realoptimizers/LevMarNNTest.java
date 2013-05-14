@@ -3,7 +3,6 @@ package org.esa.beam.waterradiance.realoptimizers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import sun.security.util.DisabledAlgorithmConstraints;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

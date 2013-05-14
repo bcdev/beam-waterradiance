@@ -1,7 +1,6 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
 import Jama.Matrix;
-import org.esa.beam.util.SystemUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -47,6 +46,11 @@ public class LevMarNN {
     static double[] merband12 = {412.3, 442.3, 489.7, 509.6, 559.5, 619.4, 664.3, 680.6, 708.1, 753.1, 778.2, 864.6};
     int[] merband12_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12};
 
+    private final NnResources nnResources;
+
+    public LevMarNN() {
+        nnResources = new NnResources();
+    }
 
     public int levmar_nn(int detector, double[] input, int input_length, double[] output, int output_length, double[] debug_dat) {
         int FIRST = 1;
@@ -133,8 +137,6 @@ public class LevMarNN {
         double[] lb = {0.001, 0.001, 0.001, -13.96, -15.42, -16.38, -15.87, 0.0};
         double[] ub = {1.0, 2.2, 10.0, 3.9, 2.294, 1.599, 4.594, 1.1};
         double lub;
-        String norm_net_name = "27x41x27_23.3.net";
-        String nominal_lam_sun_name = "./smile/nominal_lam_sun.txt";
 
         char[] errmsg = new char[1024];
         a_nn norm_net = null;
@@ -188,14 +190,14 @@ public class LevMarNN {
         if (FIRST == 1) {
             /** network for normalisation */
             make_alphatab();
-            norm_net = prepare_a_nn(norm_net_name);
+            norm_net = prepare_a_nn(nnResources.getNormNetPath());
             /*********** tables for smile correction **************/
             smile_tab_ini();
             nn_at_data.prepare = -1; // prepare neural networks only once
 
 
 		/* table with nominal wavelengths and solar flux */
-            fp_tab = open_auxfile(nominal_lam_sun_name);
+            fp_tab = open_auxfile(nnResources.getNominalLamSunPath());
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(fp_tab));
                 for (int count = 0; count < 15; count++) {
@@ -644,26 +646,26 @@ public class LevMarNN {
     }
 
     private File open_auxfile(String fileName) {
-        String path;
-        String home;
-//        char[] home = System.getenv("HOME").toCharArray();
-        char[] mapred_home = "/home/mapred".toCharArray();
-        File fd;
+//        String path;
+//        String home;
+////        char[] home = System.getenv("HOME").toCharArray();
+//        char[] mapred_home = "/home/mapred".toCharArray();
+//        File fd;
+//
+//        if (System.getProperty("os.name").contains("indows")) {
+//            home = System.getenv("HOMEPATH");
+//        } else {
+//            home = System.getenv("HOME");
+//        }
+//
+////        SystemUtils.getApplicationDataDir()
+//
+//        StringBuilder builder = new StringBuilder(home);
+//        builder.append("/Projekte/beam-waterradiance/beam-waterradiance-processor/");
+//        builder.append(fileName);
+////        path = concat_path(home, fileName);
 
-        if (System.getProperty("os.name").contains("indows")) {
-            home = System.getenv("HOMEPATH");
-        } else {
-            home = System.getenv("HOME");
-        }
-
-//        SystemUtils.getApplicationDataDir()
-
-        StringBuilder builder = new StringBuilder(home);
-        builder.append("/Projekte/beam-waterradiance/beam-waterradiance-processor/");
-        builder.append(fileName);
-//        path = concat_path(home, fileName);
-
-        return new File(builder.toString());
+        return new File(fileName);
     }
 
     private char[] concat_path(char[] homeDir, char[] fileName) {
@@ -773,14 +775,9 @@ public class LevMarNN {
         double[] nomi_lam = new double[15];
         double[] nomi_sun = new double[15];
         String smile_name = "";
-        String fr_lam_tab_name = "./smile/central_wavelen_fr.txt";
-        String rr_lam_tab_name = "./smile/central_wavelen_rr.txt";
-        String fr_edtoa_tab_name = "./smile/sun_spectral_flux_fr.txt";
-        String rr_edtoa_tab_name = "./smile/sun_spectral_flux_rr.txt";
-        String nominal_tab_name = "./smile/nominal_lam_sun.txt";
 
         /* read the tables */
-        fp_tab = open_auxfile(fr_lam_tab_name);
+        fp_tab = open_auxfile(nnResources.getCentralWavelengthFrPath());
         BufferedReader reader;
         try {
             reader = new BufferedReader(new FileReader(fp_tab));
@@ -798,7 +795,7 @@ public class LevMarNN {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        fp_tab = open_auxfile(fr_edtoa_tab_name);
+        fp_tab = open_auxfile(nnResources.getSunSpectralFluxFrPath());
         try {
             reader = new BufferedReader(new FileReader(fp_tab));
             String line = reader.readLine(); // header
@@ -815,7 +812,7 @@ public class LevMarNN {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        fp_tab = open_auxfile(rr_lam_tab_name);
+        fp_tab = open_auxfile(nnResources.getCentralWavelengthRrPath());
         try {
             reader = new BufferedReader(new FileReader(fp_tab));
             String line = reader.readLine(); // header
@@ -832,7 +829,7 @@ public class LevMarNN {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        fp_tab = open_auxfile(rr_edtoa_tab_name);
+        fp_tab = open_auxfile(nnResources.getSunSpectralFluxRrPath());
         try {
             reader = new BufferedReader(new FileReader(fp_tab));
             String line = reader.readLine(); // header
@@ -849,7 +846,7 @@ public class LevMarNN {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        fp_tab = open_auxfile(nominal_tab_name);
+        fp_tab = open_auxfile(nnResources.getNominalLamSunPath());
         try {
             reader = new BufferedReader(new FileReader(fp_tab));
             for (int count = 0; count < 15; count++) {
@@ -953,7 +950,7 @@ public class LevMarNN {
         //char *wat_net_name_for={"./water_for_b33_20111220/27_697.2.net"};
         //char *wat_net_name_for={"./water_for_b33_rlw_20120118/17x27x17_120.2.net"};
         //char *wat_net_name_for={"./for_b33_20120114_nokd_27x17/27x17_153.7.net"};
-        String wat_net_name_for = "./for_water_rw29_20120318/37x17_754.1.net";
+        //String wat_net_name_for = "./for_water_rw29_20120318/37x17_754.1.net";
         a_nn wat_net_for;
 
         s_nn_atdata nn_at_data = nn_data;
@@ -989,7 +986,7 @@ public class LevMarNN {
             prepare = prepare + 2;
             nn_at_data.setPrepare(prepare);
         }
-        wat_net_for = prepare_a_nn(wat_net_name_for);
+        wat_net_for = prepare_a_nn(nnResources.getNetWaterPath());
         outnet = use_the_nn(wat_net_for, innet, outnet);
 
         if (nlam == 11) {
@@ -1085,9 +1082,9 @@ public class LevMarNN {
             //char *tup_net_name    ={"./oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
 
             // new nets, RD 20130308:
-            String rhopath_net_name = "./oc_cci_20121127/ac_forward_all/ac_rhopath_b29/17x37x31_121.8.net";
-            String tdown_net_name = "./oc_cci_20121127/ac_forward_all/t_down_b29/17x37x31_89.4.net";
-            String tup_net_name = "./oc_cci_20121127/ac_forward_all/ac_tup_b29/17x37x31_83.8.net";
+            final String rhopath_net_name = "ac_rhopath_b29/17x37x31_121.8.net";
+            final String tdown_net_name = "t_down_b29/17x37x31_89.4.net";
+            final String tup_net_name = "ac_tup_b29/17x37x31_83.8.net";
 
 
             a_nn atm_net_for, rhopath_net, tdown_net, tup_net;
@@ -1144,9 +1141,9 @@ public class LevMarNN {
                 make_alphatab();
             }
 
-            rhopath_net = prepare_a_nn(rhopath_net_name);
-            tdown_net = prepare_a_nn(tdown_net_name);
-            tup_net = prepare_a_nn(tup_net_name);
+            rhopath_net = prepare_a_nn(nnResources.getAcForwardNetPath(rhopath_net_name));
+            tdown_net = prepare_a_nn(nnResources.getAcForwardNetPath(tdown_net_name));
+            tup_net = prepare_a_nn(nnResources.getAcForwardNetPath(tup_net_name));
 
             outnet1 = use_the_nn(rhopath_net, innet, outnet1);
             outnet2 = use_the_nn(tdown_net, innet, outnet2);
