@@ -11,311 +11,303 @@ import Jama.Matrix;
  */
 public class LevenbergMarquardtOptimizer3 {
 
-    private static final double convergenceThreshold = 1e-17;
-    private final static double initialDampingFactor = 1e-3;
+    private static final double eps1 = 1e-17;
+    private final static double tau = 1e-3;
     private final static int blockSize = 32;
     private final static int squaredBlockSize = blockSize * blockSize;
 
     public double[] solveConstrainedLevenbergMarquardt(ForwardModel model, CostFunction function,
-                                                       double[] variables, double[] measuredSignal,
+                                                       double[] p, double[] x,
                                                        BreakingCriterion criterion,
-                                                       double[] lowerBounds,
-                                                       double[] upperBounds) {
-        final double[] modeledSignal = model.getModeledSignal(variables);
-        final int numberOfVariables = variables.length;
-        final int numberOfSignalValues = measuredSignal.length;
-        final double cost = function.getCost(modeledSignal);
-        double squaredTotalError = 0;   //  This should be the cost from the cost function
-        double[] errorPerSignalValue = new double[numberOfSignalValues];
-        for (int i = 0; i < numberOfSignalValues; ++i) {
-            errorPerSignalValue[i] = measuredSignal[i] - modeledSignal[i];
-            squaredTotalError += Math.pow(errorPerSignalValue[i], 2);
+                                                       double[] lb,
+                                                       double[] ub) {
+        final int m = p.length;
+        final int n = x.length;
+        double[] hx = model.getModeledSignal(p);
+        final double cost = function.getCost(hx);
+        double p_eL2 = 0;   //  This should be the cost from the cost function
+        double[] e = new double[n];
+        for (int i = 0; i < n; ++i) {
+            e[i] = x[i] - hx[i];
+            p_eL2 += Math.pow(e[i], 2);
         }
-        final double initialSquaredTotalError = squaredTotalError;
-        Matrix jacobianTransposedJacobianMatrix = new Matrix(numberOfVariables, numberOfVariables);
-        double[] jacobianTransposedE = new double[numberOfVariables];
+//        final double initialSquaredTotalError = p_eL2;
+        Matrix jacTjac = new Matrix(m, m);
+        double[] jacTe = new double[m];
         int numberOfIterations = 0;
-        double dampingConstant = 0;
+        double mu = 0;
         double nu = 2;
-        double[] updatedSignal = modeledSignal;
-        double updatedTotalSquaredError = Double.MAX_VALUE;
+        double Dp_L2 = Double.MAX_VALUE;
         double alpha = 0;
-        int previousGradientTaken = 0;
+        int gprevtaken = 0;
         boolean breaknested = false;
-        double[] diagonalOfJacobianTransposedJacobianMatrix = new double[numberOfVariables];
-        while (!criterion.isMet(squaredTotalError, numberOfIterations) && !breaknested) {
+        double[] diag_jacTjac = new double[m];
+        double eps3 = 1e-10;
+        while (!criterion.isMet(p_eL2, numberOfIterations) && !breaknested) {
 //            if (numberOfIterations % 1 == 0) {
             System.out.println("Iteration " + numberOfIterations + ":");
-            System.out.println("Current total error: " + squaredTotalError);
+            System.out.println("Current total error: " + p_eL2);
 //            }
-            if (squaredTotalError <= convergenceThreshold) {
+            if (p_eL2 <= eps3) {
                 break;
             }
             // It is also possible to derive a jacobian matrix from center differences.
             // I am indifferent to which one to use.
-//            final Matrix jacobianMatrix = getJacobianMatrixFromForwardDifferences(model, variables, updatedSignal);
-            final Matrix jacobianMatrix = getJacobianMatrixFromCenterDifferences(model, variables, updatedSignal);
-            if (numberOfVariables * numberOfSignalValues < squaredBlockSize) {
-                for (int i = 0; i < numberOfVariables; i++) {
-                    for (int j = 0; j < numberOfVariables; j++) {
-                        jacobianTransposedJacobianMatrix.set(i, j, 0);
+//            final Matrix jac = getJacobianMatrixFromForwardDifferences(model, variables, hx);
+            final Matrix jac = getJacobianMatrixFromCenterDifferences(model, p, hx);
+            if (m * n < squaredBlockSize) {
+                for (int i = 0; i < m; i++) {
+                    for (int j = 0; j < m; j++) {
+                        jacTjac.set(i, j, 0);
                     }
-                    jacobianTransposedE[i] = 0;
+                    jacTe[i] = 0;
                 }
-                for (int i = numberOfSignalValues - 1; i >= 0; i--) {
-                    for (int j = numberOfVariables - 1; j >= 0; j--) {
-                        alpha = jacobianMatrix.get(i, j);
+                for (int i = n - 1; i >= 0; i--) {
+                    for (int j = m - 1; j >= 0; j--) {
+                        alpha = jac.get(i, j);
                         for (int k = j; k >= 0; k--) {
-                            final double value2 = jacobianMatrix.get(i, k);
-                            final double currentValue = jacobianTransposedJacobianMatrix.get(j, k);
-                            jacobianTransposedJacobianMatrix.set(j, k, currentValue + (alpha * value2));
-                            jacobianTransposedJacobianMatrix.set(k, j, currentValue + (alpha * value2));
+                            final double value2 = jac.get(i, k);
+                            final double currentValue = jacTjac.get(j, k);
+                            jacTjac.set(j, k, currentValue + (alpha * value2));
+                            jacTjac.set(k, j, currentValue + (alpha * value2));
                         }
-                        jacobianTransposedE[j] += alpha * errorPerSignalValue[i];
+                        jacTe[j] += alpha * e[i];
                     }
                 }
             } else {
-                jacobianTransposedJacobianMatrix =
-                        blockedMultiplication(jacobianMatrix, jacobianTransposedJacobianMatrix,
-                                              numberOfSignalValues, numberOfVariables);
-                for (int i = 0; i < numberOfVariables; i++) {
-                    jacobianTransposedE[numberOfVariables] = 0;
+                jacTjac = blockedMultiplication(jac, jacTjac, n, m);
+                for (int i = 0; i < m; i++) {
+                    jacTe[m] = 0;
                 }
-                for (int i = 0; i < numberOfSignalValues; i++) {
-                    for (int j = 0; j < numberOfVariables; j++) {
-                        jacobianTransposedE[j] = jacobianMatrix.get(i, j) * measuredSignal[j];
+                for (int i = 0; i < n; i++) {
+                    for (int j = 0; j < m; j++) {
+                        jacTe[j] = jac.get(i, j) * x[j];
                     }
                 }
             }
-            double jacobianTransposedEInf = 0;
-            double squaredParameters = 0;
+            double jacTe_inf = 0;
+            double p_L2 = 0;
             int numActive = 0;
             int jReplacement = 0;
-            for (int i = 0; i < numberOfVariables; ++i) {
-                if (upperBounds != null && variables[i] == upperBounds[i]) {
+            for (int i = 0; i < m; ++i) {
+                if (ub != null && p[i] == ub[i]) {
                     numActive++;
-                    if (jacobianTransposedE[i] > 0) {
+                    if (jacTe[i] > 0) {
                         jReplacement++;
                     }
-                } else if (lowerBounds != null && variables[i] == lowerBounds[i]) {
+                } else if (lb != null && p[i] == lb[i]) {
                     numActive++;
-                    if (jacobianTransposedE[i] < 0) {
+                    if (jacTe[i] < 0) {
                         jReplacement++;
                     }
-                } else if (jacobianTransposedEInf < Math.abs(jacobianTransposedE[i])) {
-                    jacobianTransposedEInf = Math.abs(jacobianTransposedE[i]);
+                } else if (jacTe_inf < Math.abs(jacTe[i])) {
+                    jacTe_inf = Math.abs(jacTe[i]);
                 }
-                diagonalOfJacobianTransposedJacobianMatrix[i] = jacobianTransposedJacobianMatrix.get(i, i);
-                squaredParameters += variables[i] * variables[i];
+                diag_jacTjac[i] = jacTjac.get(i, i);
+                p_L2 += p[i] * p[i];
             }
-            if (numActive == jReplacement && jacobianTransposedEInf < convergenceThreshold) {
-                updatedTotalSquaredError = 0;
+            if (numActive == jReplacement && jacTe_inf < eps1) {
+                Dp_L2 = 0;
                 break;  // gradient too small
             }
             if (numberOfIterations == 0) {
-                if (lowerBounds == null && upperBounds == null) {
-                    double largestElementOfDiagonalOfJacobianTransposedJacobianMatrix = Double.MIN_VALUE;
-                    for (int i = 0; i < numberOfVariables; i++) {
-                        if (diagonalOfJacobianTransposedJacobianMatrix[i] >
-                                largestElementOfDiagonalOfJacobianTransposedJacobianMatrix) {
-                            largestElementOfDiagonalOfJacobianTransposedJacobianMatrix =
-                                    diagonalOfJacobianTransposedJacobianMatrix[i];
+                if (lb == null && ub == null) {
+                    double tmp = Double.MIN_VALUE;
+                    for (int i = 0; i < m; i++) {
+                        if (diag_jacTjac[i] > tmp) {
+                            tmp = diag_jacTjac[i];
                         }
                     }
-                    dampingConstant = initialDampingFactor * largestElementOfDiagonalOfJacobianTransposedJacobianMatrix;
+                    mu = tau * tmp;
                 } else {
-                    dampingConstant = 0.5 * initialDampingFactor * squaredTotalError;
+                    mu = 0.5 * tau * p_eL2;
                 }
             }
             while (!breaknested) {
-                for (int i = 0; i < numberOfVariables; ++i) {
-                    jacobianTransposedJacobianMatrix.set(i, i, jacobianTransposedJacobianMatrix.get(i, i) + dampingConstant);
+                for (int i = 0; i < m; ++i) {
+                    jacTjac.set(i, i, jacTjac.get(i, i) + mu);
                 }
-                double[] solutionForLinearEquation = getSolutionForLinearEquation(jacobianTransposedJacobianMatrix, jacobianTransposedE);
-                double[] updatedVariables = new double[numberOfVariables];
-                double updatedTotalSignalError = 0;
-                if (solutionForLinearEquation != null) {
-                    for (int i = 0; i < numberOfVariables; ++i) {
-                        updatedVariables[i] = variables[i] + solutionForLinearEquation[i];
+                double[] Dp = getSolutionForLinearEquation(jacTjac, jacTe);
+                double[] pDp = new double[m];
+                double pDp_eL2 = 0;
+                if (Dp != null) {
+                    for (int i = 0; i < m; ++i) {
+                        pDp[i] = p[i] + Dp[i];
                     }
-                    updatedVariables = fitToBounds(updatedVariables, lowerBounds, upperBounds);
-                    updatedTotalSquaredError = 0;
-                    for (int i = 0; i < numberOfVariables; ++i) {
-                        solutionForLinearEquation[i] = updatedVariables[i] - variables[i];
-                        updatedTotalSquaredError += Math.pow(solutionForLinearEquation[i], 2);
+                    pDp = fitToBounds(pDp, lb, ub);
+                    Dp_L2 = 0;
+                    for (int i = 0; i < m; ++i) {
+                        Dp[i] = pDp[i] - p[i];
+                        Dp_L2 += Math.pow(Dp[i], 2);
                     }
-                    if (updatedTotalSquaredError <= convergenceThreshold * convergenceThreshold * squaredParameters) {
+                    if (Dp_L2 <= eps1 * eps1 * p_L2) {
                         break;  // stopped by small Dp
                     }
                     double epsilon = calculateMachineEpsilonDouble();
-                    if (updatedTotalSquaredError >= (squaredParameters + (convergenceThreshold * convergenceThreshold)) / (epsilon * epsilon)) {
+                    if (Dp_L2 >= (p_L2 + (eps1 * eps1)) / (epsilon * epsilon)) {
                         break;  //singular (or almost singular) matrix
                     }
-                    updatedSignal = model.getModeledSignal(updatedVariables);
-                    updatedTotalSignalError = 0;
-                    for (int i = 0; i < numberOfSignalValues; ++i) {
-                        updatedSignal[i] = measuredSignal[i] - updatedSignal[i];
-                        updatedTotalSignalError += Math.pow(updatedSignal[i], 2);
+                    hx = model.getModeledSignal(pDp);
+                    pDp_eL2 = 0;
+                    for (int i = 0; i < n; ++i) {
+                        hx[i] = x[i] - hx[i];
+                        pDp_eL2 += Math.pow(hx[i], 2);
                     }
-                    if (!(updatedTotalSignalError > Double.NEGATIVE_INFINITY) || !(updatedTotalSignalError < Double.POSITIVE_INFINITY)) {
+                    if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) || !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
                         break;
                     }
-                    double gamma = 0.99995;
+                    double gamma_sq = Math.pow(0.99995, 2);
                     double dL = 0;
-                    if (updatedTotalSignalError <= gamma * squaredTotalError) {
-                        for (int i = 0; i < numberOfVariables; ++i) {
-                            dL += solutionForLinearEquation[i] *
-                                    (dampingConstant * solutionForLinearEquation[i] + jacobianTransposedE[i]);
+                    if (pDp_eL2 <= gamma_sq * p_eL2) {
+                        for (int i = 0; i < m; ++i) {
+                            dL += Dp[i] * (mu * Dp[i] + jacTe[i]);
                         }
                         double dF = 0;
                         if (dL > 0) {
-                            dF = squaredTotalError - updatedTotalSignalError;
+                            dF = p_eL2 - pDp_eL2;
                             double temp = 2d * dF / dL - 1d;
                             temp = 1 - temp * temp * temp;
-                            dampingConstant = dampingConstant * Math.max(temp, (1d / 3d));
+                            mu = mu * Math.max(temp, (1d / 3d));
                         } else {
-                            double temp = 0.1 * updatedTotalSignalError;
-                            dampingConstant = Math.min(dampingConstant, temp);
+                            double temp = 0.1 * pDp_eL2;
+                            mu = Math.min(mu, temp);
                         }
                         nu = 2;
-                        for (int i = 0; i < numberOfVariables; ++i) {
-                            variables[i] = updatedVariables[i];
+                        for (int i = 0; i < m; ++i) {
+                            p[i] = pDp[i];
                         }
-                        for (int i = 0; i < numberOfSignalValues; ++i) {
-                            errorPerSignalValue[i] = updatedSignal[i];
+                        for (int i = 0; i < n; ++i) {
+                            e[i] = hx[i];
                         }
-                        squaredTotalError = updatedTotalSignalError;
-                        previousGradientTaken = 0;
+                        p_eL2 = pDp_eL2;
+                        gprevtaken = 0;
                         break;
                     }
                 } else {    // is NOT solved
-                    dampingConstant *= nu;
+                    mu *= nu;
                     if (2 * nu < nu) {
                         break;
                     }
                     nu *= 2;
-                    for (int i = 0; i < numberOfVariables; ++i) {
-                        jacobianTransposedJacobianMatrix.set(i, i, diagonalOfJacobianTransposedJacobianMatrix[i]);
+                    for (int i = 0; i < m; ++i) {
+                        jacTjac.set(i, i, diag_jacTjac[i]);
                     }
                     continue;
                 }
                 double jacTeDp = 0;
-                for (int i = 0; i < numberOfVariables; ++i) {
-                    jacobianTransposedE[i] = -jacobianTransposedE[i];
-                    jacTeDp += jacobianTransposedE[i] * solutionForLinearEquation[i];
+                for (int i = 0; i < m; ++i) {
+                    jacTe[i] = -jacTe[i];
+                    jacTeDp += jacTe[i] * Dp[i];
                 }
-                double rho = 1e8;
-                boolean gradproj = jacTeDp <= rho * Math.pow(updatedTotalSquaredError, (2.1d / 2d));
+                double rho = 1e-8;
+                boolean gradproj = jacTeDp <= -rho * Math.pow(Dp_L2, (2.1d / 2d));
                 double t = 1;
                 if (gradproj) {
                     while (gradproj && t > 1e-12) {
-                        for (int i = 0; i < numberOfVariables; ++i) {
-                            updatedVariables[i] = variables[i] + t * solutionForLinearEquation[i];
+                        for (int i = 0; i < m; ++i) {
+                            pDp[i] = p[i] + t * Dp[i];
                         }
-                        updatedVariables = fitToBounds(updatedVariables, lowerBounds, upperBounds);
-                        updatedSignal = model.getModeledSignal(updatedVariables);
-                        updatedTotalSignalError = 0;
-                        for (int i = 0; i < numberOfSignalValues; ++i) {
-                            updatedSignal[i] = measuredSignal[i] - updatedSignal[i];
-                            updatedTotalSignalError += Math.pow(updatedSignal[i], 2);
+                        pDp = fitToBounds(pDp, lb, ub);
+                        hx = model.getModeledSignal(pDp);
+                        pDp_eL2 = 0;
+                        for (int i = 0; i < n; ++i) {
+                            hx[i] = x[i] - hx[i];
+                            pDp_eL2 += Math.pow(hx[i], 2);
                         }
-                        if (!(updatedTotalSignalError > Double.NEGATIVE_INFINITY) ||
-                                !(updatedTotalSignalError < Double.POSITIVE_INFINITY)) {
-                            // todo goto wtf! -> Line 855
+                        if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) || !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
                             gradproj = false;
                             break;
                         } else {
-                            if (updatedTotalSignalError <= squaredTotalError + 2 * t * alpha * jacTeDp) {
+                            if (pDp_eL2 <= p_eL2 + 2 * t * alpha * jacTeDp) {
                                 break;
                             }
                         }
                         t *= 0.9;
                     }
-                    previousGradientTaken = 0;
+                    gprevtaken = 0;
                 }
                 if (!gradproj) {
                     double temp = 0;
-                    for (int i = 0; i < numberOfVariables; ++i) {
-                        temp += jacobianTransposedE[i] * jacobianTransposedE[i];
+                    for (int i = 0; i < m; ++i) {
+                        temp += jacTe[i] * jacTe[i];
                     }
                     temp = Math.sqrt(temp);
                     temp = 100 / (1 + temp);
                     double t0 = Math.min(temp, 1);
-                    if (previousGradientTaken == 0) {
+                    if (gprevtaken == 0) {
                         t = t0;
                     }
                     boolean terminatePGLS = false;
                     while (t > 1e-18 && !breaknested && !terminatePGLS) {
-                        for (int i = 0; i < numberOfVariables; ++i) {
-                            updatedVariables[i] = variables[i] - t * jacobianTransposedE[i];
+                        for (int i = 0; i < m; ++i) {
+                            pDp[i] = p[i] - t * jacTe[i];
                         }
-                        updatedVariables = fitToBounds(updatedVariables, lowerBounds, upperBounds);
-                        updatedTotalSquaredError = 0;
-                        for (int i = 0; i < numberOfVariables; ++i) {
-                            solutionForLinearEquation[i] = updatedVariables[i] - variables[i];
-                            updatedTotalSquaredError += solutionForLinearEquation[i] * solutionForLinearEquation[i];
+                        pDp = fitToBounds(pDp, lb, ub);
+                        Dp_L2 = 0;
+                        for (int i = 0; i < m; ++i) {
+                            Dp[i] = pDp[i] - p[i];
+                            Dp_L2 += Dp[i] * Dp[i];
                         }
-                        updatedSignal = model.getModeledSignal(updatedVariables);
-                        updatedTotalSignalError = 0;
-                        for (int i = 0; i < numberOfSignalValues; ++i) {
-                            updatedSignal[i] = measuredSignal[i] - updatedSignal[i];
-                            updatedTotalSignalError += Math.pow(updatedSignal[i], 2);
+                        hx = model.getModeledSignal(pDp);
+                        pDp_eL2 = 0;
+                        for (int i = 0; i < n; ++i) {
+                            hx[i] = x[i] - hx[i];
+                            pDp_eL2 += Math.pow(hx[i], 2);
                         }
-                        if (!(updatedTotalSignalError > Double.NEGATIVE_INFINITY) ||
-                                !(updatedTotalSignalError < Double.POSITIVE_INFINITY)) {
+                        if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) ||
+                                !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
                             breaknested = true;
                             break;
-//                            goto breaknested line 917
                         }
                         if (!breaknested) {
                             jacTeDp = 0;
-                            for (int i = 0; i < numberOfVariables; ++i) {
-                                jacTeDp += jacobianTransposedE[i] * solutionForLinearEquation[i];
+                            for (int i = 0; i < m; ++i) {
+                                jacTeDp += jacTe[i] * Dp[i];
                             }
-                            if (previousGradientTaken == 1 && updatedTotalSignalError <= squaredTotalError + 2 * 0.99999 * jacTeDp) {
+                            if (gprevtaken == 1 && pDp_eL2 <= p_eL2 + 2 * 0.99999 * jacTeDp) {
                                 t = t0;
-                                previousGradientTaken = 0;
+                                gprevtaken = 0;
                             }
-                            if (updatedTotalSignalError <= squaredTotalError + 2 * alpha * jacTeDp) {
+                            if (pDp_eL2 <= p_eL2 + 2 * alpha * jacTeDp) {
                                 terminatePGLS = true;
                             }
                         }
                         t *= 0.9;
                     }
                     if (!breaknested && !terminatePGLS) {
-                        previousGradientTaken = 0;
+                        gprevtaken = 0;
                     }
                     if (!breaknested) {
-                        previousGradientTaken = 1;
+                        gprevtaken = 1;
                     }
                 }
                 if (!breaknested) {
-                    updatedTotalSquaredError = 0;
-                    for (int i = 0; i < numberOfVariables; ++i) {
-                        double temp = updatedVariables[i] + variables[i];
-                        updatedTotalSquaredError += temp * temp;
+                    Dp_L2 = 0;
+                    for (int i = 0; i < m; ++i) {
+                        double temp = pDp[i] - p[i];
+                        Dp_L2 += temp * temp;
                     }
-                    if (updatedTotalSquaredError <= convergenceThreshold * convergenceThreshold * squaredParameters) {
+                    if (Dp_L2 <= eps1 * eps1 * p_L2) {
 //                        stop = 2
                         break;
                     }
-                    for (int i = 0; i < numberOfVariables; ++i) {
-                        variables[i] = updatedVariables[i];
+                    for (int i = 0; i < m; ++i) {
+                        p[i] = pDp[i];
                     }
-                    for (int i = 0; i < numberOfSignalValues; ++i) {
-                        errorPerSignalValue[i] = updatedSignal[i];
+                    for (int i = 0; i < n; ++i) {
+                        e[i] = hx[i];
                     }
-                    squaredTotalError = updatedTotalSignalError;
+                    p_eL2 = pDp_eL2;
                     break;
                 }
             }
             numberOfIterations++;
         }
 
-        for (int i = 0; i < numberOfVariables; ++i) {
-            jacobianTransposedJacobianMatrix.set(i, i, diagonalOfJacobianTransposedJacobianMatrix[i]);
+        for (int i = 0; i < m; ++i) {
+            jacTjac.set(i, i, diag_jacTjac[i]);
         }
-        return variables;
+        return p;
     }
 
     /**
