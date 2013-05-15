@@ -68,7 +68,7 @@ public class LevMarNnL1BPerformanceTest {
                     createDefaultParameterMap(),
                     new Product[]{product});
 
-            ProductIO.writeProduct(ocProduct, targetDirectory.getPath(), "BEAM-DIMAP");
+            ProductIO.writeProduct(ocProduct, targetDirectory.getPath() + File.separator + "nn_in_c.dim", "BEAM-DIMAP");
             nanoTimer.stop();
             c_elapsed = "C   : " + nanoTimer.getElapsedTime();
         } finally {
@@ -91,7 +91,7 @@ public class LevMarNnL1BPerformanceTest {
             final Product ocProduct = GPF.createProduct("Meris.OCNNRD",
                     createDefaultParameterMap(),
                     new Product[]{product});
-            ProductIO.writeProduct(ocProduct, targetDirectory.getPath(), "BEAM-DIMAP");
+            ProductIO.writeProduct(ocProduct, targetDirectory.getPath()+ File.separator + "nn_in_java.dim", "BEAM-DIMAP");
             nanoTimer.stop();
             java_elapsed = "Java: " + nanoTimer.getElapsedTime();
         } finally {

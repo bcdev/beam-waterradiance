@@ -45,11 +45,29 @@ public class LevMarNN {
     private final nn_atmo_watForwardModel model;
     private final LevenbergMarquardtOptimizer3 optimizer;
     private double[] p;
-    private final a_nn rhopath_net;
-    private final a_nn tdown_net;
-    private final a_nn tup_net;
-    private final a_nn wat_net_for;
 
+    private final double[] nn_in;
+    private final double[] info;
+    private final double[] rlw1;
+    private final double[] rlw2;
+    private final double[] L_toa;
+    private final double[] Ed_toa;
+    private final double[] tau_rayl_standard;
+    private final double[] tau_rayl_toa_tosa;
+    private final double[] tau_rayl_smile;
+    private final double[] L_rayl_toa_tosa;
+    private final double[] L_rayl_smile;
+    private final double[] rho_tosa_corr;
+    private final double[] Ed_toa_smile_rat;
+    private final double[] Ed_toa_smile_corr;
+    private final double[] L_tosa;
+    private final double[] Ed_tosa;
+    private final double[] trans_rayl_press;
+    private final double[] trans_ozond;
+    private final double[] trans_ozonu;
+
+    private double[] nn_out;
+    private final NnAtmoWat nnAtmoWat;
 
 
     public LevMarNN() throws IOException {
@@ -57,6 +75,38 @@ public class LevMarNN {
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
         rl_toa = new double[NLAM];
+        nn_in = new double[NLAM];
+        nn_out = new double[40];
+        info = new double[LM_INFO_SZ];
+
+//        double[] rwn1 = new double[40];
+//        double[] rwn2 = new double[40];
+        rlw1 = new double[40];
+        rlw2 = new double[40];
+
+        L_toa = new double[15];
+        Ed_toa = new double[15];
+        //double[] L_toa_ocz = new double[15];
+
+        tau_rayl_standard = new double[15];
+        tau_rayl_toa_tosa = new double[15];
+        tau_rayl_smile = new double[15];
+        L_rayl_toa_tosa = new double[15];
+        L_rayl_smile = new double[15];
+        rho_tosa_corr = new double[15];
+        Ed_toa_smile_rat = new double[15];
+        Ed_toa_smile_corr = new double[15];
+        L_tosa = new double[15];
+        Ed_tosa = new double[15];
+        //double[] trans_extra = new double[15];
+        trans_rayl_press = new double[15];
+        //double[] trans_rayl_smile = new double[15];
+        //double[] trans_rayl_pressd = new double[15];
+        //double[] trans_rayl_smiled = new double[15];
+        //double[] trans_rayl_pressu = new double[15];
+        //double[] trans_rayl_smileu = new double[15];
+        trans_ozond = new double[15];
+        trans_ozonu = new double[15];
 
         // lower and upper boundary for variables aot, ang, wind, log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min
         lb = new double[]{0.001, 0.001, 0.001, -13.96, -15.42, -16.38, -15.87, 0.0};
@@ -74,23 +124,14 @@ public class LevMarNN {
         optimizer = new LevenbergMarquardtOptimizer3();
         p = new double[8];
 
-        // new nets, RD 20130308:
-        final String rhopath_net_name = "ac_rhopath_b29/17x37x31_121.8.net";
-        final String tdown_net_name = "t_down_b29/17x37x31_89.4.net";
-        final String tup_net_name = "ac_tup_b29/17x37x31_83.8.net";
-
-        rhopath_net = prepare_a_nn(nnResources.getAcForwardNetPath(rhopath_net_name));
-        tdown_net = prepare_a_nn(nnResources.getAcForwardNetPath(tdown_net_name));
-        tup_net = prepare_a_nn(nnResources.getAcForwardNetPath(tup_net_name));
-        wat_net_for = prepare_a_nn(nnResources.getNetWaterPath());
+        nnAtmoWat = new NnAtmoWat(alphaTab);
     }
 
     public int levmar_nn(int detector, double[] input, double[] output) {
         int FIRST = 1;
 
-        double[] info = new double[LM_INFO_SZ];
         double[] x11 = new double[11];
-        double[] p_alt = new double[8];
+        //double[] p_alt = new double[8];
         // @todo 1 tb/** these two are never written, only read from ... tb 2013-05-14
         double[] rw1 = new double[NLAM];
         double[] rw2 = new double[NLAM];
@@ -100,45 +141,19 @@ public class LevMarNN {
         s_nn_atdata nn_at_data = new s_nn_atdata();
         int m, SMILE;
 
+        double surf_press, rayl_rel_mass_toa_tosa;
+        double cos_scat_ang, phase_rayl_min;
+
         double sun_zenith, view_zenith, cos_teta_sun, sin_teta_sun, cos_teta_view, sin_teta_view, cos_azi_diff;
         double sun_azimuth, view_azimuth, surf_pressure;
         int nlam, ilam, ix;
 
         double[] conc_at = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-        double[] nn_in = new double[40];
-        double[] nn_out = new double[40];
-        double[] rwn1 = new double[40];
-        double[] rwn2 = new double[40];
-        double[] rlw1 = new double[40];
-        double[] rlw2 = new double[40];
         double trans708, X2;
 
         double smile_lam;
-        double[] L_toa = new double[15];
-        double[] Ed_toa = new double[15];
-        double[] L_toa_ocz = new double[15];
-        double surf_press, rayl_rel_mass_toa_tosa;
-        double cos_scat_ang, phase_rayl_min;
-        double[] tau_rayl_standard = new double[15];
-        double[] tau_rayl_toa_tosa = new double[15];
-        double[] tau_rayl_smile = new double[15];
-        double[] L_rayl_toa_tosa = new double[15];
-        double[] L_rayl_smile = new double[15];
-        double[] rho_tosa_corr = new double[15];
-        double[] Ed_toa_smile_rat = new double[15];
-        double[] Ed_toa_smile_corr = new double[15];
-        double[] L_tosa = new double[15];
-        double[] Ed_tosa = new double[15];
-        double[] trans_extra = new double[15];
-        double[] trans_rayl_press = new double[15];
-        double[] trans_rayl_smile = new double[15];
-        double[] trans_rayl_pressd = new double[15];
-        double[] trans_rayl_smiled = new double[15];
-        double[] trans_rayl_pressu = new double[15];
-        double[] trans_rayl_smileu = new double[15];
-        double[] trans_ozond = new double[15];
-        double[] trans_ozonu = new double[15];
+
 
         /***********************************************/
         if (FIRST == 1) {
@@ -199,10 +214,10 @@ public class LevMarNN {
             trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
         }
 
-        for (int i = 0; i < 12; ++i) {
-            ix = MERBAND_12_INDEX[i];
-            L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
-        }
+//        for (int i = 0; i < 12; ++i) {
+//            ix = MERBAND_12_INDEX[i];
+//            L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
+//        }
 
         /*+++ ozone correction +++*/
         nlam = 12;
@@ -213,10 +228,10 @@ public class LevMarNN {
             trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
         }
 
-        for (int i = 0; i < 12; ++i) {
-            ix = MERBAND_12_INDEX[i];
-            L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
-        }
+//        for (int i = 0; i < 12; ++i) {
+//            ix = MERBAND_12_INDEX[i];
+//            L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
+//        }
 
         /* +++ water vapour correction for band 9 +++++ */
 
@@ -245,8 +260,8 @@ public class LevMarNN {
             //tau_rayl_toa_tosa[ilam] = tau_rayl_standard[ilam] * rayl_mass_toa_tosa; // RD20120105
             L_rayl_toa_tosa[ilam] = Ed_toa[ix] * tau_rayl_toa_tosa[ilam] * phase_rayl_min / (4 * M_PI) * (1.0 / cos_teta_view);
             trans_rayl_press[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_view + 1.0 / cos_teta_sun));
-            trans_rayl_pressd[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_sun));
-            trans_rayl_pressu[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_view));
+            //trans_rayl_pressd[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_sun));
+            //trans_rayl_pressu[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_view));
         }
 
         	/* calculate rayleigh for correction of smile, lam in micrometer */
@@ -256,9 +271,9 @@ public class LevMarNN {
             smile_lam = rrlam[detector][ix];
             tau_rayl_smile[ilam] = 0.008735 * Math.pow(smile_lam / 1000.0, -4.08);
             L_rayl_smile[ilam] = Ed_toa[ix] * (tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * phase_rayl_min / (4 * M_PI) * (1.0 / cos_teta_view);
-            trans_rayl_smile[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view + 1.0 / cos_teta_sun));
-            trans_rayl_smiled[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_sun));
-            trans_rayl_smileu[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view));
+            //trans_rayl_smile[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view + 1.0 / cos_teta_sun));
+            //trans_rayl_smiled[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_sun));
+            //trans_rayl_smileu[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view));
         }
 
             /* +++++ Esun smile correction ++++++ */
@@ -289,9 +304,9 @@ public class LevMarNN {
         }
 
         	/* extra trans for rho_water: ozon, rayl_smile, rayl_press */
-        for (ilam = 0; ilam < nlam; ilam++) {
-            trans_extra[ilam] = trans_ozon[ilam] * trans_rayl_press[ilam] * trans_rayl_smile[ilam];
-        }
+//        for (ilam = 0; ilam < nlam; ilam++) {
+//            trans_extra[ilam] = trans_ozon[ilam] * trans_rayl_press[ilam] * trans_rayl_smile[ilam];
+//        }
 
 	/* +++++ vicarious adjustment +++++*/
 //        if (0) {
@@ -397,7 +412,7 @@ public class LevMarNN {
 
         for (int i = 0; i < m; i++) {
             conc_at[i] = p[i];
-            p_alt[i] = p[i];
+           // p_alt[i] = p[i];
         }
 
         model.init(x11, nn_at_data);
@@ -429,20 +444,20 @@ public class LevMarNN {
             nn_in[i] = rlw1[i - 5];
         }
 
-        nn_out = use_the_nn(norm_net, nn_in, nn_out);
+        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
 
-        for (int i = 0; i < 12; i++) {
-            rwn1[i] = nn_out[i] * M_PI;
-        }
+//        for (int i = 0; i < 12; i++) {
+//            rwn1[i] = nn_out[i] * M_PI;
+//        }
 
         for (int i = 5; i < 17; i++)
             nn_in[i] = rlw2[i - 5];
 
-        nn_out = use_the_nn(norm_net, nn_in, nn_out);
+        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
 
-        for (int i = 0; i < 12; i++) {
-            rwn2[i] = nn_out[i] * M_PI;
-        }
+//        for (int i = 0; i < 12; i++) {
+//            rwn2[i] = nn_out[i] * M_PI;
+//        }
 
 //        } // end normalize
 
@@ -471,7 +486,7 @@ public class LevMarNN {
         return (0);
     }
 
-    private a_nn prepare_a_nn(String filename) throws IOException {
+    static a_nn prepare_a_nn(String filename) throws IOException {
         File fp;
         char ch;
         int i;
@@ -535,7 +550,7 @@ public class LevMarNN {
         return res;
     }
 
-    private File open_auxfile(String fileName) {
+    private static File open_auxfile(String fileName) {
 //        String path;
 //        String home;
 ////        char[] home = System.getenv("HOME").toCharArray();
@@ -558,7 +573,7 @@ public class LevMarNN {
         return new File(fileName);
     }
 
-    private feedforward make_ff_from_file(String filename) {
+    private static feedforward make_ff_from_file(String filename) {
         long pl, n, id1, id2, id3;
         long[] s;
         feedforward ff = new feedforward();
@@ -624,7 +639,7 @@ public class LevMarNN {
         return ff;
     }
 
-    private double[][][] make_mtxv(int n, int[] s) {
+    private static double[][][] make_mtxv(int n, int[] s) {
         int i, j;
         double[][][] wgt = new double[n - 1][][];
         for (i = 0; i < n - 1; i++) {
@@ -636,7 +651,7 @@ public class LevMarNN {
         return wgt;
     }
 
-    private double[][] make_vecv(int n, int[] s) {
+    private static double[][] make_vecv(int n, int[] s) {
         int i;
         double[][] bias;
         bias = new double[n][];
@@ -718,7 +733,7 @@ public class LevMarNN {
         }
 
 
-        /* make ed ratio tab, i.e. compute the ratio between the ed_toa for each pixel relative to ed-toa at the mean pixel for each camera */
+        /* make ed ratio tab, i.e. compute the ratio between the Ed_toa for each pixel relative to ed-toa at the mean pixel for each camera */
 
         /* compute ratio */
         for (ipix = 0; ipix < RR_TAB; ipix++) {
@@ -736,7 +751,7 @@ public class LevMarNN {
     }
 
 
-    private double[] use_the_nn(a_nn a_net, double[] nn_in, double[] nn_out) {
+    static double[] use_the_nn(a_nn a_net, double[] nn_in, double[] nn_out, AlphaTab alphaTab) {
         int i;
 
         final long anetNnin = a_net.getNnin();
@@ -747,7 +762,7 @@ public class LevMarNN {
             i,nn_in[i],a_net->nn.input[i],
 			a_net->inmin[i],a_net->inmax[i]);*/
         }
-        ff_proc(a_net.getNn());
+        ff_proc(a_net.getNn(), alphaTab);
 
         for (i = 0; i < a_net.getNnout(); i++) {
 //            double value = (nn_in[i] - a_net.getInmin()[i]) / (a_net.getInmax()[i] - a_net.getInmin()[i]);
@@ -762,7 +777,7 @@ public class LevMarNN {
         return nn_out;
     }
 
-    private void ff_proc(feedforward ff) {
+    private static void ff_proc(feedforward ff, AlphaTab alphaTab) {
         int i, pl;
         for (pl = 0; pl < ff.nplanes - 1; pl++) {
             for (i = 0; i < ff.size[pl + 1]; i++) {
@@ -772,7 +787,7 @@ public class LevMarNN {
         }
     }
 
-    private double scp(double[] x, double[] y, long n) {
+    private static double scp(double[] x, double[] y, long n) {
         int i;
         double sum = 0.;
         for (i = 0; i < n; i++)
@@ -783,7 +798,7 @@ public class LevMarNN {
     /**
      * * water nn **
      */
-    private NNReturnData nn_water(double[] conc_all, double[] rlw_nn, int m, int n, s_nn_atdata nn_data) {
+    static NNReturnData nn_water(double[] conc_all, double[] rlw_nn, int m, int n, s_nn_atdata nn_data, a_nn wat_net_for, AlphaTab alphaTab) {
         int ilam, nlam, ix;
 
         double sun_thet, view_zeni, azi_diff_hl, temperature, salinity;
@@ -833,7 +848,7 @@ public class LevMarNN {
             prepare = prepare + 2;
             nn_at_data.setPrepare(prepare);
         }
-        outnet = use_the_nn(wat_net_for, innet, outnet);
+        outnet = use_the_nn(wat_net_for, innet, outnet, alphaTab);
 
         if (nlam == 11) {
             for (ilam = 0; ilam < nlam; ilam++) {
@@ -873,7 +888,7 @@ public class LevMarNN {
 
         @Override
         public double[] getModeledSignal(double[] variables) {
-            final NNReturnData nnReturnData = nn_atmo_wat(variables, rtosa_nn.clone(), variables.length, rtosa_nn.length, nn_data);
+            final NNReturnData nnReturnData = nnAtmoWat.nn_atmo_wat(variables, rtosa_nn.clone(), variables.length, rtosa_nn.length, nn_data);
             nn_data = nnReturnData.getNn_atdata();
             return nnReturnData.getOutputValues();
         }
@@ -881,160 +896,6 @@ public class LevMarNN {
         @Override
         public double getPartialDerivative(double[] signal, double[] variables, int parameterIndex) {
             return 0;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        /**
-         * atmosphere **
-         * <p/>
-         * conc_all: Input parameters
-         * rtose_nn: Output values
-         * m:        conc_all size
-         * n:        size of ...
-         * nn_data:  additional data
-         */
-        private NNReturnData nn_atmo_wat(double[] conc_all, double[] rtosa_nn, int m, int n, s_nn_atdata nn_data) {
-            int ilam, nlam, ix;
-
-            double sun_thet, view_zeni, azi_diff_hl, temperature, salinity;
-            double aot, ang, wind, log_aot, log_ang, log_wind, log_agelb, log_apart, log_apig, log_bpart;
-            double log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min, log_conc_wit;
-
-            double[] innet = new double[10];
-            double[] outnet = new double[63];
-            double[] tdown_nn = new double[29];
-            double[] tup_nn = new double[29];
-            double[] outnet1 = new double[29];
-            double[] outnet2 = new double[29];
-            double[] outnet3 = new double[29];
-            double[] rlpath_nn = new double[29];
-            double[] rw_2flow = new double[29];
-            double[] conc_2flow = new double[5];
-            double[] rlw_nn = new double[29];
-            double[] rpath_nn = new double[29];
-            double[] rw_nn = new double[29];
-            int prepare;
-            double x, y, z, radius, azimuth, elevation;
-
-            //char *atm_net_name_for={"27x57x47_47.7.net"};
-            //char *atm_net_name_for={"./for_21bands_20110918/27x57x67_59.2.net"};
-            //char *atm_net_name_for={"./for_21bands_20110918/17_3978.7.net"};
-
-            //char *rhopath_net_name={"./for_21bands_20120112/rhopath/27x17_18.2.net"};
-            //char *tdown_net_name  ={"./for_21bands_20120112/tdown/27x17_202.6.net"};
-            //char *tup_net_name    ={"./for_21bands_20120112/tup/27x17_181.6.net"};
-
-            //char *rhopath_net_name={"./oc_cci_20120222/ac_forward_all/ac_rhopath_b29/27x27_32.7.net"};
-            //char *tdown_net_name  ={"./oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
-            //char *tup_net_name    ={"./oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
-
-
-            s_nn_atdata nn_at_data = nn_data;
-
-            nlam = n;
-
-            prepare = nn_at_data.getPrepare();
-            sun_thet = nn_at_data.getSun_thet();
-            view_zeni = nn_at_data.getView_zeni();
-            azi_diff_hl = nn_at_data.getAzi_diff_hl();
-            //azi_diff_hl=180.0-azi_diff_hl;
-            temperature = nn_at_data.getTemperature();
-            salinity = nn_at_data.getSalinity();
-
-            azimuth = DEG_2_RAD * azi_diff_hl;
-            elevation = DEG_2_RAD * view_zeni;
-            x = Math.sin(elevation) * Math.cos(azimuth);
-            y = Math.sin(elevation) * Math.sin(azimuth);
-            z = Math.cos(elevation);
-
-
-            log_aot = conc_all[0];
-            log_ang = conc_all[1];
-            log_wind = conc_all[2];
-//            log_conc_chl = conc_all[3];
-//            log_conc_det = conc_all[4];
-//            log_conc_gelb = conc_all[5];
-//            log_conc_min = conc_all[6];
-//            log_conc_wit = conc_all[7];
-
-            // innet[0] = sun_thet;
-            // CHANGED for new nets, RD 20130308:
-            innet[0] = Math.cos(DEG_2_RAD * sun_thet);
-
-            innet[1] = x;
-            innet[2] = y;
-            innet[3] = z;
-
-            //innet[4] = log_aot;
-            //innet[5] = log_ang;
-            //innet[6] = log_wind;
-
-            // CHANGED for new nets, RD 20130308:
-            innet[4] = Math.exp(log_aot);
-            innet[5] = Math.exp(log_ang);
-            innet[6] = Math.exp(log_wind);
-
-            innet[7] = temperature;
-            innet[8] = salinity;
-
-            outnet1 = use_the_nn(rhopath_net, innet, outnet1);
-            outnet2 = use_the_nn(tdown_net, innet, outnet2);
-            outnet3 = use_the_nn(tup_net, innet, outnet3);
-
-            nlam = n; // if n == 11, then iteration for LM fit, if > 11, then computation for full spectrum
-            if (nlam == 11) {
-                for (ilam = 0; ilam < nlam; ilam++) {
-                    ix = lam29_meris11_ix[ilam];
-                    rpath_nn[ilam] = outnet1[ix];
-                    tdown_nn[ilam] = outnet2[ix];
-                    tup_nn[ilam] = outnet3[ix];
-                }
-                final NNReturnData res = nn_water(conc_all, rlw_nn, m, n, nn_at_data);
-                rlw_nn = res.getOutputValues();
-                nn_at_data = res.getNn_atdata();
-                for (ilam = 0; ilam < 11; ilam++) {
-                    rw_nn[ilam] = rlw_nn[ilam];//M_PI;
-                    rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
-                }
-            } else {
-                nlam = 29; // all bands for other calculations
-                for (ilam = 0; ilam < nlam; ilam++) {
-                    rpath_nn[ilam] = outnet1[ilam];
-                    tdown_nn[ilam] = outnet2[ilam];
-                    tup_nn[ilam] = outnet3[ilam];
-                }
-                n = nlam;
-                final NNReturnData res = nn_water(conc_all, rlw_nn, m, n, nn_data);
-                rlw_nn = res.getOutputValues();
-                nn_at_data = res.getNn_atdata();
-                for (ilam = 0; ilam < nlam; ilam++) {
-                    rw_nn[ilam] = rlw_nn[ilam];//*M_PI;// ! with pi included, 21 bands
-                    rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
-                    nn_at_data.setTdown_nn(ilam, tdown_nn[ilam]);
-                    nn_at_data.setTup_nn(ilam, tup_nn[ilam]);
-                    nn_at_data.setRpath_nn(ilam, rpath_nn[ilam]);
-                    nn_at_data.setRw_nn(ilam, rw_nn[ilam]);
-                }
-            }
-            return new NNReturnData(rtosa_nn, nn_data);
-        }
-    }
-
-    private class NNReturnData {
-
-        double[] outputValues;
-        s_nn_atdata nn_atdata;
-
-        NNReturnData(double[] output, s_nn_atdata data) {
-            outputValues = output;
-            nn_atdata = data;
-        }
-
-        private double[] getOutputValues() {
-            return outputValues;
-        }
-
-        private s_nn_atdata getNn_atdata() {
-            return nn_atdata;
         }
     }
 }
