@@ -4,6 +4,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
@@ -349,6 +350,12 @@ public class OcNnRdOperator extends PixelOperator {
             copySolarFluxes(input, sourceSamples);
         } else {
             System.arraycopy(solarFluxes, 0, input, 25, 15);
+        }
+    }
+
+    public static class Spi extends OperatorSpi {
+        public Spi() {
+            super(OcNnRdOperator.class);
         }
     }
 }

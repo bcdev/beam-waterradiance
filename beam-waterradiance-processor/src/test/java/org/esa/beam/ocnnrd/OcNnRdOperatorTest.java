@@ -4,6 +4,7 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.junit.Test;
 
@@ -134,6 +135,13 @@ public class OcNnRdOperatorTest {
             samples[i].set((double) i);
         }
         return samples;
+    }
+
+    @Test
+    public void testSpi() {
+        final OcNnRdOperator.Spi spi = new OcNnRdOperator.Spi();
+        final Class<? extends Operator> operatorClass = spi.getOperatorClass();
+        assertTrue(operatorClass.isAssignableFrom(OcNnRdOperator.class));
     }
 
     private static class TestSample implements WritableSample {

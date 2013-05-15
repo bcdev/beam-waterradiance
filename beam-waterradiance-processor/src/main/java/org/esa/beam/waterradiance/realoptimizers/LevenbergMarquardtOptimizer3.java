@@ -47,14 +47,14 @@ public class LevenbergMarquardtOptimizer3 {
         int stop = 0;
         double jacTe_inf = 0;
         while (!criterion.isMet(p_eL2, numberOfIterations) && !breaknested && stop == 0) {
-            System.out.println("Iteration " + numberOfIterations + ":");
-            StringBuilder builder = new StringBuilder("Current parameter estimates:");
-            for (int i = 0; i < p.length; ++i) {
-                builder.append(" " + p[i]);
-
-            }
-            System.out.println(builder.toString());
-            System.out.println("Current jacTe_inf and p_eL2: " + jacTe_inf + ", " + p_eL2);
+//            System.out.println("Iteration " + numberOfIterations + ":");
+//            StringBuilder builder = new StringBuilder("Current parameter estimates:");
+//            for (int i = 0; i < p.length; ++i) {
+//                builder.append(" " + p[i]);
+//
+//            }
+//            System.out.println(builder.toString());
+//            System.out.println("Current jacTe_inf and p_eL2: " + jacTe_inf + ", " + p_eL2);
             if (p_eL2 <= eps3) {
                 stop = 6;
                 break;
