@@ -8,7 +8,7 @@ public class LevMarNN {
     private static final int FR_TAB = 3700;
     private static final int RR_TAB = 925;
 
-    private static final double DEG_2_RAD = (Math.PI / 180.0);
+    private static final double DEG_2_RAD = (3.1415927 / 180.0);
     private final CostFunctionImpl costFunction;
 
     private double[][] frlam = new double[FR_TAB][15];
