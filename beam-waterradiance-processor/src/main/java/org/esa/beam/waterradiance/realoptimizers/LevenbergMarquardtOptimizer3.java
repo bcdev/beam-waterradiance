@@ -13,6 +13,7 @@ public class LevenbergMarquardtOptimizer3 {
 
     private static final double eps1 = 1e-17;
     private static final double eps2_sq = 1e-20;
+    private static final double eps2 = Math.sqrt(1e-20);
     private final static double tau = 1e-3;
     private final static int blockSize = 32;
     private final static int squaredBlockSize = blockSize * blockSize;
@@ -44,9 +45,16 @@ public class LevenbergMarquardtOptimizer3 {
         double[] diag_jacTjac = new double[m];
         double eps3 = 1e-10;
         int stop = 0;
+        double jacTe_inf = 0;
         while (!criterion.isMet(p_eL2, numberOfIterations) && !breaknested && stop == 0) {
             System.out.println("Iteration " + numberOfIterations + ":");
-            System.out.println("Current total error: " + p_eL2);
+            StringBuilder builder = new StringBuilder("Current parameter estimates:");
+            for (int i = 0; i < p.length; ++i) {
+                builder.append(" " + p[i]);
+
+            }
+            System.out.println(builder.toString());
+            System.out.println("Current jacTe_inf and p_eL2: " + jacTe_inf + ", " + p_eL2);
             if (p_eL2 <= eps3) {
                 stop = 6;
                 break;
@@ -62,16 +70,16 @@ public class LevenbergMarquardtOptimizer3 {
                     }
                     jacTe[i] = 0;
                 }
-                for (int i = n - 1; i >= 0; i--) {
-                    for (int j = m - 1; j >= 0; j--) {
-                        alpha = jac.get(i, j);
-                        for (int k = j; k >= 0; k--) {
-                            final double value2 = jac.get(i, k);
-                            final double currentValue = jacTjac.get(j, k);
-                            jacTjac.set(j, k, currentValue + (alpha * value2));
-                            jacTjac.set(k, j, currentValue + (alpha * value2));
+                for (int l = n - 1; l >= 0; --l) {
+                    for (int i = m - 1; i >= 0; --i) {
+                        alpha = jac.get(l, i);
+                        for (int j = i; j >= 0; --j) {
+                            final double jaclmj = jac.get(l, j);
+                            final double currentValue = jacTjac.get(i, j);
+                            jacTjac.set(i, j, currentValue + (alpha * jaclmj));
+                            jacTjac.set(j, i, currentValue + (alpha * jaclmj));
                         }
-                        jacTe[j] += alpha * e[i];
+                        jacTe[i] += alpha * e[l];
                     }
                 }
             } else {
@@ -85,7 +93,7 @@ public class LevenbergMarquardtOptimizer3 {
                     }
                 }
             }
-            double jacTe_inf = 0;
+            jacTe_inf = 0;
             double p_L2 = 0;
             int numActive = 0;
             int jReplacement = 0;
@@ -141,12 +149,12 @@ public class LevenbergMarquardtOptimizer3 {
                         Dp[i] = pDp[i] - p[i];
                         Dp_L2 += Math.pow(Dp[i], 2);
                     }
-                    if (Dp_L2 <= eps1 * eps1 * p_L2) {
+                    if (Dp_L2 <= eps2_sq * p_L2) {
                         stop = 2;
                         break;  // stopped by small Dp
                     }
                     double epsilon = calculateMachineEpsilonDouble();
-                    if (Dp_L2 >= (p_L2 + (eps1 * eps1)) / (epsilon * epsilon)) {
+                    if (Dp_L2 >= (p_L2 + eps2) / (epsilon * epsilon)) {
                         stop = 4;
                         break;  //singular (or almost singular) matrix
                     }
@@ -208,26 +216,35 @@ public class LevenbergMarquardtOptimizer3 {
                 boolean gradproj = jacTeDp <= -rho * Math.pow(Dp_L2, (2.1d / 2d));
                 double t = 1;
                 if (gradproj) {
-                    while (gradproj && t > 1e-12) {
-                        for (int i = 0; i < m; ++i) {
-                            pDp[i] = p[i] + t * Dp[i];
-                        }
-                        pDp = fitToBounds(pDp, lb, ub);
-                        hx = model.getModeledSignal(pDp);
-                        pDp_eL2 = 0;
-                        for (int i = 0; i < n; ++i) {
-                            hx[i] = x[i] - hx[i];
-                            pDp_eL2 += Math.pow(hx[i], 2);
-                        }
-                        if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) || !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
-                            stop = 7;
-                            gradproj = false;
-                        } else {
-                            if (pDp_eL2 <= p_eL2 + 2 * t * alpha * jacTeDp) {
-                                break;
+                    double tmp = Math.sqrt(p_L2);
+                    double stepmx = 1e3 * ((tmp >= 1.0) ? tmp : 1.0);
+                    alpha = 0.0001;
+                    final double[][] doubles = lineSearch(p, model, p_eL2, stepmx, jacTe, Dp, pDp, hx.length, x, pDp_eL2, alpha);
+                    pDp = doubles[0];
+                    hx = doubles[1];
+                    pDp_eL2 = doubles[2][0];
+                    Dp = doubles[3];
+                    if (doubles[4][0] != 0) {
+                        while (gradproj && t > 1e-12) {
+                            for (int i = 0; i < m; ++i) {
+                                pDp[i] = p[i] + t * Dp[i];
                             }
+                            hx = model.getModeledSignal(pDp);
+                            pDp_eL2 = 0;
+                            for (int i = 0; i < n; ++i) {
+                                hx[i] = x[i] - hx[i];
+                                pDp_eL2 += Math.pow(hx[i], 2);
+                            }
+                            if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) || !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
+                                stop = 7;
+                                gradproj = false;
+                            } else {
+                                if (pDp_eL2 <= p_eL2 + 2 * t * alpha * jacTeDp) {
+                                    break;
+                                }
+                            }
+                            t *= 0.9;
                         }
-                        t *= 0.9;
                     }
                     gprevtaken = 0;
                 }
@@ -353,6 +370,170 @@ public class LevenbergMarquardtOptimizer3 {
             return solutionForLinearEquationMatrix.getRowPackedCopy();
         }
         return null;
+    }
+
+    private double[][] lineSearch(double[] x, ForwardModel model, double p_eL2, double stepmx, double[] jacTe, double[] Dp,
+                                  double[] pDp, int n, double[] stateX, double pDp_eL2, double alpha) {
+        int i, j;
+        int firstback = 1;
+        double disc;
+        double a3, b;
+        double t1, t2, t3, lambda, tlmbda, rmnlmb;
+        double scl, rln, sln, slp;
+        double tmp1, tmp2;
+        double fpls, pfpls = 0., plmbda = 0.; /* -Wall */
+        double f = p_eL2;
+        double steptl = 1e-3;
+        double[] clonedDp = Dp.clone();
+
+        double[] g = jacTe;
+        double[] xpls = pDp.clone();
+        double ffpls = pDp_eL2;
+        double[] stateHX = new double[n];
+        int m = x.length;
+
+        f *= 0.5;
+        int mxtake = 0;
+        int iretcd = 2;
+        tmp1 = 0.;
+//        if(!sx) /* no scaling */
+        for (i = 0; i < m; ++i)
+            tmp1 += clonedDp[i] * clonedDp[i];
+//        else
+//            for (i = 0; i < m; ++i)
+//                tmp1 += sx[i] * sx[i] * p[i] * p[i];
+        sln = Math.sqrt(tmp1);
+        if (sln > stepmx) {
+          /*    newton step longer than maximum allowed */
+            scl = stepmx / sln;
+            for (i = 0; i < m; ++i) /* p * scl */
+                clonedDp[i] *= scl;
+            sln = stepmx;
+        }
+        for (i = 0, slp = 0.; i < m; ++i) /* g^T * p */
+            slp += g[i] * clonedDp[i];
+        rln = 0.;
+//        if(!sx) /* no scaling */
+        for (i = 0; i < m; ++i) {
+            tmp1 = (Math.abs(x[i]) >= 1.) ? Math.abs(x[i]) : 1.;
+            tmp2 = Math.abs(clonedDp[i]) / tmp1;
+            if (rln < tmp2) rln = tmp2;
+        }
+//        else
+//            for (i = 0; i < m; ++i) {
+//                tmp1 = (FABS(x[i])>=LM_CNST(1.)/sx[i])? FABS(x[i]) : LM_CNST(1.)/sx[i];
+//                tmp2 = FABS(p[i])/tmp1;
+//                if(rln < tmp2) rln = tmp2;
+//            }
+        rmnlmb = steptl / rln;
+        lambda = 1.0;
+            /*  check if new iterate satisfactory.  generate new lambda if necessary. */
+        int __LSITMAX = 150;
+        for (j = __LSITMAX; j >= 0; --j) {
+            for (i = 0; i < m; ++i)
+                xpls[i] = x[i] + lambda * clonedDp[i];
+
+      /* evaluate function at new point */
+            stateHX = model.getModeledSignal(xpls);
+//            (*func)(xpls, state.hx, m, state.n, state.adata); ++(*(state.nfev));
+      /* ### state.hx=state.x-state.hx, tmp1=||state.hx|| */
+//            #if 1
+//            tmp1=LEVMAR_L2NRMXMY(state.hx, state.x, state.hx, state.n);
+//            #else
+            for (i = 0, tmp1 = 0.0; i < n; ++i) {
+                stateHX[i] = tmp2 = stateX[i] - stateHX[i];
+                tmp1 += tmp2 * tmp2;
+            }
+//            #endif
+            fpls = 0.5 * tmp1;
+            ffpls = tmp1;
+
+            if (fpls <= f + slp * alpha * lambda) { /* solution found */
+                iretcd = 0;
+                if (lambda == 1. && sln > stepmx * .99)
+                    mxtake = 1;
+//                double[] hx = model.getModeledSignal(Dp);
+                double[][] res = new double[5][];
+                res[0] = xpls;
+                res[1] = stateHX;
+                double[] pDp_eL2A = {ffpls};
+                res[2] = pDp_eL2A;
+                res[3] = clonedDp;
+                double[] iretcdA = {iretcd};
+                res[4] = iretcdA;
+                return res;
+            }
+                        /* else : solution not (yet) found */
+
+      /* First find a point with a finite value */
+
+            if (lambda < rmnlmb) {
+              /* no satisfactory xpls found sufficiently distinct from x */
+
+                iretcd = 1;
+//                double[] hx = model.getModeledSignal(Dp);
+                double[][] res = new double[5][];
+                res[0] = xpls;
+                res[1] = stateHX;
+                double[] pDp_eL2A = {ffpls};
+                res[2] = pDp_eL2A;
+                res[3] = clonedDp;
+                double[] iretcdA = {iretcd};
+                res[4] = iretcdA;
+                return res;
+            } else { /*   calculate new lambda */
+
+              /* modifications to cover non-finite values */
+                if (!(fpls > Double.NEGATIVE_INFINITY) || !(fpls < Double.POSITIVE_INFINITY)) {
+                    lambda *= 0.1;
+                    firstback = 1;
+                } else {
+                    if (firstback == 1) { /*       first backtrack: quadratic fit */
+                        tlmbda = -lambda * slp / ((fpls - f - slp) * 2.);
+                        firstback = 0;
+                    } else { /* all subsequent backtracks: cubic fit */
+                        t1 = fpls - f - lambda * slp;
+                        t2 = pfpls - f - plmbda * slp;
+                        t3 = 1. / (lambda - plmbda);
+                        a3 = 3. * t3 * (t1 / (lambda * lambda)
+                                - t2 / (plmbda * plmbda));
+                        b = t3 * (t2 * lambda / (plmbda * plmbda)
+                                - t1 * plmbda / (lambda * lambda));
+                        disc = b * b - a3 * slp;
+                        if (disc > b * b)
+                              /* only one positive critical point, must be minimum */
+                            tlmbda = (-b + ((a3 < 0) ? -Math.sqrt(disc) : Math.sqrt(disc))) / a3;
+                        else
+                              /* both critical points positive, first is minimum */
+                            tlmbda = (-b + ((a3 < 0) ? Math.sqrt(disc) : -Math.sqrt(disc))) / a3;
+
+                        if (tlmbda > lambda * .5)
+                            tlmbda = lambda * .5;
+                    }
+                    plmbda = lambda;
+                    pfpls = fpls;
+                    if (tlmbda < lambda * .1)
+                        lambda *= .1;
+                    else
+                        lambda = tlmbda;
+                }
+            }
+        }
+    /* this point is reached when the iterations limit is exceeded */
+        iretcd = 1; /* failed */
+
+
+//        double[] p = new double[8];
+//        double[] hx = model.getModeledSignal(Dp);
+        double[][] res = new double[5][];
+        res[0] = xpls;
+        res[1] = stateHX;
+        double[] pDp_eL2A = {ffpls};
+        res[2] = pDp_eL2A;
+        res[3] = clonedDp;
+        double[] iretcdA = {iretcd};
+        res[4] = iretcdA;
+        return res;
     }
 
     private Matrix blockedMultiplication(Matrix jacobianMatrix,
