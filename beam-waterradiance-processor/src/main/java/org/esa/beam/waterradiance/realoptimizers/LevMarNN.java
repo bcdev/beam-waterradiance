@@ -410,10 +410,11 @@ public class LevMarNN {
         model.init(x11, nn_at_data);
         p = optimizer.solveConstrainedLevenbergMarquardt(model, costFunction, p, x11, breakingCriterion, lb, ub);
 
-        for (int i = 0; i < m; i++) {
-            conc_at[i] = p[i];
-           // p_alt[i] = p[i];
-        }
+        System.arraycopy(p, 0, conc_at, 0, m);
+//        for (int i = 0; i < m; i++) {
+//            conc_at[i] = p[i];
+//            // p_alt[i] = p[i];
+//        }
 
         model.init(x11, nn_at_data);
         x11 = model.getModeledSignal(conc_at);
@@ -542,9 +543,9 @@ public class LevMarNN {
             }
 
         } finally {
-         if (reader != null) {
-             reader.close();
-         }
+            if (reader != null) {
+                reader.close();
+            }
         }
         res.setNn(make_ff_from_file(filename));
         return res;
@@ -752,46 +753,50 @@ public class LevMarNN {
 
 
     static double[] use_the_nn(a_nn a_net, double[] nn_in, double[] nn_out, AlphaTab alphaTab) {
-        int i;
-
         final long anetNnin = a_net.getNnin();
-        for (i = 0; i < anetNnin; i++) {
-            double value = (nn_in[i] - a_net.getInmin()[i]) / (a_net.getInmax()[i] - a_net.getInmin()[i]);
-            a_net.getNn().setInput(i, value);
-        /*printf("%ld %lf %lf %lf %lf\n",
-            i,nn_in[i],a_net->nn.input[i],
-			a_net->inmin[i],a_net->inmax[i]);*/
+
+        final feedforward nn = a_net.getNn();
+        final double[] inmin = a_net.getInmin();
+        final double[] inmax = a_net.getInmax();
+
+        for (int i = 0; i < anetNnin; i++) {
+            final double value = (nn_in[i] - inmin[i]) / (inmax[i] - inmin[i]);
+            nn.setInput(i, value);
         }
-        ff_proc(a_net.getNn(), alphaTab);
 
-        for (i = 0; i < a_net.getNnout(); i++) {
-//            double value = (nn_in[i] - a_net.getInmin()[i]) / (a_net.getInmax()[i] - a_net.getInmin()[i]);
-//            a_net.getNn().setOutput(i, value);
+        ff_proc(nn, alphaTab);
 
-            nn_out[i] = a_net.getNn().getOutput()[i] * (a_net.getOutmax()[i] - a_net.getOutmin()[i]) + a_net.getOutmin()[i];
+        final double[] nnOutput = nn.getOutput();
+        final double[] outmax = a_net.getOutmax();
+        final double[] outmin = a_net.getOutmin();
 
-		/*printf("%ld %lf %lf %lf %lf\n",
-            i,nn_in[i],a_net->nn.input[i],
-			a_net->inmin[i],a_net->inmax[i]);*/
+        for (int i = 0; i < a_net.getNnout(); i++) {
+            nn_out[i] = nnOutput[i] * (outmax[i] - outmin[i]) + outmin[i];
         }
         return nn_out;
     }
 
     private static void ff_proc(feedforward ff, AlphaTab alphaTab) {
-        int i, pl;
-        for (pl = 0; pl < ff.nplanes - 1; pl++) {
-            for (i = 0; i < ff.size[pl + 1]; i++) {
-                final double x = ff.bias[pl][i] + scp(ff.wgt[pl][i], ff.act[pl], ff.size[pl]);
-                ff.act[pl + 1][i] = alphaTab.get(x);
+        double[] bias;
+        double[] act_plus;
+        double[][] wgt;
+
+        for (int pl = 0; pl < ff.nplanes - 1; pl++) {
+            bias = ff.bias[pl];
+            wgt = ff.wgt[pl];
+            act_plus = ff.act[pl + 1];
+            for (int i = 0; i < ff.size[pl + 1]; i++) {
+                final double x = bias[i] + scp(wgt[i], ff.act[pl], ff.size[pl]);
+                act_plus[i] = alphaTab.get(x);
             }
         }
     }
 
-    private static double scp(double[] x, double[] y, long n) {
-        int i;
+    static double scp(double[] x, double[] y, long n) {
         double sum = 0.;
-        for (i = 0; i < n; i++)
+        for (int i = 0; i < n; i++) {
             sum += x[i] * y[i];
+        }
         return sum;
     }
 

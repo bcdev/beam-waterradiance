@@ -1,7 +1,6 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -9,7 +8,7 @@ import java.io.IOException;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-public class LevMarNNTest {
+public class LevMarNNAcceptanceTest {
 
     private static final double[] SUN_SPECTRAL_FLUXES_NORMAN = {
             1773.03,

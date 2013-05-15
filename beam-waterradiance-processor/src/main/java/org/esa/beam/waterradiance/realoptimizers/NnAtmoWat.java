@@ -4,6 +4,18 @@ import java.io.IOException;
 
 class NnAtmoWat {
 
+    //char *atm_net_name_for={"27x57x47_47.7.net"};
+    //char *atm_net_name_for={"./for_21bands_20110918/27x57x67_59.2.net"};
+    //char *atm_net_name_for={"./for_21bands_20110918/17_3978.7.net"};
+
+    //char *rhopath_net_name={"./for_21bands_20120112/rhopath/27x17_18.2.net"};
+    //char *tdown_net_name  ={"./for_21bands_20120112/tdown/27x17_202.6.net"};
+    //char *tup_net_name    ={"./for_21bands_20120112/tup/27x17_181.6.net"};
+
+    //char *rhopath_net_name={"./oc_cci_20120222/ac_forward_all/ac_rhopath_b29/27x27_32.7.net"};
+    //char *tdown_net_name  ={"./oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
+    //char *tup_net_name    ={"./oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
+
     // new nets, RD 20130308:
     private static final String rhopath_net_name = "ac_rhopath_b29/17x37x31_121.8.net";
     private static final String tdown_net_name = "t_down_b29/17x37x31_89.4.net";
@@ -17,6 +29,16 @@ class NnAtmoWat {
     private final a_nn tup_net;
     private final a_nn wat_net_for;
     private final AlphaTab alphaTab;
+    private final double[] innet;
+    private final double[] tdown_nn;
+    private final double[] rpath_nn;
+    private final double[] tup_nn;
+    private final double[] rw_nn;
+
+    private double[] outnet1;
+    private double[] outnet2;
+    private double[] outnet3;
+    private double[] rlw_nn;
 
     NnAtmoWat(AlphaTab alphaTab) throws IOException {
         this.alphaTab = alphaTab;
@@ -25,6 +47,16 @@ class NnAtmoWat {
         tdown_net = LevMarNN.prepare_a_nn(nnResources.getAcForwardNetPath(tdown_net_name));
         tup_net = LevMarNN.prepare_a_nn(nnResources.getAcForwardNetPath(tup_net_name));
         wat_net_for = LevMarNN.prepare_a_nn(nnResources.getNetWaterPath());
+
+        innet = new double[10];
+        tdown_nn = new double[29];
+        tup_nn = new double[29];
+        outnet1 = new double[29];
+        outnet2 = new double[29];
+        outnet3 = new double[29];
+        rlw_nn = new double[29];
+        rpath_nn = new double[29];
+        rw_nn = new double[29];
     }
 
     /**
@@ -36,47 +68,14 @@ class NnAtmoWat {
      * n:        size of ...
      * nn_data:  additional data
      */
-     NNReturnData nn_atmo_wat(double[] conc_all, double[] rtosa_nn, int m, int n, s_nn_atdata nn_data) {
+    NNReturnData nn_atmo_wat(double[] conc_all, double[] rtosa_nn, int m, int n, s_nn_atdata nn_data) {
         int ilam, nlam, ix;
-
         double sun_thet, view_zeni, azi_diff_hl, temperature, salinity;
-        double log_aot, log_ang, log_wind, log_agelb, log_apart, log_apig, log_bpart;
-        double log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min, log_conc_wit;
-
-        double[] innet = new double[10];
-        double[] outnet = new double[63];
-        double[] tdown_nn = new double[29];
-        double[] tup_nn = new double[29];
-        double[] outnet1 = new double[29];
-        double[] outnet2 = new double[29];
-        double[] outnet3 = new double[29];
-        double[] rlpath_nn = new double[29];
-        double[] rw_2flow = new double[29];
-        double[] conc_2flow = new double[5];
-        double[] rlw_nn = new double[29];
-        double[] rpath_nn = new double[29];
-        double[] rw_nn = new double[29];
-        int prepare;
-        double x, y, z, radius, azimuth, elevation;
-
-        //char *atm_net_name_for={"27x57x47_47.7.net"};
-        //char *atm_net_name_for={"./for_21bands_20110918/27x57x67_59.2.net"};
-        //char *atm_net_name_for={"./for_21bands_20110918/17_3978.7.net"};
-
-        //char *rhopath_net_name={"./for_21bands_20120112/rhopath/27x17_18.2.net"};
-        //char *tdown_net_name  ={"./for_21bands_20120112/tdown/27x17_202.6.net"};
-        //char *tup_net_name    ={"./for_21bands_20120112/tup/27x17_181.6.net"};
-
-        //char *rhopath_net_name={"./oc_cci_20120222/ac_forward_all/ac_rhopath_b29/27x27_32.7.net"};
-        //char *tdown_net_name  ={"./oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
-        //char *tup_net_name    ={"./oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
-
+        double log_aot, log_ang, log_wind;
+        double x, y, z, azimuth, elevation;
 
         s_nn_atdata nn_at_data = nn_data;
 
-        nlam = n;
-
-        prepare = nn_at_data.getPrepare();
         sun_thet = nn_at_data.getSun_thet();
         view_zeni = nn_at_data.getView_zeni();
         azi_diff_hl = nn_at_data.getAzi_diff_hl();
@@ -86,8 +85,10 @@ class NnAtmoWat {
 
         azimuth = DEG_2_RAD * azi_diff_hl;
         elevation = DEG_2_RAD * view_zeni;
-        x = Math.sin(elevation) * Math.cos(azimuth);
-        y = Math.sin(elevation) * Math.sin(azimuth);
+
+        final double sin_elevation = Math.sin(elevation);
+        x = sin_elevation * Math.cos(azimuth);
+        y = sin_elevation * Math.sin(azimuth);
         z = Math.cos(elevation);
 
 
@@ -134,7 +135,6 @@ class NnAtmoWat {
             }
             final NNReturnData res = LevMarNN.nn_water(conc_all, rlw_nn, m, n, nn_at_data, wat_net_for, alphaTab);
             rlw_nn = res.getOutputValues();
-            nn_at_data = res.getNn_atdata();
             for (ilam = 0; ilam < 11; ilam++) {
                 rw_nn[ilam] = rlw_nn[ilam];//M_PI;
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
