@@ -45,6 +45,11 @@ public class LevMarNN {
     private final nn_atmo_watForwardModel model;
     private final LevenbergMarquardtOptimizer3 optimizer;
     private double[] p;
+    private final a_nn rhopath_net;
+    private final a_nn tdown_net;
+    private final a_nn tup_net;
+    private final a_nn wat_net_for;
+
 
 
     public LevMarNN() throws IOException {
@@ -68,6 +73,16 @@ public class LevMarNN {
         model = new nn_atmo_watForwardModel();
         optimizer = new LevenbergMarquardtOptimizer3();
         p = new double[8];
+
+        // new nets, RD 20130308:
+        final String rhopath_net_name = "ac_rhopath_b29/17x37x31_121.8.net";
+        final String tdown_net_name = "t_down_b29/17x37x31_89.4.net";
+        final String tup_net_name = "ac_tup_b29/17x37x31_83.8.net";
+
+        rhopath_net = prepare_a_nn(nnResources.getAcForwardNetPath(rhopath_net_name));
+        tdown_net = prepare_a_nn(nnResources.getAcForwardNetPath(tdown_net_name));
+        tup_net = prepare_a_nn(nnResources.getAcForwardNetPath(tup_net_name));
+        wat_net_for = prepare_a_nn(nnResources.getNetWaterPath());
     }
 
     public int levmar_nn(int detector, double[] input, double[] output) {
@@ -456,7 +471,7 @@ public class LevMarNN {
         return (0);
     }
 
-    private a_nn prepare_a_nn(String filename) {
+    private a_nn prepare_a_nn(String filename) throws IOException {
         File fp;
         char ch;
         int i;
@@ -468,7 +483,7 @@ public class LevMarNN {
 
         fp = open_auxfile(filename);
 
-        BufferedReader reader;
+        BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(fp));
             String line = reader.readLine();
@@ -511,10 +526,10 @@ public class LevMarNN {
                 line = reader.readLine();
             }
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } finally {
+         if (reader != null) {
+             reader.close();
+         }
         }
         res.setNn(make_ff_from_file(filename));
         return res;
@@ -785,7 +800,6 @@ public class LevMarNN {
         //char *wat_net_name_for={"./water_for_b33_rlw_20120118/17x27x17_120.2.net"};
         //char *wat_net_name_for={"./for_b33_20120114_nokd_27x17/27x17_153.7.net"};
         //String wat_net_name_for = "./for_water_rw29_20120318/37x17_754.1.net";
-        a_nn wat_net_for;
 
         s_nn_atdata nn_at_data = nn_data;
 
@@ -819,7 +833,6 @@ public class LevMarNN {
             prepare = prepare + 2;
             nn_at_data.setPrepare(prepare);
         }
-        wat_net_for = prepare_a_nn(nnResources.getNetWaterPath());
         outnet = use_the_nn(wat_net_for, innet, outnet);
 
         if (nlam == 11) {
@@ -914,13 +927,6 @@ public class LevMarNN {
             //char *tdown_net_name  ={"./oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
             //char *tup_net_name    ={"./oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
 
-            // new nets, RD 20130308:
-            final String rhopath_net_name = "ac_rhopath_b29/17x37x31_121.8.net";
-            final String tdown_net_name = "t_down_b29/17x37x31_89.4.net";
-            final String tup_net_name = "ac_tup_b29/17x37x31_83.8.net";
-
-
-            a_nn rhopath_net, tdown_net, tup_net;
 
             s_nn_atdata nn_at_data = nn_data;
 
@@ -969,10 +975,6 @@ public class LevMarNN {
 
             innet[7] = temperature;
             innet[8] = salinity;
-
-            rhopath_net = prepare_a_nn(nnResources.getAcForwardNetPath(rhopath_net_name));
-            tdown_net = prepare_a_nn(nnResources.getAcForwardNetPath(tdown_net_name));
-            tup_net = prepare_a_nn(nnResources.getAcForwardNetPath(tup_net_name));
 
             outnet1 = use_the_nn(rhopath_net, innet, outnet1);
             outnet2 = use_the_nn(tdown_net, innet, outnet2);
