@@ -48,8 +48,6 @@ public class LevenbergMarquardtOptimizer3 {
         double nu = 2;
         double Dp_L2;
         double alpha;
-        double Dp_L2 = Double.MAX_VALUE;
-        double alpha = 0;
         double alphaNeu = 0.0001;
         int gprevtaken = 0;
         boolean breaknested = false;
