@@ -2,16 +2,19 @@ package org.esa.beam.waterradiance.realoptimizers;
 
 class NNReturnData {
 
-    double[] outputValues;
-    s_nn_atdata nn_atdata;
+    private double[] outputValues;
+    private s_nn_atdata nn_atdata;
 
-    NNReturnData(double[] output, s_nn_atdata data) {
-        outputValues = output;
-        nn_atdata = data;
+    void setOutputValues(double[] outputValues) {
+        this.outputValues = outputValues;
     }
 
     double[] getOutputValues() {
         return outputValues;
+    }
+
+    void setNn_atdata(s_nn_atdata nn_atdata) {
+        this.nn_atdata = nn_atdata;
     }
 
     s_nn_atdata getNn_atdata() {

@@ -799,6 +799,11 @@ public class LevMarNN {
     private class nn_atmo_watForwardModel implements ForwardModel {
         private double[] rtosa_nn;
         private s_nn_atdata nn_data;
+        private NNReturnData nnReturnData;
+
+        private nn_atmo_watForwardModel() {
+            nnReturnData = new NNReturnData();
+        }
 
         public void init(double[] rtosa_nn, s_nn_atdata nn_data) {
             this.rtosa_nn = rtosa_nn.clone();
@@ -816,7 +821,7 @@ public class LevMarNN {
 
         @Override
         public double[] getModeledSignal(double[] variables) {
-            final NNReturnData nnReturnData = nnAtmoWat.nn_atmo_wat(variables, rtosa_nn.clone(), nn_data);
+            nnReturnData = nnAtmoWat.nn_atmo_wat(variables, rtosa_nn.clone(), nn_data, nnReturnData);
             nn_data = nnReturnData.getNn_atdata();
             return nnReturnData.getOutputValues();
         }

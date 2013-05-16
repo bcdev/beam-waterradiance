@@ -16,7 +16,7 @@ class NnWater {
     /**
      * * water nn **
      */
-    NNReturnData nn_water(double[] conc_all, double[] rlw_nn, int n, s_nn_atdata nn_data, a_nn wat_net_for, AlphaTab alphaTab) {
+    NNReturnData nn_water(double[] conc_all, double[] rlw_nn, int n, s_nn_atdata nn_data, a_nn wat_net_for, AlphaTab alphaTab, NNReturnData nnReturnData) {
         //char *wat_net_name_for={"23x7x28_77.3.net"};
         //char *wat_net_name_for={"27x17x41_43.8.net"};
         //char *wat_net_name_for={"./water_for_b33_20111220/17_1070.2.net"};
@@ -51,6 +51,9 @@ class NnWater {
         } else {
             System.arraycopy(outnet, 0, rlw_nn, 0, 29);
         }
-        return new NNReturnData(rlw_nn, nn_data);
+
+        nnReturnData.setOutputValues(rlw_nn);
+        nnReturnData.setNn_atdata(nn_data);
+        return nnReturnData;
     }
 }

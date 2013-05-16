@@ -71,7 +71,7 @@ class NnAtmoWat {
      * n:        size of ...
      * nn_data:  additional data
      */
-    NNReturnData nn_atmo_wat(final double[] conc_all, final double[] rtosa_nn, s_nn_atdata nn_data) {
+    NNReturnData nn_atmo_wat(final double[] conc_all, final double[] rtosa_nn, s_nn_atdata nn_data, NNReturnData nnReturnData) {
         final double sun_thet = nn_data.getSun_thet();
         final double view_zeni = nn_data.getView_zeni();
         final double azi_diff_hl = nn_data.getAzi_diff_hl();
@@ -129,8 +129,8 @@ class NnAtmoWat {
                 tdown_nn[ilam] = outnet2[ix];
                 tup_nn[ilam] = outnet3[ix];
             }
-            final NNReturnData res = nnWater.nn_water(conc_all, rlw_nn, rtosa_nn.length, nn_data, wat_net_for, alphaTab);
-            rlw_nn = res.getOutputValues();
+            nnReturnData = nnWater.nn_water(conc_all, rlw_nn, rtosa_nn.length, nn_data, wat_net_for, alphaTab, nnReturnData);
+            rlw_nn = nnReturnData.getOutputValues();
             for (int ilam = 0; ilam < 11; ilam++) {
                 rw_nn[ilam] = rlw_nn[ilam];//M_PI;
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
@@ -142,9 +142,9 @@ class NnAtmoWat {
                 tdown_nn[ilam] = outnet2[ilam];
                 tup_nn[ilam] = outnet3[ilam];
             }
-            final NNReturnData res = nnWater.nn_water(conc_all, rlw_nn, nlam, nn_data, wat_net_for, alphaTab);
-            rlw_nn = res.getOutputValues();
-            nn_data = res.getNn_atdata();
+            nnReturnData = nnWater.nn_water(conc_all, rlw_nn, nlam, nn_data, wat_net_for, alphaTab, nnReturnData);
+            rlw_nn = nnReturnData.getOutputValues();
+            nn_data = nnReturnData.getNn_atdata();
             for (int ilam = 0; ilam < nlam; ilam++) {
                 rw_nn[ilam] = rlw_nn[ilam];//*M_PI;// ! with pi included, 21 bands
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
@@ -154,6 +154,9 @@ class NnAtmoWat {
                 nn_data.setRw_nn(ilam, rw_nn[ilam]);
             }
         }
-        return new NNReturnData(rtosa_nn, nn_data);
+
+        nnReturnData.setOutputValues(rtosa_nn);
+        nnReturnData.setNn_atdata(nn_data);
+        return nnReturnData;
     }
 }
