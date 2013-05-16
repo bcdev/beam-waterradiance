@@ -27,7 +27,6 @@ public class LevMarNN {
 
     double M_PI = 3.1416;
 
-    static int[] lam29_meris11_ix = {1, 2, 4, 6, 11, 12, 15, 20, 22, 24, 25};
     static int[] lam29_meris12_ix = {1, 2, 4, 6, 11, 12, 15, 19, 20, 22, 24, 25};
     double[] ozon_meris12 = {0.0002179, 0.002814, 0.02006, 0.04081, 0.104, 0.109, 0.0505, 0.03526, 0.01881, 0.008897, 0.007693, 0.002192}; // L.Bourg 2010
 
@@ -682,7 +681,7 @@ public class LevMarNN {
                 frlam[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
             }
         }
-
+        reader.close();
 
         fp_tab = open_auxfile(nnResources.getSunSpectralFluxFrPath());
         reader = new BufferedReader(new FileReader(fp_tab));
@@ -694,6 +693,7 @@ public class LevMarNN {
                 fredtoa[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
             }
         }
+        reader.close();
 
 
         fp_tab = open_auxfile(nnResources.getCentralWavelengthRrPath());
@@ -706,7 +706,7 @@ public class LevMarNN {
                 rrlam[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
             }
         }
-
+        reader.close();
 
         fp_tab = open_auxfile(nnResources.getSunSpectralFluxRrPath());
 
@@ -719,7 +719,7 @@ public class LevMarNN {
                 rredtoa[count][count2] = Double.parseDouble(tableLine[count2 + 1]);
             }
         }
-
+        reader.close();
 
         fp_tab = open_auxfile(nnResources.getNominalLamSunPath());
 
@@ -730,7 +730,7 @@ public class LevMarNN {
             nomi_lam[count] = Double.parseDouble(tableLine[0]);
             nomi_sun[count] = Double.parseDouble(tableLine[1]);
         }
-
+        reader.close();
 
         /* make ed ratio tab, i.e. compute the ratio between the Ed_toa for each pixel relative to ed-toa at the mean pixel for each camera */
 
@@ -797,51 +797,7 @@ public class LevMarNN {
         return sum;
     }
 
-    /**
-     * * water nn **
-     */
-    static NNReturnData nn_water(double[] conc_all, double[] rlw_nn, int m, int n, s_nn_atdata nn_data, a_nn wat_net_for, AlphaTab alphaTab) {
-        double[] innet = new double[10];
-        double[] outnet = new double[35];
-        //char *wat_net_name_for={"23x7x28_77.3.net"};
-        //char *wat_net_name_for={"27x17x41_43.8.net"};
-        //char *wat_net_name_for={"./water_for_b33_20111220/17_1070.2.net"};
-        //char *wat_net_name_for={"./water_for_b33_20111220/27_697.2.net"};
-        //char *wat_net_name_for={"./water_for_b33_rlw_20120118/17x27x17_120.2.net"};
-        //char *wat_net_name_for={"./for_b33_20120114_nokd_27x17/27x17_153.7.net"};
-        //String wat_net_name_for = "./for_water_rw29_20120318/37x17_754.1.net";
-
-        innet[0] = nn_data.getSun_thet();
-        innet[1] = nn_data.getView_zeni();
-        innet[2] = nn_data.getAzi_diff_hl();
-        innet[3] = nn_data.getTemperature();
-        innet[4] = nn_data.getSalinity();
-
-        innet[5] = conc_all[3];     // log_conc_chl
-        innet[6] = conc_all[4];     // log_conc_det
-        innet[7] = conc_all[5];     // log_conc_gelb
-        innet[8] = conc_all[6];     // log_conc_min
-        innet[9] = conc_all[7];     // log_bwit
-
-        final int prepare = nn_data.getPrepare();
-        if (prepare < 0) {
-            nn_data.setPrepare( prepare + 2);
-        }
-        outnet = use_the_nn(wat_net_for, innet, outnet, alphaTab);
-
-        if (n == 11) {
-            for (int ilam = 0; ilam < n; ilam++) {
-                final int ix = lam29_meris11_ix[ilam];
-                rlw_nn[ilam] = outnet[ix];
-            }
-        } else {
-            System.arraycopy(outnet, 0, rlw_nn, 0, 29);
-        }
-        return new NNReturnData(rlw_nn, nn_data);
-    }
-
     private class nn_atmo_watForwardModel implements ForwardModel {
-
         private double[] rtosa_nn;
         private s_nn_atdata nn_data;
 
@@ -861,7 +817,7 @@ public class LevMarNN {
 
         @Override
         public double[] getModeledSignal(double[] variables) {
-            final NNReturnData nnReturnData = nnAtmoWat.nn_atmo_wat(variables, rtosa_nn.clone(), variables.length, rtosa_nn.length, nn_data);
+            final NNReturnData nnReturnData = nnAtmoWat.nn_atmo_wat(variables, rtosa_nn.clone(), rtosa_nn.length, nn_data);
             nn_data = nnReturnData.getNn_atdata();
             return nnReturnData.getOutputValues();
         }

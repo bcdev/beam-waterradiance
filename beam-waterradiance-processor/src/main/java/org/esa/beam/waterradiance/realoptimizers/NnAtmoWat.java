@@ -39,6 +39,7 @@ class NnAtmoWat {
     private double[] outnet2;
     private double[] outnet3;
     private double[] rlw_nn;
+    private final NnWater nnWater;
 
     NnAtmoWat(AlphaTab alphaTab) throws IOException {
         this.alphaTab = alphaTab;
@@ -47,6 +48,8 @@ class NnAtmoWat {
         tdown_net = LevMarNN.prepare_a_nn(nnResources.getAcForwardNetPath(tdown_net_name));
         tup_net = LevMarNN.prepare_a_nn(nnResources.getAcForwardNetPath(tup_net_name));
         wat_net_for = LevMarNN.prepare_a_nn(nnResources.getNetWaterPath());
+
+        nnWater = new NnWater();
 
         innet = new double[10];
         tdown_nn = new double[29];
@@ -68,7 +71,7 @@ class NnAtmoWat {
      * n:        size of ...
      * nn_data:  additional data
      */
-    NNReturnData nn_atmo_wat(double[] conc_all, double[] rtosa_nn, int m, int n, s_nn_atdata nn_data) {
+    NNReturnData nn_atmo_wat(double[] conc_all, double[] rtosa_nn, int n, s_nn_atdata nn_data) {
         final double sun_thet = nn_data.getSun_thet();
         final double view_zeni = nn_data.getView_zeni();
         final double azi_diff_hl = nn_data.getAzi_diff_hl();
@@ -126,7 +129,7 @@ class NnAtmoWat {
                 tdown_nn[ilam] = outnet2[ix];
                 tup_nn[ilam] = outnet3[ix];
             }
-            final NNReturnData res = LevMarNN.nn_water(conc_all, rlw_nn, m, n, nn_data, wat_net_for, alphaTab);
+            final NNReturnData res = nnWater.nn_water(conc_all, rlw_nn, n, nn_data, wat_net_for, alphaTab);
             rlw_nn = res.getOutputValues();
             for (int ilam = 0; ilam < 11; ilam++) {
                 rw_nn[ilam] = rlw_nn[ilam];//M_PI;
@@ -140,7 +143,7 @@ class NnAtmoWat {
                 tup_nn[ilam] = outnet3[ilam];
             }
             n = nlam;
-            final NNReturnData res = LevMarNN.nn_water(conc_all, rlw_nn, m, n, nn_data, wat_net_for, alphaTab);
+            final NNReturnData res = nnWater.nn_water(conc_all, rlw_nn, n, nn_data, wat_net_for, alphaTab);
             rlw_nn = res.getOutputValues();
             nn_data = res.getNn_atdata();
             for (int ilam = 0; ilam < nlam; ilam++) {
