@@ -128,14 +128,22 @@ public class LevMarNnL1BPerformanceTest {
         assertNotNull(product);
 
         try {
-            final Band rl_tosa_1 = product.getBand("rl_tosa_1");
-            assertNotNull(rl_tosa_1);
-            rl_tosa_1.loadRasterData();
-            final double pixelDouble = rl_tosa_1.getPixelDouble(21, 21);
-            assertEquals(0.059958883, pixelDouble, 1e-7);
+            assertBandValue("rl_tosa_1", 21, 21, 0.059958883,  product);
+            assertBandValue("rl_tosa_4", 61, 49, 0.02576415,  product);
+            assertBandValue("rl_tosa_7", 25, 71, 0.0094091315,  product);
+            assertBandValue("rl_tosa_10", 55, 70, 0.006421028,  product);
         } finally {
             product.dispose();
         }
+    }
+
+    private void assertBandValue(String bandname, int x, int y, double expected, Product product) throws IOException {
+        final Band band = product.getBand(bandname);
+        assertNotNull(band);
+
+        band.loadRasterData();
+        final double pixelDouble = band.getPixelDouble(x, y);
+        assertEquals(expected, pixelDouble, 1e-7);
     }
 
     private class NanoTimer {

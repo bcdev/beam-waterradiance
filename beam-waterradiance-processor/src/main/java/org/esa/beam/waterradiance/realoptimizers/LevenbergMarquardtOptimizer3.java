@@ -17,6 +17,14 @@ public class LevenbergMarquardtOptimizer3 {
     private final static double tau = 1e-3;
     private final static int blockSize = 32;
     private final static int squaredBlockSize = blockSize * blockSize;
+    private final double epsilon_sq;
+    public static final double GAMMA_SQ = 0.99995 * 0.99995;
+    public static final double DELTA = 1E-01;
+
+    public LevenbergMarquardtOptimizer3() {
+        final double epsilon = calculateMachineEpsilonDouble();
+        epsilon_sq = epsilon * epsilon;
+    }
 
     public double[] solveConstrainedLevenbergMarquardt(ForwardModel model, CostFunction function,
                                                        double[] p, double[] x,
@@ -26,20 +34,20 @@ public class LevenbergMarquardtOptimizer3 {
         final int m = p.length;
         final int n = x.length;
         double[] hx = model.getModeledSignal(p);
-        final double cost = function.getCost(hx);
+       // final double cost = function.getCost(hx);
         double p_eL2 = 0;   //  This should be the cost from the cost function
         double[] e = new double[n];
         for (int i = 0; i < n; ++i) {
             e[i] = x[i] - hx[i];
-            p_eL2 += Math.pow(e[i], 2);
+            p_eL2 += e[i] * e[i];
         }
         Matrix jacTjac = new Matrix(m, m);
         double[] jacTe = new double[m];
         int numberOfIterations = 0;
         double mu = 0;
         double nu = 2;
-        double Dp_L2 = Double.MAX_VALUE;
-        double alpha = 0;
+        double Dp_L2;
+        double alpha;
         int gprevtaken = 0;
         boolean breaknested = false;
         double[] diag_jacTjac = new double[m];
@@ -56,7 +64,7 @@ public class LevenbergMarquardtOptimizer3 {
 //            System.out.println(builder.toString());
 //            System.out.println("Current jacTe_inf and p_eL2: " + jacTe_inf + ", " + p_eL2);
             if (p_eL2 <= eps3) {
-                stop = 6;
+                //stop = 6;
                 break;
             }
             // It is also possible to derive a jacobian matrix from center differences.
@@ -147,14 +155,14 @@ public class LevenbergMarquardtOptimizer3 {
                     Dp_L2 = 0;
                     for (int i = 0; i < m; ++i) {
                         Dp[i] = pDp[i] - p[i];
-                        Dp_L2 += Math.pow(Dp[i], 2);
+                        Dp_L2 += Dp[i] * Dp[i];
                     }
                     if (Dp_L2 <= eps2_sq * p_L2) {
                         stop = 2;
                         break;  // stopped by small Dp
                     }
-                    double epsilon = calculateMachineEpsilonDouble();
-                    if (Dp_L2 >= (p_L2 + eps2) / (epsilon * epsilon)) {
+
+                    if (Dp_L2 >= (p_L2 + eps2) / (epsilon_sq)) {
                         stop = 4;
                         break;  //singular (or almost singular) matrix
                     }
@@ -162,15 +170,14 @@ public class LevenbergMarquardtOptimizer3 {
                     pDp_eL2 = 0;
                     for (int i = 0; i < n; ++i) {
                         hx[i] = x[i] - hx[i];
-                        pDp_eL2 += Math.pow(hx[i], 2);
+                        pDp_eL2 += hx[i] * hx[i];
                     }
                     if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) || !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
                         stop = 7;
                         break;
                     }
-                    double gamma_sq = Math.pow(0.99995, 2);
                     double dL = 0;
-                    if (pDp_eL2 <= gamma_sq * p_eL2) {
+                    if (pDp_eL2 <= GAMMA_SQ * p_eL2) {
                         for (int i = 0; i < m; ++i) {
                             dL += Dp[i] * (mu * Dp[i] + jacTe[i]);
                         }
@@ -185,12 +192,8 @@ public class LevenbergMarquardtOptimizer3 {
                             mu = Math.min(mu, temp);
                         }
                         nu = 2;
-                        for (int i = 0; i < m; ++i) {
-                            p[i] = pDp[i];
-                        }
-                        for (int i = 0; i < n; ++i) {
-                            e[i] = hx[i];
-                        }
+                        System.arraycopy(pDp, 0, p, 0, m);
+                        System.arraycopy(hx, 0, e, 0, n);
                         p_eL2 = pDp_eL2;
                         gprevtaken = 0;
                         break;
@@ -233,7 +236,7 @@ public class LevenbergMarquardtOptimizer3 {
                             pDp_eL2 = 0;
                             for (int i = 0; i < n; ++i) {
                                 hx[i] = x[i] - hx[i];
-                                pDp_eL2 += Math.pow(hx[i], 2);
+                                pDp_eL2 += hx[i] * hx[i];
                             }
                             if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) || !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
                                 stop = 7;
@@ -273,7 +276,7 @@ public class LevenbergMarquardtOptimizer3 {
                         pDp_eL2 = 0;
                         for (int i = 0; i < n; ++i) {
                             hx[i] = x[i] - hx[i];
-                            pDp_eL2 += Math.pow(hx[i], 2);
+                            pDp_eL2 += hx[i] * hx[i];
                         }
                         if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) ||
                                 !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
@@ -313,12 +316,8 @@ public class LevenbergMarquardtOptimizer3 {
                         stop = 2;
                         break;
                     }
-                    for (int i = 0; i < m; ++i) {
-                        p[i] = pDp[i];
-                    }
-                    for (int i = 0; i < n; ++i) {
-                        e[i] = hx[i];
-                    }
+                    System.arraycopy(pDp, 0, p, 0, m);
+                    System.arraycopy(hx, 0, e, 0, n);
                     p_eL2 = pDp_eL2;
                     break;
                 }
@@ -585,11 +584,10 @@ public class LevenbergMarquardtOptimizer3 {
         Matrix jac = new Matrix(modeledSignal.length, variables.length);
         for (int j = 0; j < variables.length; ++j) {
             double d = Math.abs(1E-04 * variables[j]); // force evaluation
-            final double delta = 1E-01;
-            if (d < delta) {
-                d = delta;
+            if (d < DELTA) {
+                d = DELTA;
             }
-            double tmp = variables[j];
+            final double tmp = variables[j];
             variables[j] -= d;
             final double[] modeledSignal1 = model.getModeledSignal(variables);
             variables[j] = tmp + d;
@@ -625,8 +623,9 @@ public class LevenbergMarquardtOptimizer3 {
 
         @Override
         public double[] getModeledSignal(double[] variables) {
-            final double[] modeledSignal = {Math.pow(variables[0], 2) - 4 * variables[0] + 5, Math.pow(variables[1], 2)};
-            return modeledSignal;
+            final double v0_sq = variables[0] * variables[0];
+            final double v1_sq = variables[1] * variables[1];
+            return new double[]{v0_sq - 4 * variables[0] + 5, v1_sq};
         }
 
         @Override

@@ -120,8 +120,8 @@ public class LevMarNN {
         breakingCriterion = new BreakingCriterionImpl(150, 1e-10);
         costFunction = new CostFunctionImpl();
         model = new nn_atmo_watForwardModel();
-        optimizer = new LevenbergMarquardtOptimizer3();
         p = new double[8];
+        optimizer = new LevenbergMarquardtOptimizer3();
 
         nnAtmoWat = new NnAtmoWat(alphaTab);
     }
@@ -448,8 +448,7 @@ public class LevMarNN {
 //            rwn1[i] = nn_out[i] * M_PI;
 //        }
 
-        for (int i = 5; i < 17; i++)
-            nn_in[i] = rlw2[i - 5];
+        System.arraycopy(rlw2, 0, nn_in, 5, 12);
 
         nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
 
@@ -817,7 +816,7 @@ public class LevMarNN {
 
         @Override
         public double[] getModeledSignal(double[] variables) {
-            final NNReturnData nnReturnData = nnAtmoWat.nn_atmo_wat(variables, rtosa_nn.clone(), rtosa_nn.length, nn_data);
+            final NNReturnData nnReturnData = nnAtmoWat.nn_atmo_wat(variables, rtosa_nn.clone(), nn_data);
             nn_data = nnReturnData.getNn_atdata();
             return nnReturnData.getOutputValues();
         }
