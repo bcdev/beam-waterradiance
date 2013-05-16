@@ -48,12 +48,16 @@ public class LevenbergMarquardtOptimizer3 {
         double nu = 2;
         double Dp_L2;
         double alpha;
+        double Dp_L2 = Double.MAX_VALUE;
+        double alpha = 0;
+        double alphaNeu = 0.0001;
         int gprevtaken = 0;
         boolean breaknested = false;
         double[] diag_jacTjac = new double[m];
         double eps3 = 1e-10;
         int stop = 0;
         double jacTe_inf = 0;
+        double t = 0;
         while (!criterion.isMet(p_eL2, numberOfIterations) && !breaknested && stop == 0) {
 //            System.out.println("Iteration " + numberOfIterations + ":");
 //            StringBuilder builder = new StringBuilder("Current parameter estimates:");
@@ -218,17 +222,16 @@ public class LevenbergMarquardtOptimizer3 {
                 }
                 double rho = 1e-8;
                 boolean gradproj = jacTeDp <= -rho * Math.pow(Dp_L2, (2.1d / 2d));
-                double t = 1;
                 if (gradproj) {
                     double tmp = Math.sqrt(p_L2);
                     double stepmx = 1e3 * ((tmp >= 1.0) ? tmp : 1.0);
-                    alpha = 0.0001;
-                    final double[][] doubles = lineSearch(p, model, p_eL2, stepmx, jacTe, Dp, pDp, hx.length, x, pDp_eL2, alpha);
+                    final double[][] doubles = lineSearch(p, model, p_eL2, stepmx, jacTe, Dp, pDp, hx.length, x, pDp_eL2, alphaNeu);
                     pDp = doubles[0];
                     hx = doubles[1];
                     pDp_eL2 = doubles[2][0];
                     Dp = doubles[3];
                     if (doubles[4][0] != 0) {
+                        t = 1;
                         while (gradproj && t > 1e-12) {
                             for (int i = 0; i < m; ++i) {
                                 pDp[i] = p[i] + t * Dp[i];
@@ -243,7 +246,7 @@ public class LevenbergMarquardtOptimizer3 {
                                 stop = 7;
                                 gradproj = false;
                             } else {
-                                if (pDp_eL2 <= p_eL2 + 2 * t * alpha * jacTeDp) {
+                                if (pDp_eL2 <= p_eL2 + 2 * t * alphaNeu * jacTeDp) {
                                     break;
                                 }
                             }
@@ -263,9 +266,7 @@ public class LevenbergMarquardtOptimizer3 {
                     if (gprevtaken == 0) {
                         t = t0;
                     }
-                    boolean terminatePGLS = false;
-                    alpha = 0.0001;
-                    while (t > 1e-18 && !breaknested && !terminatePGLS) {
+                    while (t > 1e-18 && !breaknested) {
                         for (int i = 0; i < m; ++i) {
                             pDp[i] = p[i] - t * jacTe[i];
                         }
@@ -292,16 +293,14 @@ public class LevenbergMarquardtOptimizer3 {
                             if (gprevtaken == 1 && pDp_eL2 <= p_eL2 + 2 * 0.99999 * temp) {
                                 t = t0;
                                 gprevtaken = 0;
+                                t *= 0.9;
                                 continue;
                             }
-                            if (pDp_eL2 <= p_eL2 + 2 * alpha * temp) {
-                                terminatePGLS = true;
+                            if (pDp_eL2 <= p_eL2 + 2 * alphaNeu * temp) {
+                                break;
                             }
                         }
                         t *= 0.9;
-                    }
-                    if (!breaknested && !terminatePGLS) {
-                        gprevtaken = 0;
                     }
                     if (!breaknested) {
                         gprevtaken = 1;
@@ -324,10 +323,6 @@ public class LevenbergMarquardtOptimizer3 {
                 }
             }
             numberOfIterations++;
-        }
-
-        for (int i = 0; i < m; ++i) {
-            jacTjac.set(i, i, diag_jacTjac[i]);
         }
         return p;
     }
