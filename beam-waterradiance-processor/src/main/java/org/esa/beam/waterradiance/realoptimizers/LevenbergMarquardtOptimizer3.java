@@ -145,6 +145,7 @@ public class LevenbergMarquardtOptimizer3 {
                     jacTjac.set(i, i, jacTjac.get(i, i) + mu);
                 }
                 double[] Dp = getSolutionForLinearEquation(jacTjac, jacTe);
+//                double[] Dp = getSolutionForLinearEquation2(jacTjac, jacTe);
                 double[] pDp = new double[m];
                 double pDp_eL2 = 0;
                 if (Dp != null) {
@@ -357,7 +358,7 @@ public class LevenbergMarquardtOptimizer3 {
         return updatedParameters;
     }
 
-    private static double[] getSolutionForLinearEquation(Matrix jTJMatrix, double[] jTE) {
+    private static double[] getSolutionForLinearEquation2(Matrix jTJMatrix, double[] jTE) {
         double[][] jTEMatrixArray = new double[jTE.length][1];
         for (int i = 0; i < jTE.length; i++) {
             jTEMatrixArray[i][0] = jTE[i];
@@ -369,6 +370,90 @@ public class LevenbergMarquardtOptimizer3 {
             return solutionForLinearEquationMatrix.getRowPackedCopy();
         }
         return null;
+    }
+
+    private double[] getSolutionForLinearEquation(Matrix A, double[] B) {
+        int maxi = -1;
+        double max, sum, tmp;
+        int m = B.length;
+        int[] idx = new int[m];
+        double[] work = new double[m];
+        double[][] a = A.getArrayCopy();
+        double[] x = B.clone();
+        double epsilon = calculateMachineEpsilonDouble();
+
+          /* compute the LU decomposition of a row permutation of matrix a; the permutation itself is saved in idx[] */
+        for (int i = 0; i < m; ++i) {
+            max = 0.0;
+            for (int j = 0; j < m; ++j)
+                if ((tmp = Math.abs(a[i][j])) > max)
+                    max = tmp;
+            if (max == 0.0) {
+                return null;
+            }
+            work[i] = 1.0 / max;
+        }
+        for (int j = 0; j < m; ++j) {
+            for (int i = 0; i < j; ++i) {
+                sum = a[i][j];
+                for (int k = 0; k < i; ++k)
+                    sum -= a[i][k] * a[k][j];
+                a[i][j] = sum;
+            }
+            max = 0.0;
+            for (int i = j; i < m; ++i) {
+                sum = a[i][j];
+                for (int k = 0; k < j; ++k)
+                    sum -= a[i][k] * a[k][j];
+                a[i][j] = sum;
+                if ((tmp = work[i] * Math.abs(sum)) >= max) {
+                    max = tmp;
+                    maxi = i;
+                }
+            }
+            if (j != maxi) {
+                for (int k = 0; k < m; ++k) {
+                    tmp = a[maxi][k];
+                    a[maxi][k] = a[j][k];
+                    a[j][k] = tmp;
+                }
+                work[maxi] = work[j];
+            }
+            idx[j] = maxi;
+            if (a[j][j] == 0.0)
+                a[j][j] = epsilon;
+            if (j != m - 1) {
+                tmp = 1.0 / (a[j][j]);
+                for (int i = j + 1; i < m; ++i)
+                    a[i][j] *= tmp;
+            }
+        }
+
+          /* The decomposition has now replaced a. Solve the linear system using
+   * forward and back substitution
+   */
+        int k = 0;
+        for (int i = 0; i < m; ++i) {
+            int j = idx[i];
+            sum = x[j];
+            x[j] = x[i];
+            if (k != 0)
+                for (j = k - 1; j < i; ++j)
+                    sum -= a[i][j] * x[j];
+            else if (sum != 0.0)
+                k = i + 1;
+            x[i] = sum;
+        }
+
+        for (int i = m - 1; i >= 0; --i) {
+            sum = x[i];
+            for (int j = i + 1; j < m; ++j)
+                sum -= a[i][j] * x[j];
+            x[i] = sum / a[i][i];
+        }
+
+        return x;
+
     }
 
     private double[][] lineSearch(double[] x, ForwardModel model, double p_eL2, double stepmx, double[] jacTe, double[] Dp,
