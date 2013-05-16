@@ -69,32 +69,25 @@ class NnAtmoWat {
      * nn_data:  additional data
      */
     NNReturnData nn_atmo_wat(double[] conc_all, double[] rtosa_nn, int m, int n, s_nn_atdata nn_data) {
-        int ilam, nlam, ix;
-        double sun_thet, view_zeni, azi_diff_hl, temperature, salinity;
-        double log_aot, log_ang, log_wind;
-        double x, y, z, azimuth, elevation;
-
-        s_nn_atdata nn_at_data = nn_data;
-
-        sun_thet = nn_at_data.getSun_thet();
-        view_zeni = nn_at_data.getView_zeni();
-        azi_diff_hl = nn_at_data.getAzi_diff_hl();
+        final double sun_thet = nn_data.getSun_thet();
+        final double view_zeni = nn_data.getView_zeni();
+        final double azi_diff_hl = nn_data.getAzi_diff_hl();
         //azi_diff_hl=180.0-azi_diff_hl;
-        temperature = nn_at_data.getTemperature();
-        salinity = nn_at_data.getSalinity();
+        final double temperature = nn_data.getTemperature();
+        final double salinity = nn_data.getSalinity();
 
-        azimuth = DEG_2_RAD * azi_diff_hl;
-        elevation = DEG_2_RAD * view_zeni;
+        final double azimuth = DEG_2_RAD * azi_diff_hl;
+        final double elevation = DEG_2_RAD * view_zeni;
 
         final double sin_elevation = Math.sin(elevation);
-        x = sin_elevation * Math.cos(azimuth);
-        y = sin_elevation * Math.sin(azimuth);
-        z = Math.cos(elevation);
+        final double x = sin_elevation * Math.cos(azimuth);
+        final double y = sin_elevation * Math.sin(azimuth);
+        final double z = Math.cos(elevation);
 
 
-        log_aot = conc_all[0];
-        log_ang = conc_all[1];
-        log_wind = conc_all[2];
+        final double log_aot = conc_all[0];
+        final double log_ang = conc_all[1];
+        final double log_wind = conc_all[2];
 //            log_conc_chl = conc_all[3];
 //            log_conc_det = conc_all[4];
 //            log_conc_gelb = conc_all[5];
@@ -125,23 +118,23 @@ class NnAtmoWat {
         outnet2 = LevMarNN.use_the_nn(tdown_net, innet, outnet2, alphaTab);
         outnet3 = LevMarNN.use_the_nn(tup_net, innet, outnet3, alphaTab);
 
-        nlam = n; // if n == 11, then iteration for LM fit, if > 11, then computation for full spectrum
+        int nlam = n; // if n == 11, then iteration for LM fit, if > 11, then computation for full spectrum
         if (nlam == 11) {
-            for (ilam = 0; ilam < nlam; ilam++) {
-                ix = lam29_meris11_ix[ilam];
+            for (int ilam = 0; ilam < nlam; ilam++) {
+                final int ix = lam29_meris11_ix[ilam];
                 rpath_nn[ilam] = outnet1[ix];
                 tdown_nn[ilam] = outnet2[ix];
                 tup_nn[ilam] = outnet3[ix];
             }
-            final NNReturnData res = LevMarNN.nn_water(conc_all, rlw_nn, m, n, nn_at_data, wat_net_for, alphaTab);
+            final NNReturnData res = LevMarNN.nn_water(conc_all, rlw_nn, m, n, nn_data, wat_net_for, alphaTab);
             rlw_nn = res.getOutputValues();
-            for (ilam = 0; ilam < 11; ilam++) {
+            for (int ilam = 0; ilam < 11; ilam++) {
                 rw_nn[ilam] = rlw_nn[ilam];//M_PI;
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
             }
         } else {
             nlam = 29; // all bands for other calculations
-            for (ilam = 0; ilam < nlam; ilam++) {
+            for (int ilam = 0; ilam < nlam; ilam++) {
                 rpath_nn[ilam] = outnet1[ilam];
                 tdown_nn[ilam] = outnet2[ilam];
                 tup_nn[ilam] = outnet3[ilam];
@@ -149,14 +142,14 @@ class NnAtmoWat {
             n = nlam;
             final NNReturnData res = LevMarNN.nn_water(conc_all, rlw_nn, m, n, nn_data, wat_net_for, alphaTab);
             rlw_nn = res.getOutputValues();
-            nn_at_data = res.getNn_atdata();
-            for (ilam = 0; ilam < nlam; ilam++) {
+            nn_data = res.getNn_atdata();
+            for (int ilam = 0; ilam < nlam; ilam++) {
                 rw_nn[ilam] = rlw_nn[ilam];//*M_PI;// ! with pi included, 21 bands
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
-                nn_at_data.setTdown_nn(ilam, tdown_nn[ilam]);
-                nn_at_data.setTup_nn(ilam, tup_nn[ilam]);
-                nn_at_data.setRpath_nn(ilam, rpath_nn[ilam]);
-                nn_at_data.setRw_nn(ilam, rw_nn[ilam]);
+                nn_data.setTdown_nn(ilam, tdown_nn[ilam]);
+                nn_data.setTup_nn(ilam, tup_nn[ilam]);
+                nn_data.setRpath_nn(ilam, rpath_nn[ilam]);
+                nn_data.setRw_nn(ilam, rw_nn[ilam]);
             }
         }
         return new NNReturnData(rtosa_nn, nn_data);

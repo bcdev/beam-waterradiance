@@ -1,6 +1,7 @@
 package org.esa.beam.waterradiance;
 
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.graph.GraphException;
@@ -14,8 +15,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 public class LevMarNnL1BPerformanceTest {
@@ -61,6 +61,7 @@ public class LevMarNnL1BPerformanceTest {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(waterRadianceOpSpi);
         final String testProductPath = getTestProductPath();
         final Product product = ProductIO.readProduct(testProductPath);
+        final String targetFilePath = targetDirectory.getPath() + File.separator + "nn_in_c.dim";
 
         try {
             nanoTimer.start();
@@ -68,7 +69,8 @@ public class LevMarNnL1BPerformanceTest {
                     createDefaultParameterMap(),
                     new Product[]{product});
 
-            ProductIO.writeProduct(ocProduct, targetDirectory.getPath() + File.separator + "nn_in_c.dim", "BEAM-DIMAP");
+
+            ProductIO.writeProduct(ocProduct, targetFilePath, "BEAM-DIMAP");
             nanoTimer.stop();
             c_elapsed = "C   : " + nanoTimer.getElapsedTime();
         } finally {
@@ -77,6 +79,8 @@ public class LevMarNnL1BPerformanceTest {
                 product.dispose();
             }
         }
+
+        assertCorrectProduct(targetFilePath);
     }
 
     @Test
@@ -85,13 +89,15 @@ public class LevMarNnL1BPerformanceTest {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(ocNnRdSpi);
         final String testProductPath = getTestProductPath();
         final Product product = ProductIO.readProduct(testProductPath);
+        final String targetFilePath = targetDirectory.getPath() + File.separator + "nn_in_java.dim";
 
         try {
             nanoTimer.start();
             final Product ocProduct = GPF.createProduct("Meris.OCNNRD",
                     createDefaultParameterMap(),
                     new Product[]{product});
-            ProductIO.writeProduct(ocProduct, targetDirectory.getPath()+ File.separator + "nn_in_java.dim", "BEAM-DIMAP");
+
+            ProductIO.writeProduct(ocProduct, targetFilePath, "BEAM-DIMAP");
             nanoTimer.stop();
             java_elapsed = "Java: " + nanoTimer.getElapsedTime();
         } finally {
@@ -101,6 +107,7 @@ public class LevMarNnL1BPerformanceTest {
             }
         }
 
+        assertCorrectProduct(targetFilePath);
     }
 
     private String getTestProductPath() {
@@ -114,6 +121,21 @@ public class LevMarNnL1BPerformanceTest {
         final HashMap<String, Object> parameterMap = new HashMap<String, Object>();
         parameterMap.put("targetDirectory", targetDirectory);
         return parameterMap;
+    }
+
+    private void assertCorrectProduct(String targetFilePath) throws IOException {
+        final Product product = ProductIO.readProduct(targetFilePath);
+        assertNotNull(product);
+
+        try {
+            final Band rl_tosa_1 = product.getBand("rl_tosa_1");
+            assertNotNull(rl_tosa_1);
+            rl_tosa_1.loadRasterData();
+            final double pixelDouble = rl_tosa_1.getPixelDouble(21, 21);
+            assertEquals(0.059958883, pixelDouble, 1e-7);
+        } finally {
+            product.dispose();
+        }
     }
 
     private class NanoTimer {

@@ -441,9 +441,7 @@ public class LevMarNN {
         nn_in[2] = azi_diff_hl;
         nn_in[3] = temperature;
         nn_in[4] = salinity;
-        for (int i = 5; i < 17; i++) {
-            nn_in[i] = rlw1[i - 5];
-        }
+        System.arraycopy(rlw1, 0, nn_in, 5, 12);
 
         nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
 
@@ -754,7 +752,6 @@ public class LevMarNN {
 
     static double[] use_the_nn(a_nn a_net, double[] nn_in, double[] nn_out, AlphaTab alphaTab) {
         final long anetNnin = a_net.getNnin();
-
         final feedforward nn = a_net.getNn();
         final double[] inmin = a_net.getInmin();
         final double[] inmax = a_net.getInmax();
@@ -804,13 +801,6 @@ public class LevMarNN {
      * * water nn **
      */
     static NNReturnData nn_water(double[] conc_all, double[] rlw_nn, int m, int n, s_nn_atdata nn_data, a_nn wat_net_for, AlphaTab alphaTab) {
-        int ilam, nlam, ix;
-
-        double sun_thet, view_zeni, azi_diff_hl, temperature, salinity;
-        double log_apart, log_agelb, log_apig, log_bpart, log_bwit;
-        double log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min, log_conc_wit;
-        double aot, ang, wind;
-        int prepare;
         double[] innet = new double[10];
         double[] outnet = new double[35];
         //char *wat_net_name_for={"23x7x28_77.3.net"};
@@ -821,55 +811,33 @@ public class LevMarNN {
         //char *wat_net_name_for={"./for_b33_20120114_nokd_27x17/27x17_153.7.net"};
         //String wat_net_name_for = "./for_water_rw29_20120318/37x17_754.1.net";
 
-        s_nn_atdata nn_at_data = nn_data;
+        innet[0] = nn_data.getSun_thet();
+        innet[1] = nn_data.getView_zeni();
+        innet[2] = nn_data.getAzi_diff_hl();
+        innet[3] = nn_data.getTemperature();
+        innet[4] = nn_data.getSalinity();
 
-        nlam = n;
-        prepare = nn_at_data.getPrepare();
-        sun_thet = nn_at_data.getSun_thet();
-        view_zeni = nn_at_data.getView_zeni();
-        azi_diff_hl = nn_at_data.getAzi_diff_hl();
-        temperature = nn_at_data.getTemperature();
-        salinity = nn_at_data.getSalinity();
+        innet[5] = conc_all[3];     // log_conc_chl
+        innet[6] = conc_all[4];     // log_conc_det
+        innet[7] = conc_all[5];     // log_conc_gelb
+        innet[8] = conc_all[6];     // log_conc_min
+        innet[9] = conc_all[7];     // log_bwit
 
-        log_conc_chl = conc_all[3];
-        log_conc_det = conc_all[4];
-        log_conc_gelb = conc_all[5];
-        log_conc_min = conc_all[6];
-        log_bwit = conc_all[7];
-
-        innet[0] = sun_thet;
-        innet[1] = view_zeni;
-        innet[2] = azi_diff_hl;
-        innet[3] = temperature;
-        innet[4] = salinity;
-
-        innet[5] = log_conc_chl;
-        innet[6] = log_conc_det;
-        innet[7] = log_conc_gelb;
-        innet[8] = log_conc_min;
-        innet[9] = log_bwit;
-
-        if (prepare < 0.0) {
-            prepare = prepare + 2;
-            nn_at_data.setPrepare(prepare);
+        final int prepare = nn_data.getPrepare();
+        if (prepare < 0) {
+            nn_data.setPrepare( prepare + 2);
         }
         outnet = use_the_nn(wat_net_for, innet, outnet, alphaTab);
 
-        if (nlam == 11) {
-            for (ilam = 0; ilam < nlam; ilam++) {
-                ix = lam29_meris11_ix[ilam];
+        if (n == 11) {
+            for (int ilam = 0; ilam < n; ilam++) {
+                final int ix = lam29_meris11_ix[ilam];
                 rlw_nn[ilam] = outnet[ix];
             }
         } else {
-            nlam = 29;
-            for (ilam = 0; ilam < nlam; ilam++) {
-                //ix=lam33_meris29_ix[ilam];
-                ix = ilam;
-                rlw_nn[ilam] = outnet[ix];
-            }
+            System.arraycopy(outnet, 0, rlw_nn, 0, 29);
         }
-        NNReturnData res = new NNReturnData(rlw_nn, nn_at_data);
-        return res;
+        return new NNReturnData(rlw_nn, nn_data);
     }
 
     private class nn_atmo_watForwardModel implements ForwardModel {
