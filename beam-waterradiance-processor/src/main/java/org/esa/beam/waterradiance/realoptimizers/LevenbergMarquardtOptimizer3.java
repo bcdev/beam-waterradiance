@@ -22,9 +22,12 @@ public class LevenbergMarquardtOptimizer3 {
 
     private final double epsilon_sq;
     private final double[] work;
+    private final double[] jacTe;
+    private final double[] diag_jacTjac;
+    private final int[] idx;
+
     private final int m;
     private final int n;
-
     private Matrix jac;
     private double[] pDp;
     private Matrix jacTjac;
@@ -38,9 +41,12 @@ public class LevenbergMarquardtOptimizer3 {
 
         jac = new Matrix(n, m);
         jacTjac = new Matrix(m, m);
+        jacTe = new double[m];
+        diag_jacTjac = new double[m];
 
         pDp = new double[m];
         work = new double[m];
+        idx = new int[m];
     }
 
     public double[] solveConstrainedLevenbergMarquardt(ForwardModel model, CostFunction function,
@@ -56,7 +62,7 @@ public class LevenbergMarquardtOptimizer3 {
             e[i] = x[i] - hx[i];
             p_eL2 += e[i] * e[i];
         }
-        double[] jacTe = new double[m];
+
         int numberOfIterations = 0;
         double mu = 0;
         double nu = 2;
@@ -65,10 +71,10 @@ public class LevenbergMarquardtOptimizer3 {
         double alphaNeu = 0.0001;
         int gprevtaken = 0;
         boolean breaknested = false;
-        double[] diag_jacTjac = new double[m];
+
         double eps3 = 1e-10;
         int stop = 0;
-        double jacTe_inf = 0;
+        double jacTe_inf;
         double t = 0;
         while (!criterion.isMet(p_eL2, numberOfIterations) && !breaknested && stop == 0) {
 //            System.out.println("Iteration " + numberOfIterations + ":");
@@ -100,8 +106,9 @@ public class LevenbergMarquardtOptimizer3 {
                         for (int j = i; j >= 0; --j) {
                             final double jaclmj = jac.get(l, j);
                             final double currentValue = jacTjac.get(i, j);
-                            jacTjac.set(i, j, currentValue + (alpha * jaclmj));
-                            jacTjac.set(j, i, currentValue + (alpha * jaclmj));
+                            final double value = currentValue + (alpha * jaclmj);
+                            jacTjac.set(i, j, value);
+                            jacTjac.set(j, i, value);
                         }
                         jacTe[i] += alpha * e[l];
                     }
@@ -109,7 +116,7 @@ public class LevenbergMarquardtOptimizer3 {
             } else {
                 jacTjac = blockedMultiplication(jac, jacTjac, n, m);
                 for (int i = 0; i < m; i++) {
-                    jacTe[m] = 0;
+                    jacTe[i] = 0;
                 }
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j < m; j++) {
@@ -139,8 +146,6 @@ public class LevenbergMarquardtOptimizer3 {
                 p_L2 += p[i] * p[i];
             }
             if (numActive == jReplacement && jacTe_inf < eps1) {
-                Dp_L2 = 0;
-                stop = 1;
                 break;  // gradient too small
             }
             if (numberOfIterations == 0) {
@@ -197,9 +202,8 @@ public class LevenbergMarquardtOptimizer3 {
                         for (int i = 0; i < m; ++i) {
                             dL += Dp[i] * (mu * Dp[i] + jacTe[i]);
                         }
-                        double dF = 0;
                         if (dL > 0) {
-                            dF = p_eL2 - pDp_eL2;
+                            final double dF = p_eL2 - pDp_eL2;
                             double temp = 2d * dF / dL - 1d;
                             temp = 1 - temp * temp * temp;
                             mu = mu * Math.max(temp, (1d / 3d));
@@ -320,7 +324,7 @@ public class LevenbergMarquardtOptimizer3 {
                 if (!breaknested) {
                     Dp_L2 = 0;
                     for (int i = 0; i < m; ++i) {
-                        double temp = pDp[i] - p[i];
+                        final double temp = pDp[i] - p[i];
                         Dp_L2 += temp * temp;
                     }
                     if (Dp_L2 <= eps2_sq * p_L2) {
@@ -380,18 +384,17 @@ public class LevenbergMarquardtOptimizer3 {
 
     private double[] getSolutionForLinearEquation(Matrix A, double[] B) {
         int maxi = -1;
-        double max, sum, tmp;
-        int m = B.length;
-        int[] idx = new int[m];
+        double sum, tmp;
         double[][] a = A.getArrayCopy();
         double[] x = B.clone();
         double epsilon = calculateMachineEpsilonDouble();
 
           /* compute the LU decomposition of a row permutation of matrix a; the permutation itself is saved in idx[] */
         for (int i = 0; i < m; ++i) {
-            max = 0.0;
+            double max = 0.0;
+            final double[] a_vec = a[i];
             for (int j = 0; j < m; ++j)
-                if ((tmp = Math.abs(a[i][j])) > max) {
+                if ((tmp = Math.abs(a_vec[j])) > max) {
                     max = tmp;
                 }
             if (max == 0.0) {
@@ -401,17 +404,19 @@ public class LevenbergMarquardtOptimizer3 {
         }
         for (int j = 0; j < m; ++j) {
             for (int i = 0; i < j; ++i) {
-                sum = a[i][j];
+                final double[] a_i =  a[i];
+                sum = a_i[j];
                 for (int k = 0; k < i; ++k) {
-                    sum -= a[i][k] * a[k][j];
+                    sum -= a_i[k] * a[k][j];
                 }
-                a[i][j] = sum;
+                a_i[j] = sum;
             }
-            max = 0.0;
+            double max = 0.0;
             for (int i = j; i < m; ++i) {
                 sum = a[i][j];
-                for (int k = 0; k < j; ++k)
+                for (int k = 0; k < j; ++k) {
                     sum -= a[i][k] * a[k][j];
+                }
                 a[i][j] = sum;
                 if ((tmp = work[i] * Math.abs(sum)) >= max) {
                     max = tmp;
