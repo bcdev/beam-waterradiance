@@ -68,6 +68,7 @@ public class LevMarNN {
     private double[] nn_out;
     private final NnAtmoWat nnAtmoWat;
     private s_nn_atdata nn_at_data;
+    private double[] x11;
 
 
     public LevMarNN() throws IOException {
@@ -118,6 +119,7 @@ public class LevMarNN {
             else
                 p[i] = lb[i] + lb[i] * 0.2;
         }
+        x11 = new double[11];
 
         nnResources = new NnResources();
         alphaTab = new AlphaTab();
@@ -128,7 +130,7 @@ public class LevMarNN {
         breakingCriterion = new BreakingCriterionImpl(150, 1e-10);
         costFunction = new CostFunctionImpl();
         model = new nn_atmo_watForwardModel();
-        optimizer = new LevenbergMarquardtOptimizer3();
+        optimizer = new LevenbergMarquardtOptimizer3(p.length, x11.length);
 
         nnAtmoWat = new NnAtmoWat(alphaTab);
         nn_at_data = new s_nn_atdata();
@@ -136,8 +138,6 @@ public class LevMarNN {
     }
 
     public int levmar_nn(int detector, double[] input, double[] output) {
-        double[] x11 = new double[11];
-        //double[] p_alt = new double[8];
         // @todo 1 tb/** these two are never written, only read from ... tb 2013-05-14
         double[] rw1 = new double[NLAM];
         double[] rw2 = new double[NLAM];
