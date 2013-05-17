@@ -44,6 +44,7 @@ public class LevMarNN {
     private final nn_atmo_watForwardModel model;
     private final LevenbergMarquardtOptimizer3 optimizer;
     private double[] p;
+    private double[] p_init;
 
     private final double[] nn_in;
     private final double[] info;
@@ -110,8 +111,29 @@ public class LevMarNN {
         trans_ozonu = new double[15];
 
         // lower and upper boundary for variables aot, ang, wind, log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min
-        lb = new double[]{0.001, 0.001, 0.001, -13.96, -15.42, -16.38, -15.87, 0.0};
-        ub = new double[]{1.0, 2.2, 10.0, 3.9, 2.294, 1.599, 4.594, 1.1};
+        // lb = new double[]{0.001, 0.001, 0.001, -13.96, -15.42, -16.38, -15.87, 0.0};
+        lb = new double[]{
+                -4.6,   // aot
+                -3.8,   // ang
+                -2.3,   // wind
+                -19.9,  // apig
+                -15.89, // apart
+                -17.23, // agelb
+                -15.8,  // bpart
+                -14.92  // bwit
+        };
+
+        //ub = new double[]{1.0, 2.2, 10.0, 3.9, 2.294, 1.599, 4.594, 1.1};
+        ub = new double[]{
+                0.0,   // aot
+                0.788, // ang
+                2.3,   // wind
+                0.685, // apig
+                2.297, // apart
+                1.6,   // agelb
+                4.598, // bpart
+                4.599  // bwit
+        };
         p = new double[8];
         for (int i = 0; i < p.length; i++) {
             if (lb[i] < 0.0)
@@ -119,6 +141,16 @@ public class LevMarNN {
             else
                 p[i] = lb[i] + lb[i] * 0.2;
         }
+        p_init = new double[8];
+        p_init[0] = Math.log(0.1);   // tau550
+        p_init[1] = Math.log(1.0);   // ang
+        p_init[2] = Math.log(3.0);   // wind
+        p_init[3] = Math.log(0.005); // apig
+        p_init[4] = Math.log(0.005); // adet
+        p_init[5] = Math.log(0.005); // agelb
+        p_init[6] = Math.log(0.01);  // bspm
+        p_init[7] = Math.log(0.01);  // bwit
+
         x11 = new double[11];
 
         nnResources = new NnResources();
@@ -144,7 +176,7 @@ public class LevMarNN {
         double sun_thet, view_zeni, azi_diff_hl, temperature, salinity, ozone;
 
         // @todo 2 tb/** can this be a field - check when all tests run green tb 2013-05-14
-        int m, SMILE;
+        int SMILE;
 
         double surf_press, rayl_rel_mass_toa_tosa;
         double cos_scat_ang, phase_rayl_min;
@@ -191,7 +223,6 @@ public class LevMarNN {
         nn_at_data.temperature = temperature;
         nn_at_data.salinity = salinity;
 
-        m = 8;
         /* ++++ angles ++++ */
 
         cos_teta_sun = Math.cos(sun_zenith * DEG_2_RAD);
@@ -200,7 +231,7 @@ public class LevMarNN {
         sin_teta_view = Math.sin(view_zenith * DEG_2_RAD);
         cos_azi_diff = Math.cos(delta_azimuth * DEG_2_RAD);
 
-       /*+++ ozone correction +++*/
+        /*+++ ozone correction +++*/
 
         nlam = 12;
         for (int i = 0; i < nlam; i++) {
@@ -237,17 +268,17 @@ public class LevMarNN {
 
         L_toa[8] /= trans708;
 
-        	/*+++ smile and pressure correction +++*/
+        /*+++ smile and pressure correction +++*/
 
-	/* calculate relative airmass rayleigh correction for correction layer*/
+        /* calculate relative airmass rayleigh correction for correction layer*/
         surf_press = surf_pressure;
         rayl_rel_mass_toa_tosa = (surf_press - 1013.2) / 1013.2; //?? oder rayl_mass_toa_tosa =surf_press - 1013.2; // RD20120105
 
-	/* calculate phase function for rayleigh path radiance*/
+        /* calculate phase function for rayleigh path radiance*/
         cos_scat_ang = -cos_teta_view * cos_teta_sun - sin_teta_view * sin_teta_sun * cos_azi_diff; // this is the scattering angle without fresnel reflection
         phase_rayl_min = 0.75 * (1.0 + cos_scat_ang * cos_scat_ang);
 
-        	/* calculate optical thickness of rayleigh for correction layer, lam in micrometer */
+        /* calculate optical thickness of rayleigh for correction layer, lam in micrometer */
 
         for (ilam = 0; ilam < nlam; ilam++) {
             ix = MERBAND_12_INDEX[ilam];
@@ -260,7 +291,7 @@ public class LevMarNN {
             //trans_rayl_pressu[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_view));
         }
 
-        	/* calculate rayleigh for correction of smile, lam in micrometer */
+        /* calculate rayleigh for correction of smile, lam in micrometer */
 
         for (ilam = 0; ilam < nlam; ilam++) {
             ix = MERBAND_12_INDEX[ilam];
@@ -272,7 +303,7 @@ public class LevMarNN {
             //trans_rayl_smileu[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view));
         }
 
-            /* +++++ Esun smile correction ++++++ */
+        /* +++++ Esun smile correction ++++++ */
         for (ilam = 0; ilam < nlam; ilam++) {
             ix = MERBAND_12_INDEX[ilam];
             Ed_toa_smile_rat[ilam] = rredtoa[detector][ix];///nomi_sun[ix];
@@ -280,7 +311,7 @@ public class LevMarNN {
         }
         SMILE = 1;
         if (SMILE == 1) {
-        /* subtract all correcting radiances */
+            /* subtract all correcting radiances */
             for (ilam = 0; ilam < nlam; ilam++) {
                 ix = MERBAND_12_INDEX[ilam];
                 // L_tosa[ilam] = ((L_toa[ix]-L_rayl_smile[ilam])-L_rayl_toa_tosa[ilam])/(trans_ozon[ilam]*trans_rayl_smile[ilam]);
@@ -299,12 +330,12 @@ public class LevMarNN {
             }
         }
 
-        	/* extra trans for rho_water: ozon, rayl_smile, rayl_press */
+        /* extra trans for rho_water: ozon, rayl_smile, rayl_press */
 //        for (ilam = 0; ilam < nlam; ilam++) {
 //            trans_extra[ilam] = trans_ozon[ilam] * trans_rayl_press[ilam] * trans_rayl_smile[ilam];
 //        }
 
-	/* +++++ vicarious adjustment +++++*/
+        /* +++++ vicarious adjustment +++++*/
 //        if (0) {
 //            x[10] /= 0.98;
 //            xb[10] = x[10];
@@ -313,65 +344,37 @@ public class LevMarNN {
 //            xb[11] = x[11];
 //        }
 
-    /*
-    input  5 is log_aot in [-4.605000,0.000000]
-	input  6 is log_angstrom in [-3.817000,0.788500]
-	input  7 is log_wind in [-2.303000,2.303000]
-	input  8 is temperature in [0.000047,36.000000]
-	input  9 is salinity in [0.000004,43.000000]
-	*/
+        /*
+      input  5 is log_aot in [-4.605000,0.000000]
+      input  6 is log_angstrom in [-3.817000,0.788500]
+      input  7 is log_wind in [-2.303000,2.303000]
+      input  8 is temperature in [0.000047,36.000000]
+      input  9 is salinity in [0.000004,43.000000]
+      */
 
-        //lower boundary
-        lb[0] = -4.6; // aot
-        lb[1] = -3.8; // ang
-        lb[2] = -2.3; // wind
-        lb[3] = -19.9; // apig
-        lb[4] = -15.89; // apart
-        lb[5] = -17.23; // agelb
-        lb[6] = -15.8; // bpart
-        lb[7] = -14.92; // bwit
+//        for (int i = 0; i < m; i++) {
+//            double lub = Math.abs(ub[i] - lb[i]);
+//            /*
+//        if(lb[i]<0.0)
+//            p[i]=lb[i]-lb[i]*0.2;
+//        else
+//            p[i]=lb[i]+lb[i]*0.2;
+//            */
+//            if (ub[i] < 0.0) {
+//                p[i] = ub[i] - lub * 0.2;
+//            } else {
+//                p[i] = ub[i] - lub * 0.2;
+//            }
+//        }
 
-        // upper boundary
-        ub[0] = 0.0;   // aot
-        ub[1] = 0.788; // ang
-        ub[2] = 2.3;   // wind
-        ub[3] = 0.685; // apig
-        ub[4] = 2.297; // apart
-        ub[5] = 1.6;   // agelb
-        ub[6] = 4.598; // bpart
-        ub[7] = 4.599; // bwit
-
-
-        for (int i = 0; i < m; i++) {
-            double lub = Math.abs(ub[i] - lb[i]);
-                    /*
-                    if(lb[i]<0.0)
-                        p[i]=lb[i]-lb[i]*0.2;
-                    else
-                        p[i]=lb[i]+lb[i]*0.2;
-                        */
-            if (ub[i] < 0.0) {
-                p[i] = ub[i] - lub * 0.2;
-            } else {
-                p[i] = ub[i] - lub * 0.2;
-            }
-        }
-        p[0] = Math.log(0.1);   // tau550
-        p[1] = Math.log(1.0);   // ang
-        p[2] = Math.log(3.0);   // wind
-        p[3] = Math.log(0.005); // apig
-        p[4] = Math.log(0.005); // adet
-        p[5] = Math.log(0.005); // agelb
-        p[6] = Math.log(0.01);  // bspm
-        p[7] = Math.log(0.01);  // bwit
+        System.arraycopy(p_init, 0, p, 0, p.length);
 
         // select the 11 bands for iterations
         for (int i = 0; i < 11; i++) {
             ix = MERIS_11_OUTOF_12_IX[i];
             x11[i] = x[ix];
         }
-        m = 8;
-            /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
+        /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
         //  opts[0]=LM_INIT_MU; opts[1]=1E-15; opts[2]=1E-15; opts[3]=1E-20;
 //        final double LM_INIT_MU = 1E-03;
 //        final int LM_OPTS_SZ = 5; /* max(4, 5) */
@@ -384,14 +387,14 @@ public class LevMarNN {
 //        //  opts[4]= 0.2; // relevant only if the finite difference Jacobian version is used
 //        opts[4] = -0.1; // relevant only if the finite difference Jacobian version is used
 
-        	/* invoke the optimization function */
+        /* invoke the optimization function */
 //        ret = dlevmar_bc_dif(nn_atmo_wat, p, x11, m, n, lb, ub, 150, opts, info, NULL, & covar_out[0][0],&nn_at_data)
 //        ; // without Jacobian
 
         model.init(x11, nn_at_data);
         p = optimizer.solveConstrainedLevenbergMarquardt(model, costFunction, p, x11, breakingCriterion, lb, ub);
 
-        System.arraycopy(p, 0, conc_at, 0, m);
+        System.arraycopy(p, 0, conc_at, 0, p.length);
 //        for (int i = 0; i < m; i++) {
 //            conc_at[i] = p[i];
 //            // p_alt[i] = p[i];

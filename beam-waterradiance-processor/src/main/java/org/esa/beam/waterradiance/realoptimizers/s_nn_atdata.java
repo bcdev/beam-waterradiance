@@ -7,7 +7,7 @@ package org.esa.beam.waterradiance.realoptimizers;
  * Time: 13:48
  * To change this template use File | Settings | File Templates.
  */
-public class s_nn_atdata {
+class s_nn_atdata {
 
     private static int NUM_RW = 33;
     private static int NUM_ATMO = 29;
@@ -102,7 +102,7 @@ public class s_nn_atdata {
     }
 
     public void setRpath_nn(double[] rpath_nn) {
-        this.rpath_nn = rpath_nn;
+        System.arraycopy(rpath_nn, 0, this.rpath_nn, 0, rpath_nn.length);
     }
 
     public void setRpath_nn(int index, double value) {
