@@ -132,7 +132,9 @@ class NnAtmoWat {
             nnReturnData = nnWater.nn_water(conc_all, rlw_nn, rtosa_nn.length, nn_data, wat_net_for, alphaTab, nnReturnData);
             rlw_nn = nnReturnData.getOutputValues();
             for (int ilam = 0; ilam < 11; ilam++) {
-                rw_nn[ilam] = rlw_nn[ilam];//M_PI;
+//                final double rlwnn = rlw_nn[ilam];
+                final double rlwnn = Math.exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517
+                rw_nn[ilam] = rlwnn;//M_PI;
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
             }
         } else {
@@ -146,7 +148,9 @@ class NnAtmoWat {
             rlw_nn = nnReturnData.getOutputValues();
             nn_data = nnReturnData.getNn_atdata();
             for (int ilam = 0; ilam < nlam; ilam++) {
-                rw_nn[ilam] = rlw_nn[ilam];//*M_PI;// ! with pi included, 21 bands
+//                final double rlwnn = rlw_nn[ilam];
+                final double rlwnn = Math.exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517
+                rw_nn[ilam] = rlwnn;//*M_PI;// ! with pi included, 21 bands
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
                 nn_data.setTdown_nn(ilam, tdown_nn[ilam]);
                 nn_data.setTup_nn(ilam, tup_nn[ilam]);

@@ -14,7 +14,8 @@ public class NnResources {
     }
 
     public String getNetWaterPath() {
-        return getResourcePath(AUXDATA_PATH + "for_water_rw29_20120318/37x17_754.1.net");
+//        return getResourcePath(AUXDATA_PATH + "for_water_rw29_20120318/37x17_754.1.net");
+        return getResourcePath(AUXDATA_PATH + "for_water_rw29_20120318/37x77x97_86.7.net");
     }
 
     public String getCentralWavelengthFrPath() {

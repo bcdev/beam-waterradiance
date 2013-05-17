@@ -427,7 +427,8 @@ public class LevMarNN {
         nn_in[4] = salinity;
         System.arraycopy(rlw1, 0, nn_in, 5, 12);
 
-        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
+//        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
+        nn_out = nn_in;    // requested by CB, 20130517
 
 //        for (int i = 0; i < 12; i++) {
 //            rwn1[i] = nn_out[i] * M_PI;
@@ -435,7 +436,8 @@ public class LevMarNN {
 
         System.arraycopy(rlw2, 0, nn_in, 5, 12);
 
-        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
+//        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
+        nn_out = nn_in;    // requested by CB, 20130517
 
 //        for (int i = 0; i < 12; i++) {
 //            rwn2[i] = nn_out[i] * M_PI;
