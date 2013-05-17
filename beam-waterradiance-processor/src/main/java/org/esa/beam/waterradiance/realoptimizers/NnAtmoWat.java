@@ -150,9 +150,10 @@ class NnAtmoWat {
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
                 nn_data.setTdown_nn(ilam, tdown_nn[ilam]);
                 nn_data.setTup_nn(ilam, tup_nn[ilam]);
-                nn_data.setRpath_nn(ilam, rpath_nn[ilam]);
                 nn_data.setRw_nn(ilam, rw_nn[ilam]);
             }
+
+            nn_data.setRpath_nn(rpath_nn);
         }
 
         nnReturnData.setOutputValues(rtosa_nn);
