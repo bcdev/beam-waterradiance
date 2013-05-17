@@ -132,7 +132,7 @@ public class LevMarNnL1BPerformanceTest {
             assertBandValue("rl_tosa_4", 61, 49, 0.02576415,  product);
             assertBandValue("rl_tosa_7", 25, 71, 0.0094091315,  product);
             assertBandValue("rl_tosa_10", 55, 70, 0.006421028,  product);
-            assertBandValue("rl_path_1", 92, 39, 0.15506972,  product);
+            assertBandValue("rl_path_1", 92, 39, 0.15506972,  product);   //0.15234639159958366
         } finally {
             product.dispose();
         }

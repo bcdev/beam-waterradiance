@@ -67,9 +67,12 @@ public class LevMarNN {
 
     private double[] nn_out;
     private final NnAtmoWat nnAtmoWat;
+    private int first;
 
 
     public LevMarNN() throws IOException {
+        first = 1;
+
         x = new double[NLAM];
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
@@ -127,8 +130,6 @@ public class LevMarNN {
     }
 
     public int levmar_nn(int detector, double[] input, double[] output) {
-        int FIRST = 1;
-
         double[] x11 = new double[11];
         //double[] p_alt = new double[8];
         // @todo 1 tb/** these two are never written, only read from ... tb 2013-05-14
@@ -155,7 +156,7 @@ public class LevMarNN {
 
 
         /***********************************************/
-        if (FIRST == 1) {
+        if (first == 1) {
             nn_at_data.prepare = -1; // prepare neural networks only once
 
             //FIRST=0; //do this later down
@@ -344,14 +345,14 @@ public class LevMarNN {
         ub[6] = 4.598; // bpart
         ub[7] = 4.599; // bwit
 
-        if (FIRST == 1) {
+        if (first == 1) {
             for (int i = 0; i < m; i++) {
                 if (lb[i] < 0.0)
                     p[i] = lb[i] - lb[i] * 0.2;
                 else
                     p[i] = lb[i] + lb[i] * 0.2;
             }
-            FIRST = 0;
+            first = 0;
                     /*
         } else{
 		for(i=0;i<m;i++)
