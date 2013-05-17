@@ -67,12 +67,10 @@ public class LevMarNN {
 
     private double[] nn_out;
     private final NnAtmoWat nnAtmoWat;
-    private int first;
+    private s_nn_atdata nn_at_data;
 
 
     public LevMarNN() throws IOException {
-        first = 1;
-
         x = new double[NLAM];
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
@@ -113,6 +111,13 @@ public class LevMarNN {
         // lower and upper boundary for variables aot, ang, wind, log_conc_chl, log_conc_det, log_conc_gelb, log_conc_min
         lb = new double[]{0.001, 0.001, 0.001, -13.96, -15.42, -16.38, -15.87, 0.0};
         ub = new double[]{1.0, 2.2, 10.0, 3.9, 2.294, 1.599, 4.594, 1.1};
+        p = new double[8];
+        for (int i = 0; i < p.length; i++) {
+            if (lb[i] < 0.0)
+                p[i] = lb[i] - lb[i] * 0.2;
+            else
+                p[i] = lb[i] + lb[i] * 0.2;
+        }
 
         nnResources = new NnResources();
         alphaTab = new AlphaTab();
@@ -123,10 +128,11 @@ public class LevMarNN {
         breakingCriterion = new BreakingCriterionImpl(150, 1e-10);
         costFunction = new CostFunctionImpl();
         model = new nn_atmo_watForwardModel();
-        p = new double[8];
         optimizer = new LevenbergMarquardtOptimizer3();
 
         nnAtmoWat = new NnAtmoWat(alphaTab);
+        nn_at_data = new s_nn_atdata();
+        nn_at_data.prepare = -1;
     }
 
     public int levmar_nn(int detector, double[] input, double[] output) {
@@ -138,7 +144,6 @@ public class LevMarNN {
         double sun_thet, view_zeni, azi_diff_hl, temperature, salinity, ozone;
 
         // @todo 2 tb/** can this be a field - check when all tests run green tb 2013-05-14
-        s_nn_atdata nn_at_data = new s_nn_atdata();
         int m, SMILE;
 
         double surf_press, rayl_rel_mass_toa_tosa;
@@ -153,15 +158,6 @@ public class LevMarNN {
         double trans708, X2;
 
         double smile_lam;
-
-
-        /***********************************************/
-        if (first == 1) {
-            nn_at_data.prepare = -1; // prepare neural networks only once
-
-            //FIRST=0; //do this later down
-        } // end of FIRST
-        /***********************************************/
 
         // input data
         sun_zenith = input[0];
@@ -345,44 +341,29 @@ public class LevMarNN {
         ub[6] = 4.598; // bpart
         ub[7] = 4.599; // bwit
 
-        if (first == 1) {
-            for (int i = 0; i < m; i++) {
-                if (lb[i] < 0.0)
-                    p[i] = lb[i] - lb[i] * 0.2;
-                else
-                    p[i] = lb[i] + lb[i] * 0.2;
-            }
-            first = 0;
-                    /*
-        } else{
-		for(i=0;i<m;i++)
-		p[i]=p_alt[i];
-		}
-		*/
-        } else {
-            for (int i = 0; i < m; i++) {
-                double lub = Math.abs(ub[i] - lb[i]);
+
+        for (int i = 0; i < m; i++) {
+            double lub = Math.abs(ub[i] - lb[i]);
                     /*
                     if(lb[i]<0.0)
                         p[i]=lb[i]-lb[i]*0.2;
                     else
                         p[i]=lb[i]+lb[i]*0.2;
                         */
-                if (ub[i] < 0.0) {
-                    p[i] = ub[i] - lub * 0.2;
-                } else {
-                    p[i] = ub[i] - lub * 0.2;
-                }
+            if (ub[i] < 0.0) {
+                p[i] = ub[i] - lub * 0.2;
+            } else {
+                p[i] = ub[i] - lub * 0.2;
             }
-            p[0] = Math.log(0.1);   // tau550
-            p[1] = Math.log(1.0);   // ang
-            p[2] = Math.log(3.0);   // wind
-            p[3] = Math.log(0.005); // apig
-            p[4] = Math.log(0.005); // adet
-            p[5] = Math.log(0.005); // agelb
-            p[6] = Math.log(0.01);  // bspm
-            p[7] = Math.log(0.01);  // bwit
         }
+        p[0] = Math.log(0.1);   // tau550
+        p[1] = Math.log(1.0);   // ang
+        p[2] = Math.log(3.0);   // wind
+        p[3] = Math.log(0.005); // apig
+        p[4] = Math.log(0.005); // adet
+        p[5] = Math.log(0.005); // agelb
+        p[6] = Math.log(0.01);  // bspm
+        p[7] = Math.log(0.01);  // bwit
 
         // select the 11 bands for iterations
         for (int i = 0; i < 11; i++) {

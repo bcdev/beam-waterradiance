@@ -59,7 +59,6 @@ public class LevMarNNAcceptanceTest {
     }
 
     @Test
-//   @Ignore
     public void testL1b_testDataNorman() throws Exception {
         final double solar_zenith = 38.532475;
         final double solar_azimuth = 142.5679;
@@ -106,13 +105,10 @@ public class LevMarNNAcceptanceTest {
 
         int result_1 = levMarNN.levmar_nn(181, input, output);
         assertEquals(0, result_1);
-        int result_2 = levMarNN.levmar_nn(181, input, output);
-        assertEquals(0, result_2);
         assertArrayEquals(expected_Norman, output, 1e-7);
     }
 
     @Test
-//    @Ignore
     public void testLib_MER_RR__1PRACR20060116_201233_000026092044_00200_20294_0000_ocean() throws Exception {
         final double solar_zenith = 43.913773;
         final double solar_azimuth = 76.12128;
@@ -160,13 +156,10 @@ public class LevMarNNAcceptanceTest {
 
         int result_1 = levMarNN.levmar_nn(873, input, output);
         assertEquals(0, result_1);
-        int result_2 = levMarNN.levmar_nn(873, input, output);
-        assertEquals(0, result_2);
         assertArrayEquals(expected_20060116_ocean, output, 1e-7);
     }
 
     @Test
-//    @Ignore
     public void testLib_MER_RR__1PRACR20060116_201233_000026092044_00200_20294_0000_cloud() throws Exception {
         final double solar_zenith = 42.372684;
         final double solar_azimuth = 128.2194;
@@ -214,13 +207,10 @@ public class LevMarNNAcceptanceTest {
 
         int result_1 = levMarNN.levmar_nn(748, input, output);
         assertEquals(0, result_1);
-        int result_2 = levMarNN.levmar_nn(748, input, output);
-        assertEquals(0, result_2);
         assertArrayEquals(expected_20060116_cloud, output, 1e-2);
     }
 
     @Test
-//    @Ignore
     public void testLib_MER_RR__1PRACR20060116_201233_000026092044_00200_20294_0000_land() throws Exception {
         final double solar_zenith = 50.82132;
         final double solar_azimuth = 140.0397;
@@ -268,8 +258,6 @@ public class LevMarNNAcceptanceTest {
 
         int result_1 = levMarNN.levmar_nn(723, input, output);
         assertEquals(0, result_1);
-        int result_2 = levMarNN.levmar_nn(723, input, output);
-        assertEquals(0, result_2);
         assertArrayEquals(expected_20060116_land, output, 1e-2);
     }
 
