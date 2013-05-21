@@ -56,7 +56,7 @@ public class LevMarNnL1BPerformanceTest {
     }
 
     @Test
-    @Ignore
+//    @Ignore
     public void testNnInC() throws Exception {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(waterRadianceOpSpi);
         final String testProductPath = getTestProductPath();
@@ -84,7 +84,7 @@ public class LevMarNnL1BPerformanceTest {
     }
 
     @Test
-    @Ignore
+//    @Ignore
     public void testNnInJava() throws GraphException, IOException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(ocNnRdSpi);
         final String testProductPath = getTestProductPath();
@@ -158,8 +158,9 @@ public class LevMarNnL1BPerformanceTest {
             assertBandValue("rl_tosa_4", 61, 49, 0.02576415,  product);
             assertBandValue("rl_tosa_7", 25, 71, 0.0094091315,  product);
             assertBandValue("rl_tosa_10", 55, 70, 0.006421028,  product);
-            assertBandValue("rl_path_1", 92, 39, 0.2502424716949463,  product);   //0.15234639159958366
-            assertBandValue("rl_path_4", 84, 6, 0.17087258398532867,  product);
+            assertBandValue("rl_path_1", 92, 39, 0.1539577692747116,  product);   //0.15234639159958366
+//            assertBandValue("rl_path_4", 84, 6, 0.17087258398532867,  product);
+            assertBandValue("rl_path_4", 84, 6, 0.07189907878637314,  product);
         } finally {
             product.dispose();
         }

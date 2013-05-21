@@ -253,8 +253,6 @@ void nn_atmo_wat(double *conc_all, double *rtosa_nn, int m, int n, void *nn_data
 	char *tdown_net_name  ={"./oc_cci_20121127/ac_forward_all/t_down_b29/17x37x31_89.4.net"};
 	char *tup_net_name    ={"./oc_cci_20121127/ac_forward_all/ac_tup_b29/17x37x31_83.8.net"};
 
-	//new net, RD 201305
-
 
 	static a_nn *atm_net_for, *rhopath_net, *tdown_net, *tup_net;
 
@@ -327,7 +325,9 @@ void nn_atmo_wat(double *conc_all, double *rtosa_nn, int m, int n, void *nn_data
 		}
 		nn_water(conc_all, rlw_nn, m, n, nn_at_data);
 		for(ilam=0;ilam<11;ilam++){
-			rw_nn[ilam]=rlw_nn[ilam];//M_PI;
+			//rw_nn[ilam]=rlw_nn[ilam];//M_PI;
+			double rlwnn = exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517 
+			rw_nn[ilam] = rlwnn;//M_PI;
 			rtosa_nn[ilam]=rpath_nn[ilam]+rw_nn[ilam]*tdown_nn[ilam]*tup_nn[ilam];
 		}
 	}
@@ -341,7 +341,9 @@ void nn_atmo_wat(double *conc_all, double *rtosa_nn, int m, int n, void *nn_data
 		n=nlam;
 		nn_water(conc_all, rlw_nn, m, n, nn_data);
 		for(ilam=0;ilam<nlam;ilam++){
-			rw_nn[ilam]=rlw_nn[ilam];//*M_PI;// ! with pi included, 21 bands
+			//rw_nn[ilam]=rlw_nn[ilam];//*M_PI;// ! with pi included, 21 bands
+			double rlwnn = exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517 
+   	        rw_nn[ilam] = rlwnn;//*M_PI;// ! with pi included, 21 bands
 			rtosa_nn[ilam]=rpath_nn[ilam]+rw_nn[ilam]*tdown_nn[ilam]*tup_nn[ilam];
 			nn_at_data->tdown_nn[ilam] = tdown_nn[ilam];
 			nn_at_data->tup_nn[ilam]   = tup_nn[ilam];
@@ -426,7 +428,7 @@ int levmar_nn(int detector, double *input, int input_length, double *output, int
 	double tau_rayl_standard[15], tau_rayl_toa_tosa[15],tau_rayl_smile[15], L_rayl_toa_tosa[15],L_rayl_smile[15];
 	double L_toa_corr[15], rho_tosa_corr[15], Ed_toa_smile_rat[15], Ed_toa_smile_corr[15], L_tosa[15], Ed_tosa[15];
 	double trans_extra[15],trans_rayl_press[15],trans_rayl_smile[15],trans_rayl_pressd[15],trans_rayl_smiled[15],trans_rayl_pressu[15],trans_rayl_smileu[15], trans_ozond[15], trans_ozonu[15];
-	void smile_tab_ini();
+	void smile_tab_ini();	
 
 	/***********************************************/
 	if(FIRST==1) {
@@ -735,7 +737,9 @@ int levmar_nn(int detector, double *input, int input_length, double *output, int
 		for(i=5;i<17;i++)
 			nn_in[i]=rlw1[i-5];
 
-		use_the_nn(norm_net, nn_in, nn_out);
+		//use_the_nn(norm_net, nn_in, nn_out);
+		for(i=0;i<40;i++)
+			nn_out[i] = nn_in[i];
 
 		for(i=0;i<12;i++){
 			rwn1[i]=nn_out[i]*M_PI;
@@ -744,7 +748,9 @@ int levmar_nn(int detector, double *input, int input_length, double *output, int
 		for(i=5;i<17;i++)
 			nn_in[i]=rlw2[i-5];
 
-		use_the_nn(norm_net, nn_in, nn_out);
+		//use_the_nn(norm_net, nn_in, nn_out);
+		for(i=0;i<40;i++)
+			nn_out[i] = nn_in[i];
 
 		for(i=0;i<12;i++){
 			rwn2[i]=nn_out[i]*M_PI;
