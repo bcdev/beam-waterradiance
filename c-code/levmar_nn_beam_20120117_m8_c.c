@@ -161,7 +161,8 @@ void nn_water(double *conc_all, double *rlw_nn, int m, int n, void *nn_data){
 	//char *wat_net_name_for={"./water_for_b33_20111220/27_697.2.net"};
 	//char *wat_net_name_for={"./water_for_b33_rlw_20120118/17x27x17_120.2.net"};
 	//char *wat_net_name_for={"./for_b33_20120114_nokd_27x17/27x17_153.7.net"};
-	char *wat_net_name_for={"./for_water_rw29_20120318/37x17_754.1.net"};
+	//char *wat_net_name_for={"./for_water_rw29_20120318/37x17_754.1.net"};
+	char *wat_net_name_for={"./for_water_rw29_20120318/37x77x97_86.7.net"};
 	static a_nn *wat_net_for;
 
 	s_nn_at_data *nn_at_data = (s_nn_at_data *) nn_data;
@@ -251,6 +252,8 @@ void nn_atmo_wat(double *conc_all, double *rtosa_nn, int m, int n, void *nn_data
 	char *rhopath_net_name={"./oc_cci_20121127/ac_forward_all/ac_rhopath_b29/17x37x31_121.8.net"};
 	char *tdown_net_name  ={"./oc_cci_20121127/ac_forward_all/t_down_b29/17x37x31_89.4.net"};
 	char *tup_net_name    ={"./oc_cci_20121127/ac_forward_all/ac_tup_b29/17x37x31_83.8.net"};
+
+	//new net, RD 201305
 
 
 	static a_nn *atm_net_for, *rhopath_net, *tdown_net, *tup_net;
