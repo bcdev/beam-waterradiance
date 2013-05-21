@@ -31,7 +31,7 @@ public class NnResourcesTest {
     public void testGetNetWaterPath() {
         final String netWaterPath = nnResources.getNetWaterPath();
         assertNotNull(netWaterPath);
-        assertTrue(netWaterPath.contains("37x17_754.1.net"));
+        assertTrue(netWaterPath.contains("37x77x97_86.7.net"));
         assertTrue(new File(netWaterPath).isFile());
     }
 
