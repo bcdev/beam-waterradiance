@@ -689,6 +689,9 @@ public class LevenbergMarquardtOptimizer3 {
             variables[j] = tmp + d;
             final double[] modeledSignal2 = model.getModeledSignal(variables);
             variables[j] = tmp; /* restore */
+//            if (modeledSignal.length != modeledSignal1.length || modeledSignal.length != modeledSignal2.length) {
+//                System.out.print("Hoppla");
+//            }
             d = 0.5 / d; /* invert so that divisions can be carried out faster as multiplications */
             for (int i = 0; i < modeledSignal.length; ++i) {
                 jac.set(i, j, (modeledSignal2[i] - modeledSignal1[i]) * d);
