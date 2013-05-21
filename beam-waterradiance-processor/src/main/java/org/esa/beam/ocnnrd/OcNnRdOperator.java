@@ -51,15 +51,24 @@ public class OcNnRdOperator extends PixelOperator {
     private static final int[] SPECTRAL_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
     private static final int[] SPECTRAL_WAVELENGTHS = new int[]{412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865};
 
-    private final double[] input = new double[40];
-    private final double[] output = new double[NUM_OUTPUTS];
-    private final double[] debug_dat = new double[1000];
+    private final ThreadLocal<double[]> input = new ThreadLocal<double[]>() {
+        @Override
+        protected double[] initialValue() {
+            return new double[40];
+        }
+    };
+    private final ThreadLocal<double[]> output = new ThreadLocal<double[]>() {
+        @Override
+        protected double[] initialValue() {
+            return new double[NUM_OUTPUTS];
+        }
+    };
 
     private double[] solarFluxes;
 
     private AuxdataProvider auxdataProvider = null;
     private Date date = null;
-    private LevMarNN levMarNN;
+    private ThreadLocal<LevMarNN> levMarNN;
 
     // solar_flux from bands
     // copy lat, lon, row_index to target
@@ -95,21 +104,23 @@ public class OcNnRdOperator extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         if (isValid(sourceSamples)) {
-            copyTiePointData(input, sourceSamples);
+            final double[] input_local = input.get();
+            copyTiePointData(input_local, sourceSamples);
             copyAuxData(x, y);
-            copyRadiances(input, sourceSamples);
+            copyRadiances(input_local, sourceSamples);
             copySolarFluxes(sourceSamples);
 
             final int detectorIndex = getDetectorIndex(sourceSamples);
-            final int result = levMarNN.levmar_nn(detectorIndex, input, output);
+            final double[] output_local = output.get();
+            final LevMarNN levMarNN_local = levMarNN.get();
+            final int result = levMarNN_local.levmar_nn(detectorIndex, input_local, output_local);
 
             // @todo 2 tb/tb extract method and test tb 2013-05-13
-            for (int i = 0; i < output.length; i++) {
-                targetSamples[i].set(output[i]);
+            for (int i = 0; i < output_local.length; i++) {
+                targetSamples[i].set(output_local[i]);
             }
-            targetSamples[output.length].set(input[8]);
-            targetSamples[output.length + 1].set(input[9]);
-
+            targetSamples[output_local.length].set(input_local[8]);
+            targetSamples[output_local.length + 1].set(input_local[9]);
         } else {
             setToInvalid(targetSamples, NUM_TARGET_BANDS);
         }
@@ -145,7 +156,8 @@ public class OcNnRdOperator extends PixelOperator {
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         Product targetProduct = getTargetProduct();
         String[] bandNames = targetProduct.getBandNames();
-        for (int i = 0; i < output.length + 2; i++) {
+        final double[] output_local = output.get();
+        for (int i = 0; i < output_local.length + 2; i++) {
             final String bandName = bandNames[i];
             sampleConfigurer.defineSample(i, bandName);
         }
@@ -245,11 +257,18 @@ public class OcNnRdOperator extends PixelOperator {
             auxdataProvider = createAuxdataDataProvider();
         }
 
-        try {
-            levMarNN = new LevMarNN();
-        } catch (IOException e) {
-            throw new OperatorException(e.getMessage());
-        }
+        levMarNN = new ThreadLocal<LevMarNN>() {
+            @Override
+            protected LevMarNN initialValue() {
+                try {
+                    return new LevMarNN();
+                } catch (IOException e) {
+                    // @todo 3 tb/tb improve error handling here ... tb 2013-05-20
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        };
     }
 
     // package access for testing only tb 2013-05-13
@@ -329,27 +348,32 @@ public class OcNnRdOperator extends PixelOperator {
         }
     }
 
+    @SuppressWarnings("MismatchedReadAndWriteOfArray")
     private void copyAuxData(int x, int y) {
+        final double[] input_local = input.get();
         if (auxdataProvider != null) {
             try {
-                GeoCoding geoCoding = sourceProduct.getGeoCoding();
+                final GeoCoding geoCoding = sourceProduct.getGeoCoding();
                 GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
-                input[8] = auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
-                input[9] = auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+                synchronized (this) {
+                    input_local[8] = auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
+                    input_local[9] = auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+                }
             } catch (Exception e) {
                 throw new OperatorException(e);
             }
         } else {
-            input[8] = temperature;
-            input[9] = salinity;
+            input_local[8] = temperature;
+            input_local[9] = salinity;
         }
     }
 
     private void copySolarFluxes(Sample[] sourceSamples) {
+        final double[] input_local = input.get();
         if (csvMode) {
-            copySolarFluxes(input, sourceSamples);
+            copySolarFluxes(input_local, sourceSamples);
         } else {
-            System.arraycopy(solarFluxes, 0, input, 25, 15);
+            System.arraycopy(solarFluxes, 0, input_local, 25, 15);
         }
     }
 
