@@ -1,7 +1,10 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
-import java.io.*;
-
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class LevMarNN {
 
