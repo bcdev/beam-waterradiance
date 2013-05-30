@@ -737,9 +737,9 @@ int levmar_nn(int detector, double *input, int input_length, double *output, int
 		for(i=5;i<17;i++)
 			nn_in[i]=rlw1[i-5];
 
-		//use_the_nn(norm_net, nn_in, nn_out);
-		for(i=0;i<40;i++)
-			nn_out[i] = nn_in[i];
+		use_the_nn(norm_net, nn_in, nn_out);
+		//for(i=0;i<40;i++)
+//			nn_out[i] = nn_in[i];
 
 		for(i=0;i<12;i++){
 			rwn1[i]=nn_out[i]*M_PI;
@@ -748,9 +748,9 @@ int levmar_nn(int detector, double *input, int input_length, double *output, int
 		for(i=5;i<17;i++)
 			nn_in[i]=rlw2[i-5];
 
-		//use_the_nn(norm_net, nn_in, nn_out);
-		for(i=0;i<40;i++)
-			nn_out[i] = nn_in[i];
+		use_the_nn(norm_net, nn_in, nn_out);
+		//for(i=0;i<40;i++)
+			//nn_out[i] = nn_in[i];
 
 		for(i=0;i<12;i++){
 			rwn2[i]=nn_out[i]*M_PI;
