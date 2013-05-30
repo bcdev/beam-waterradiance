@@ -9,7 +9,7 @@ import Jama.Matrix;
  * Time: 15:16
  * To change this template use File | Settings | File Templates.
  */
-public class LevenbergMarquardtOptimizer3 {
+public class LevenbergMarquardtOptimizer {
 
     private static final double eps1 = 1e-17;
     private static final double eps2_sq = 1e-20;
@@ -32,7 +32,7 @@ public class LevenbergMarquardtOptimizer3 {
     private double[] pDp;
     private Matrix jacTjac;
 
-    public LevenbergMarquardtOptimizer3(int m, int n) {
+    public LevenbergMarquardtOptimizer(int m, int n) {
         final double epsilon = calculateMachineEpsilonDouble();
         epsilon_sq = epsilon * epsilon;
 
@@ -685,7 +685,7 @@ public class LevenbergMarquardtOptimizer3 {
         double[] measuredSignal = {2, 4};
         double[] lowerBounds = {0, 1};
         double[] upperBounds = {4, 3};
-        LevenbergMarquardtOptimizer3 optimizer = new LevenbergMarquardtOptimizer3(startVariables.length, measuredSignal.length);
+        LevenbergMarquardtOptimizer optimizer = new LevenbergMarquardtOptimizer(startVariables.length, measuredSignal.length);
         final double[] optimizedVariables = optimizer.solveConstrainedLevenbergMarquardt(new ForwardModelImpl(),
                                                                                          new CostFunctionImpl(), startVariables,
                                                                                          measuredSignal,

@@ -45,7 +45,7 @@ public class LevMarNN {
     private final double[] ub;
     private final BreakingCriterion breakingCriterion;
     private final nn_atmo_watForwardModel model;
-    private final LevenbergMarquardtOptimizer3 optimizer;
+    private final LevenbergMarquardtOptimizer optimizer;
     private double[] p;
     private double[] p_init;
 
@@ -165,7 +165,7 @@ public class LevMarNN {
         breakingCriterion = new BreakingCriterionImpl(150, 1e-10);
         costFunction = new CostFunctionImpl();
         model = new nn_atmo_watForwardModel();
-        optimizer = new LevenbergMarquardtOptimizer3(p.length, x11.length);
+        optimizer = new LevenbergMarquardtOptimizer(p.length, x11.length);
 
         nnAtmoWat = new NnAtmoWat(alphaTab);
         nn_at_data = new s_nn_atdata();
