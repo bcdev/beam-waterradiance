@@ -84,7 +84,7 @@ public class LevMarNnL1BPerformanceTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void testNnInJava() throws GraphException, IOException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(ocNnRdSpi);
         final String testProductPath = getTestProductPath();
@@ -110,31 +110,32 @@ public class LevMarNnL1BPerformanceTest {
         assertCorrectProduct(targetFilePath);
     }
 
-//    @Test
-//    public void testNnInOlafsCrashJava() throws GraphException, IOException {
-//        GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(ocNnRdSpi);
-//        final String testProductPath = "C:/Data/MERIS/RR/MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1";
-//        final Product product = ProductIO.readProduct(testProductPath);
-//        final String targetFilePath = targetDirectory.getPath() + File.separator + "nn_olaf_crash_java.dim";
-//
-//        try {
-//            nanoTimer.start();
-//            final Product ocProduct = GPF.createProduct("Meris.OCNNRD",
-//                    createDefaultParameterMap(),
-//                    new Product[]{product});
-//
-//            ProductIO.writeProduct(ocProduct, targetFilePath, "BEAM-DIMAP");
-//            nanoTimer.stop();
-//            java_elapsed = "Java: " + nanoTimer.getElapsedTime();
-//        } finally {
-//            GPF.getDefaultInstance().getOperatorSpiRegistry().removeOperatorSpi(ocNnRdSpi);
-//            if (product != null) {
-//                product.dispose();
-//            }
-//        }
-//
-//        assertCorrectProduct(targetFilePath);
-//    }
+    @Test
+    @Ignore
+    public void testNnInOlafsCrashJava() throws GraphException, IOException {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(ocNnRdSpi);
+        final String testProductPath = "C:\\Users\\tonio\\Desktop\\ocnnrd\\MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1";
+        final Product product = ProductIO.readProduct(testProductPath);
+        final String targetFilePath = targetDirectory.getPath() + File.separator + "nn_olaf_crash_java.dim";
+
+        try {
+            nanoTimer.start();
+            final Product ocProduct = GPF.createProduct("Meris.OCNNRD",
+                    createDefaultParameterMap(),
+                    new Product[]{product});
+
+            ProductIO.writeProduct(ocProduct, targetFilePath, "BEAM-DIMAP");
+            nanoTimer.stop();
+            java_elapsed = "Java: " + nanoTimer.getElapsedTime();
+        } finally {
+            GPF.getDefaultInstance().getOperatorSpiRegistry().removeOperatorSpi(ocNnRdSpi);
+            if (product != null) {
+                product.dispose();
+            }
+        }
+
+        assertCorrectProduct(targetFilePath);
+    }
 
     private String getTestProductPath() {
         final URL resource = LevMarNnL1BPerformanceTest.class.getResource("../../../../subset_0_of_MER_RR__1PRACR20060116_201233_000026092044_00200_20294_0000.dim");
@@ -158,9 +159,9 @@ public class LevMarNnL1BPerformanceTest {
             assertBandValue("rl_tosa_4", 61, 49, 0.02576415,  product);
             assertBandValue("rl_tosa_7", 25, 71, 0.0094091315,  product);
             assertBandValue("rl_tosa_10", 55, 70, 0.006421028,  product);
-//            assertBandValue("rl_path_1", 92, 39, 0.1539577692747116,  product);   //0.15234639159958366
-//            assertBandValue("aot_550", 5, 20, 0.08877553045749664,  product);
-//            assertBandValue("ang_864_443", 15, 60, 1.9363973140716553,  product);
+            assertBandValue("rl_path_1", 92, 39, 0.1539577692747116,  product);   //0.15234639159958366
+            assertBandValue("aot_550", 5, 20, 0.08877553045749664,  product);
+            assertBandValue("ang_864_443", 15, 60, 1.9363973140716553,  product);
         } finally {
             product.dispose();
         }
