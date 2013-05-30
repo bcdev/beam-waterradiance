@@ -246,27 +246,7 @@ public class LevenbergMarquardtOptimizer3 {
                     pDp_eL2 = doubles[2][0];
                     Dp = doubles[3];
                     if (doubles[4][0] != 0) {
-                        t = 1;
-                        while (gradproj && t > 1e-12) {
-                            for (int i = 0; i < m; ++i) {
-                                pDp[i] = p[i] + t * Dp[i];
-                            }
-                            hx = model.getModeledSignal(pDp);
-                            pDp_eL2 = 0;
-                            for (int i = 0; i < n; ++i) {
-                                hx[i] = x[i] - hx[i];
-                                pDp_eL2 += hx[i] * hx[i];
-                            }
-                            if (!(pDp_eL2 > Double.NEGATIVE_INFINITY) || !(pDp_eL2 < Double.POSITIVE_INFINITY)) {
-                                stop = 7;
-                                gradproj = false;
-                            } else {
-                                if (pDp_eL2 <= p_eL2 + 2 * t * alphaNeu * jacTeDp) {
-                                    break;
-                                }
-                            }
-                            t *= 0.9;
-                        }
+                        gradproj = false;
                     }
                     gprevtaken = 0;
                 }
@@ -404,7 +384,7 @@ public class LevenbergMarquardtOptimizer3 {
         }
         for (int j = 0; j < m; ++j) {
             for (int i = 0; i < j; ++i) {
-                final double[] a_i =  a[i];
+                final double[] a_i = a[i];
                 sum = a_i[j];
                 for (int k = 0; k < i; ++k) {
                     sum -= a_i[k] * a[k][j];
@@ -479,7 +459,7 @@ public class LevenbergMarquardtOptimizer3 {
         double tmp1, tmp2;
         double fpls, pfpls = 0., plmbda = 0.; /* -Wall */
         double f = p_eL2;
-        double steptl = 1e-3;
+        double steptl = 1e-3 * Math.sqrt(2.2204460492503131e-016);
         double[] clonedDp = Dp.clone();
 
         double[] g = jacTe;
@@ -707,10 +687,10 @@ public class LevenbergMarquardtOptimizer3 {
         double[] upperBounds = {4, 3};
         LevenbergMarquardtOptimizer3 optimizer = new LevenbergMarquardtOptimizer3(startVariables.length, measuredSignal.length);
         final double[] optimizedVariables = optimizer.solveConstrainedLevenbergMarquardt(new ForwardModelImpl(),
-                new CostFunctionImpl(), startVariables,
-                measuredSignal,
-                new BreakingCriterionImpl(),
-                lowerBounds, upperBounds);
+                                                                                         new CostFunctionImpl(), startVariables,
+                                                                                         measuredSignal,
+                                                                                         new BreakingCriterionImpl(),
+                                                                                         lowerBounds, upperBounds);
         System.out.println("Optimized Variables. 1 = " + optimizedVariables[0] + ", 2 = " + optimizedVariables[1]);
     }
 
