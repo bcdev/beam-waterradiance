@@ -31,6 +31,8 @@ public class LevenbergMarquardtOptimizer {
     private Matrix jac;
     private double[] pDp;
     private Matrix jacTjac;
+    private int numberOfIterations;
+    private double p_eL2;
 
     public LevenbergMarquardtOptimizer(int m, int n) {
         final double epsilon = calculateMachineEpsilonDouble();
@@ -56,14 +58,14 @@ public class LevenbergMarquardtOptimizer {
                                                        double[] ub) {
         double[] hx = model.getModeledSignal(p);
         // final double cost = function.getCost(hx);
-        double p_eL2 = 0;   //  This should be the cost from the cost function
         double[] e = new double[n];
+
+        p_eL2 = 0;
         for (int i = 0; i < n; ++i) {
             e[i] = x[i] - hx[i];
             p_eL2 += e[i] * e[i];
         }
-
-        int numberOfIterations = 0;
+        numberOfIterations = 0;
         double mu = 0;
         double nu = 2;
         double Dp_L2;
@@ -322,6 +324,15 @@ public class LevenbergMarquardtOptimizer {
         return p;
     }
 
+    public int getNumberOfIterations() {
+        return numberOfIterations;
+    }
+
+    public double getP_eL2() {
+        return p_eL2;
+    }
+
+
     /**
      * Source: Wikipedia
      * http://en.wikipedia.org/wiki/Machine_epsilon#Approximation_using_Java, accessed 22.04.2013
@@ -459,7 +470,7 @@ public class LevenbergMarquardtOptimizer {
         double tmp1, tmp2;
         double fpls, pfpls = 0., plmbda = 0.; /* -Wall */
         double f = p_eL2;
-        double steptl = 1e-3 * Math.sqrt(2.2204460492503131e-016);
+        double steptl = 1e3 * Math.sqrt(2.2204460492503131e-016);
         double[] clonedDp = Dp.clone();
 
         double[] g = jacTe;
@@ -514,7 +525,7 @@ public class LevenbergMarquardtOptimizer {
 //            (*func)(xpls, state.hx, m, state.n, state.adata); ++(*(state.nfev));
       /* ### state.hx=state.x-state.hx, tmp1=||state.hx|| */
 //            #if 1
-//            tmp1=LEVMAR_L2NRMXMY(state.hx, state.x, state.hx, state.n);
+//            tmp1=LEVMAR_L2NRMXMY(stateHX, stateX, stateHX, n);
 //            #else
             for (i = 0, tmp1 = 0.0; i < n; ++i) {
                 stateHX[i] = tmp2 = stateX[i] - stateHX[i];

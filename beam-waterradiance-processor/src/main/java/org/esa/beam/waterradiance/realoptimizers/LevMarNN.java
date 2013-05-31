@@ -467,8 +467,8 @@ public class LevMarNN {
         output[64] = Math.exp(p[5]);    // a_gelb
         output[65] = Math.exp(p[6]);    // b_part
         output[66] = Math.exp(p[7]);    // b_part
-        output[67] = info[1];           // sum_sq
-        output[68] = info[5];
+        output[67] = optimizer.getP_eL2();  // sum_sq
+        output[68] = optimizer.getNumberOfIterations();
 
         return (0);
     }
