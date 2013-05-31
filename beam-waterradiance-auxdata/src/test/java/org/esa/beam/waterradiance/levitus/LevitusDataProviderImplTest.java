@@ -107,21 +107,22 @@ public class LevitusDataProviderImplTest {
         assertEquals(1, LevitusDataProviderImpl.calculateUpperMonth(20, 0));
     }
 
-    @Test
-    public void testGetMaximumFieldValueOfCalendar() throws Exception {
-        Calendar calendar = createUTCCalendar();
-        calendar.set(Calendar.YEAR, 2012);
-
-        calendar.set(Calendar.MONTH, 1); // February
-        assertEquals(29, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-        assertEquals(28, calendar.getLeastMaximum(Calendar.DAY_OF_MONTH));
-        assertEquals(31, calendar.getMaximum(Calendar.DAY_OF_MONTH));
-
-        calendar.set(Calendar.MONTH, 2); // March
-        assertEquals(31, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-        assertEquals(28, calendar.getLeastMaximum(Calendar.DAY_OF_MONTH));
-        assertEquals(31, calendar.getMaximum(Calendar.DAY_OF_MONTH));
-    }
+    // Why do we have tests that test functionality of java.util classes???? tb 2013-05-31
+//    @Test
+//    public void testGetMaximumFieldValueOfCalendar() throws Exception {
+//        Calendar calendar = createUTCCalendar();
+//        calendar.set(Calendar.YEAR, 2012);
+//
+//        calendar.set(Calendar.MONTH, 1); // February
+//        assertEquals(29, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+//        assertEquals(28, calendar.getLeastMaximum(Calendar.DAY_OF_MONTH));
+//        assertEquals(31, calendar.getMaximum(Calendar.DAY_OF_MONTH));
+//
+//        calendar.set(Calendar.MONTH, 2); // March
+//        assertEquals(31, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+//        assertEquals(28, calendar.getLeastMaximum(Calendar.DAY_OF_MONTH));
+//        assertEquals(31, calendar.getMaximum(Calendar.DAY_OF_MONTH));
+//    }
 
     private static Calendar createUTCCalendar() {
         return Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
