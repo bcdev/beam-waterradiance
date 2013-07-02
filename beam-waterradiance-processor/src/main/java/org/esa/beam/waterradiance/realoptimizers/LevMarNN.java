@@ -1,5 +1,13 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
+import org.esa.beam.siocs.abstractprocessor.BreakingCriterion;
+import org.esa.beam.siocs.abstractprocessor.CostFunction;
+import org.esa.beam.siocs.abstractprocessor.ForwardModel;
+import org.esa.beam.siocs.abstractprocessor.support.ChiSquareCostFunction;
+import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
+import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
+import org.esa.beam.siocs.abstractprocessor.support.RapidMinerNeuralNetForwardModel;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +20,7 @@ public class LevMarNN {
     private static final int RR_TAB = 925;
 
     private static final double DEG_2_RAD = (3.1415927 / 180.0);
-    private final CostFunctionImpl costFunction;
+    private final CostFunction costFunction;
 
     private double[][] frlam = new double[FR_TAB][15];
     private double[][] fredtoa = new double[FR_TAB][15];
@@ -162,10 +170,11 @@ public class LevMarNN {
         norm_net = prepare_a_nn(nnResources.getNormNetPath());
 
         smile_tab_ini();
-        breakingCriterion = new BreakingCriterionImpl(150, 1e-10);
-        costFunction = new CostFunctionImpl();
         model = new nn_atmo_watForwardModel();
+        breakingCriterion = new DefaultBreakingCriterion(150, 1e-10);
+        costFunction = new ChiSquareCostFunction();
         optimizer = new LevenbergMarquardtOptimizer(p.length, x11.length);
+        optimizer.init(model, costFunction, breakingCriterion);
 
         nnAtmoWat = new NnAtmoWat(alphaTab);
         nn_at_data = new s_nn_atdata();
@@ -394,8 +403,10 @@ public class LevMarNN {
 //        ret = dlevmar_bc_dif(nn_atmo_wat, p, x11, m, n, lb, ub, 150, opts, info, NULL, & covar_out[0][0],&nn_at_data)
 //        ; // without Jacobian
 
-        model.init(x11, nn_at_data);
-        p = optimizer.solveConstrainedLevenbergMarquardt(model, costFunction, p, x11, breakingCriterion, lb, ub);
+        model.init(nn_at_data);
+        model.setReferenceSignal(x11);
+        costFunction.setReferenceSignal(x11);
+        p = optimizer.optimize(p, x11, lb, ub);
 
         System.arraycopy(p, 0, conc_at, 0, p.length);
 //        for (int i = 0; i < m; i++) {
@@ -403,11 +414,8 @@ public class LevMarNN {
 //            // p_alt[i] = p[i];
 //        }
 
-        model.init(x11, nn_at_data);
-        x11 = model.getModeledSignal(conc_at);
-        nn_at_data = model.getNn_data();
 
-        model.init(x, nn_at_data);
+        model.setReferenceSignal(x);
         x = model.getModeledSignal(conc_at);
         nn_at_data = model.getNn_data();
 
@@ -467,7 +475,7 @@ public class LevMarNN {
         output[64] = Math.exp(p[5]);    // a_gelb
         output[65] = Math.exp(p[6]);    // b_part
         output[66] = Math.exp(p[7]);    // b_part
-        output[67] = optimizer.getP_eL2();  // sum_sq
+        output[67] = optimizer.getCost();  // sum_sq
         output[68] = optimizer.getNumberOfIterations();
 
         return (0);
@@ -795,18 +803,18 @@ public class LevMarNN {
             nnReturnData = new NNReturnData();
         }
 
-        public void init(double[] rtosa_nn, s_nn_atdata nn_data) {
-            this.rtosa_nn = rtosa_nn.clone();
-            this.nn_data = nn_data;
-        }
-
         public s_nn_atdata getNn_data() {
             return nn_data;
         }
 
         @Override
-        public void init(double[] knownParameters) {
-            //To change body of implemented methods use File | Settings | File Templates.
+        public void init(Object o) {
+            this.nn_data = (s_nn_atdata)o;
+        }
+
+        @Override
+        public void setReferenceSignal(double[] doubles) {
+            this.rtosa_nn = doubles.clone();
         }
 
         @Override
@@ -816,9 +824,5 @@ public class LevMarNN {
             return nnReturnData.getOutputValues();
         }
 
-        @Override
-        public double getPartialDerivative(double[] signal, double[] variables, int parameterIndex) {
-            return 0;  //To change body of implemented methods use File | Settings | File Templates.
-        }
     }
 }
