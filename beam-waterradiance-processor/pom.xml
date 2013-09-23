@@ -33,6 +33,10 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
+            <artifactId>beam-modis-reader</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
             <artifactId>beam-waterradiance-auxdata</artifactId>
         </dependency>
 

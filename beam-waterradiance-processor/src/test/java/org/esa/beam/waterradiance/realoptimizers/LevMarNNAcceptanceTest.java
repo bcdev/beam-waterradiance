@@ -57,7 +57,7 @@ public class LevMarNNAcceptanceTest {
 
     @Before
     public void setUp() throws IOException {
-        levMarNN = new LevMarNN();
+        levMarNN = new LevMarNN("MERIS");
     }
 
     @Test
@@ -105,7 +105,7 @@ public class LevMarNNAcceptanceTest {
                 SUN_SPECTRAL_FLUXES_NORMAN);
         final double[] output = new double[75];
 
-        int result_1 = levMarNN.levmar_nn(181, input, output);
+        int result_1 = levMarNN.levmar_nn(181, input, output, "MERIS");
         assertEquals(0, result_1);
         assertArrayEquals(expected_Norman, output, 1e-7);
     }
@@ -156,7 +156,7 @@ public class LevMarNNAcceptanceTest {
 
         final double[] output = new double[75];
 
-        int result_1 = levMarNN.levmar_nn(873, input, output);
+        int result_1 = levMarNN.levmar_nn(873, input, output, "MERIS");
         assertEquals(0, result_1);
         assertArrayEquals(expected_20060116_ocean, output, 1e-7);
     }
@@ -207,7 +207,7 @@ public class LevMarNNAcceptanceTest {
 
         final double[] output = new double[75];
 
-        int result_1 = levMarNN.levmar_nn(748, input, output);
+        int result_1 = levMarNN.levmar_nn(748, input, output, "MERIS");
         assertEquals(0, result_1);
         assertArrayEquals(expected_20060116_cloud, output, 1e-2);
     }
@@ -258,7 +258,7 @@ public class LevMarNNAcceptanceTest {
 
         final double[] output = new double[75];
 
-        int result_1 = levMarNN.levmar_nn(723, input, output);
+        int result_1 = levMarNN.levmar_nn(723, input, output, "MERIS");
         assertEquals(0, result_1);
         assertArrayEquals(expected_20060116_land, output, 1e-2);
     }

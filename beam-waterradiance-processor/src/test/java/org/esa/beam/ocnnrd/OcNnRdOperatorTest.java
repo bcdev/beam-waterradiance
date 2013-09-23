@@ -49,7 +49,7 @@ public class OcNnRdOperatorTest {
         final TestSample[] samples = createTestSamples(8);
         final double[] inputs = new double[8];
 
-        OcNnRdOperator.copyTiePointData(inputs, samples);
+        OcNnRdOperator.copyTiePointData(inputs, samples, "MERIS");
 
         for (int i = 0; i < inputs.length; i++) {
             assertEquals(i, inputs[i], 1e-8);
@@ -61,7 +61,7 @@ public class OcNnRdOperatorTest {
         final TestSample[] samples = createTestSamples(23);
         final double[] inputs = new double[25];
 
-        OcNnRdOperator.copyRadiances(inputs, samples);
+        new OcNnRdOperator().copyRadiances(inputs, samples);
 
         for (int i = 0; i < 10; i++) {
             assertEquals(0.0, inputs[i], 1e-8);

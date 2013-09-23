@@ -23,6 +23,7 @@ class NnAtmoWat {
 
     private static final double DEG_2_RAD = (3.1415927 / 180.0);
     private static final int[] lam29_meris11_ix = {1, 2, 4, 6, 11, 12, 15, 20, 22, 24, 25};
+    private static final int[] lam29_modis9_ix = {1, 2, 4, 8, 9, 15, 18, 21, 26};
 
     private final a_nn rhopath_net;
     private final a_nn tdown_net;
@@ -137,7 +138,22 @@ class NnAtmoWat {
                 rw_nn[ilam] = rlwnn;//M_PI;
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
             }
-        } else {
+        } else if (nlam == 9) {
+            for (int ilam = 0; ilam < nlam; ilam++) {
+                final int ix = lam29_modis9_ix[ilam];
+                rpath_nn[ilam] = outnet1[ix];
+                tdown_nn[ilam] = outnet2[ix];
+                tup_nn[ilam] = outnet3[ix];
+            }
+            nnReturnData = nnWater.nn_water(conc_all, rlw_nn, rtosa_nn.length, nn_data, wat_net_for, alphaTab, nnReturnData);
+            rlw_nn = nnReturnData.getOutputValues();
+            for (int ilam = 0; ilam < nlam; ilam++) {
+//                final double rlwnn = rlw_nn[ilam];
+                final double rlwnn = Math.exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517
+                rw_nn[ilam] = rlwnn;//M_PI;
+                rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
+            }
+        }else {
             nlam = 29; // all bands for other calculations
             for (int ilam = 0; ilam < nlam; ilam++) {
                 rpath_nn[ilam] = outnet1[ilam];

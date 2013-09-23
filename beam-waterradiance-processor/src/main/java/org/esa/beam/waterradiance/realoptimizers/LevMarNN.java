@@ -1,12 +1,12 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
+import Jama.Matrix;
 import org.esa.beam.siocs.abstractprocessor.BreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.CostFunction;
 import org.esa.beam.siocs.abstractprocessor.ForwardModel;
 import org.esa.beam.siocs.abstractprocessor.support.ChiSquareCostFunction;
 import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
-import org.esa.beam.siocs.abstractprocessor.support.RapidMinerNeuralNetForwardModel;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,8 +33,14 @@ public class LevMarNN {
     private static final double[] H_2_O_COR_POLY = new double[]{0.3832989, 1.6527957, -1.5635101, 0.5311913};
 
     private static final double[] MERBAND_12 = {412.3, 442.3, 489.7, 509.6, 559.5, 619.4, 664.3, 680.6, 708.1, 753.1, 778.2, 864.6};
+    private static final double[] MODBAND_10 = {412.5, 443, 488, 531, 551, 667, 678, 748, 869.5};
     private static final int[] MERBAND_12_INDEX = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12};
     private static final int[] MERIS_11_OUTOF_12_IX = new int[]{0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11};
+
+    private static final double[] modisReflectanceScales = {1.7005885E-5f, 9.557186E-6f, 6.1540863E-6f, 4.824122E-6f,
+            3.8021312E-6f, 2.2562692E-6f, 2.3084365E-6f, 2.1856329E-6f, 1.9265376E-6f};
+    private static final double[] modisReflectanceOffsets =  {316.9722f, 316.9722f, 316.9722f, 316.9722f, 316.9722f,
+            316.9722f, 316.9722f, 316.9722f, 316.9722f};
 
     double M_PI = 3.1416;
 
@@ -83,7 +89,7 @@ public class LevMarNN {
     private double[] x11;
 
 
-    public LevMarNN() throws IOException {
+    public LevMarNN(String pt) throws IOException {
         x = new double[NLAM];
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
@@ -162,7 +168,11 @@ public class LevMarNN {
         p_init[6] = Math.log(0.01);  // bspm
         p_init[7] = Math.log(0.01);  // bwit
 
-        x11 = new double[11];
+        if (pt.equals("MERIS")) {
+            x11 = new double[11];
+        } else if (pt.equals("MODIS")) {
+            x11 = new double[9];
+        }
 
         nnResources = new NnResources();
         alphaTab = new AlphaTab();
@@ -172,6 +182,7 @@ public class LevMarNN {
         smile_tab_ini();
         model = new nn_atmo_watForwardModel();
         breakingCriterion = new DefaultBreakingCriterion(150, 1e-10);
+//        breakingCriterion = new DefaultBreakingCriterion(10, 1e-6);
         costFunction = new ChiSquareCostFunction();
         optimizer = new LevenbergMarquardtOptimizer(p.length, x11.length);
         optimizer.init(model, costFunction, breakingCriterion);
@@ -181,7 +192,7 @@ public class LevMarNN {
         nn_at_data.prepare = -1;
     }
 
-    public int levmar_nn(int detector, double[] input, double[] output) {
+    public int levmar_nn(int detector, double[] input, double[] output, String pt) {
         // @todo 1 tb/** these two are never written, only read from ... tb 2013-05-14
         double[] rw1 = new double[NLAM];
         double[] rw2 = new double[NLAM];
@@ -214,7 +225,15 @@ public class LevMarNN {
         salinity = input[9];
 
         final double cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
-        for (int i = 0; i < 15; i++) {
+
+        int countOfSpectralBands = -1;
+        if (pt.equals("MERIS")) {
+            countOfSpectralBands = 15;
+        } else if (pt.equals("MODIS")) {
+            countOfSpectralBands = 9;
+        }
+
+        for (int i = 0; i < countOfSpectralBands; i++) {
             L_toa[i] = input[i + 10];
             solar_flux[i] = input[i + 25];
 
@@ -246,11 +265,21 @@ public class LevMarNN {
         /*+++ ozone correction +++*/
 
         nlam = 12;
-        for (int i = 0; i < nlam; i++) {
-            //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
-            trans_ozond[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
-            trans_ozonu[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
-            trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
+        if (pt.equals("MERIS")) {
+            for (int i = 0; i < nlam; i++) {
+                //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
+                trans_ozond[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
+                trans_ozonu[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
+                trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
+            }
+        } else if (pt.equals("MODIS")) {
+            nlam = 9;
+            for (int i = 0; i < nlam; i++) {
+                //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
+                trans_ozond[i] = (ozone / 1000.0 * (1.0 / cos_teta_sun));
+                trans_ozonu[i] = (ozone / 1000.0 * (1.0 / cos_teta_view));
+                trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
+            }
         }
 
 //        for (int i = 0; i < 12; ++i) {
@@ -258,87 +287,87 @@ public class LevMarNN {
 //            L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
 //        }
 
-        /*+++ ozone correction +++*/
-        nlam = 12;
-        for (int i = 0; i < nlam; i++) {
-            //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
-            trans_ozond[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
-            trans_ozonu[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
-            trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
-        }
-
-//        for (int i = 0; i < 12; ++i) {
-//            ix = MERBAND_12_INDEX[i];
-//            L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
-//        }
+        if (pt.equals("MERIS")) {
 
         /* +++ water vapour correction for band 9 +++++ */
 
-        //X2=rho_900/rho_885;
-        X2 = rl_toa[14] / rl_toa[13];
-        trans708 = H_2_O_COR_POLY[0] + H_2_O_COR_POLY[1] * X2 + H_2_O_COR_POLY[2] * X2 * X2 + H_2_O_COR_POLY[3] * X2 * X2 * X2;
+            //X2=rho_900/rho_885;
 
-        L_toa[8] /= trans708;
+            X2 = rl_toa[14] / rl_toa[13];
+            trans708 = H_2_O_COR_POLY[0] + H_2_O_COR_POLY[1] * X2 + H_2_O_COR_POLY[2] * X2 * X2 + H_2_O_COR_POLY[3] * X2 * X2 * X2;
+
+            L_toa[8] /= trans708;
 
         /*+++ smile and pressure correction +++*/
 
         /* calculate relative airmass rayleigh correction for correction layer*/
-        surf_press = surf_pressure;
-        rayl_rel_mass_toa_tosa = (surf_press - 1013.2) / 1013.2; //?? oder rayl_mass_toa_tosa =surf_press - 1013.2; // RD20120105
+            surf_press = surf_pressure;
+            rayl_rel_mass_toa_tosa = (surf_press - 1013.2) / 1013.2; //?? oder rayl_mass_toa_tosa =surf_press - 1013.2; // RD20120105
 
         /* calculate phase function for rayleigh path radiance*/
-        cos_scat_ang = -cos_teta_view * cos_teta_sun - sin_teta_view * sin_teta_sun * cos_azi_diff; // this is the scattering angle without fresnel reflection
-        phase_rayl_min = 0.75 * (1.0 + cos_scat_ang * cos_scat_ang);
+            cos_scat_ang = -cos_teta_view * cos_teta_sun - sin_teta_view * sin_teta_sun * cos_azi_diff; // this is the scattering angle without fresnel reflection
+            phase_rayl_min = 0.75 * (1.0 + cos_scat_ang * cos_scat_ang);
 
         /* calculate optical thickness of rayleigh for correction layer, lam in micrometer */
 
-        for (ilam = 0; ilam < nlam; ilam++) {
-            ix = MERBAND_12_INDEX[ilam];
-            tau_rayl_standard[ilam] = 0.008735 * Math.pow(MERBAND_12[ilam] / 1000.0, -4.08);/* lam in �m */
-            tau_rayl_toa_tosa[ilam] = tau_rayl_standard[ilam] * rayl_rel_mass_toa_tosa;
-            //tau_rayl_toa_tosa[ilam] = tau_rayl_standard[ilam] * rayl_mass_toa_tosa; // RD20120105
-            L_rayl_toa_tosa[ilam] = Ed_toa[ix] * tau_rayl_toa_tosa[ilam] * phase_rayl_min / (4 * M_PI) * (1.0 / cos_teta_view);
-            trans_rayl_press[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_view + 1.0 / cos_teta_sun));
-            //trans_rayl_pressd[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_sun));
-            //trans_rayl_pressu[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_view));
-        }
+            for (ilam = 0; ilam < nlam; ilam++) {
+                ix = MERBAND_12_INDEX[ilam];
+                tau_rayl_standard[ilam] = 0.008735 * Math.pow(MERBAND_12[ilam] / 1000.0, -4.08);/* lam in �m */
+                tau_rayl_toa_tosa[ilam] = tau_rayl_standard[ilam] * rayl_rel_mass_toa_tosa;
+                //tau_rayl_toa_tosa[ilam] = tau_rayl_standard[ilam] * rayl_mass_toa_tosa; // RD20120105
+                L_rayl_toa_tosa[ilam] = Ed_toa[ix] * tau_rayl_toa_tosa[ilam] * phase_rayl_min / (4 * M_PI) * (1.0 / cos_teta_view);
+                trans_rayl_press[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_view + 1.0 / cos_teta_sun));
+                //trans_rayl_pressd[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_sun));
+                //trans_rayl_pressu[ilam] = Math.exp(-tau_rayl_toa_tosa[ilam] * (1.0 / cos_teta_view));
+            }
 
         /* calculate rayleigh for correction of smile, lam in micrometer */
 
-        for (ilam = 0; ilam < nlam; ilam++) {
-            ix = MERBAND_12_INDEX[ilam];
-            smile_lam = rrlam[detector][ix];
-            tau_rayl_smile[ilam] = 0.008735 * Math.pow(smile_lam / 1000.0, -4.08);
-            L_rayl_smile[ilam] = Ed_toa[ix] * (tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * phase_rayl_min / (4 * M_PI) * (1.0 / cos_teta_view);
-            //trans_rayl_smile[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view + 1.0 / cos_teta_sun));
-            //trans_rayl_smiled[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_sun));
-            //trans_rayl_smileu[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view));
-        }
+            for (ilam = 0; ilam < nlam; ilam++) {
+                ix = MERBAND_12_INDEX[ilam];
+                smile_lam = rrlam[detector][ix];
+                tau_rayl_smile[ilam] = 0.008735 * Math.pow(smile_lam / 1000.0, -4.08);
+                L_rayl_smile[ilam] = Ed_toa[ix] * (tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * phase_rayl_min / (4 * M_PI) * (1.0 / cos_teta_view);
+                //trans_rayl_smile[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view + 1.0 / cos_teta_sun));
+                //trans_rayl_smiled[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_sun));
+                //trans_rayl_smileu[ilam] = Math.exp(-(tau_rayl_smile[ilam] - tau_rayl_standard[ilam]) * (1.0 / cos_teta_view));
+            }
 
         /* +++++ Esun smile correction ++++++ */
-        for (ilam = 0; ilam < nlam; ilam++) {
-            ix = MERBAND_12_INDEX[ilam];
-            Ed_toa_smile_rat[ilam] = rredtoa[detector][ix];///nomi_sun[ix];
-            Ed_toa_smile_corr[ilam] = Ed_toa[ix] * Ed_toa_smile_rat[ilam]; // RD20120105 geaendert von / in *, wieder zurueck 20120119
-        }
-        SMILE = 1;
-        if (SMILE == 1) {
-            /* subtract all correcting radiances */
             for (ilam = 0; ilam < nlam; ilam++) {
                 ix = MERBAND_12_INDEX[ilam];
-                // L_tosa[ilam] = ((L_toa[ix]-L_rayl_smile[ilam])-L_rayl_toa_tosa[ilam])/(trans_ozon[ilam]*trans_rayl_smile[ilam]);
-                L_tosa[ilam] = L_toa[ix] / (trans_ozon[ilam] * trans_rayl_press[ilam]/**trans_rayl_smile[ilam]*/) - L_rayl_toa_tosa[ilam] + L_rayl_smile[ilam];//*trans_rayl_smile[ilam]);
-                Ed_tosa[ilam] = Ed_toa_smile_corr[ilam];//*trans_rayl_smiled[ilam]*trans_rayl_pressd[ilam];
-                rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
-                x[ilam] = rho_tosa_corr[ilam];
+                Ed_toa_smile_rat[ilam] = rredtoa[detector][ix];///nomi_sun[ix];
+                Ed_toa_smile_corr[ilam] = Ed_toa[ix] * Ed_toa_smile_rat[ilam]; // RD20120105 geaendert von / in *, wieder zurueck 20120119
             }
-        } else { /* subtract only correction for ozone */
+            SMILE = 1;
+            if (SMILE == 1) {
+            /* subtract all correcting radiances */
+                for (ilam = 0; ilam < nlam; ilam++) {
+                    ix = MERBAND_12_INDEX[ilam];
+                    // L_tosa[ilam] = ((L_toa[ix]-L_rayl_smile[ilam])-L_rayl_toa_tosa[ilam])/(trans_ozon[ilam]*trans_rayl_smile[ilam]);
+                    L_tosa[ilam] = L_toa[ix] / (trans_ozon[ilam] * trans_rayl_press[ilam]/**trans_rayl_smile[ilam]*/) - L_rayl_toa_tosa[ilam] + L_rayl_smile[ilam];//*trans_rayl_smile[ilam]);
+                    Ed_tosa[ilam] = Ed_toa_smile_corr[ilam];//*trans_rayl_smiled[ilam]*trans_rayl_pressd[ilam];
+                    rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
+                    x[ilam] = rho_tosa_corr[ilam];
+                }
+            } else { /* subtract only correction for ozone */
+                for (ilam = 0; ilam < nlam; ilam++) {
+                    ix = MERBAND_12_INDEX[ilam];
+                    L_tosa[ilam] = L_toa[ix] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
+                    Ed_tosa[ilam] = Ed_toa[ix];
+                    rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
+                    x[ilam] = rho_tosa_corr[ilam];
+                }
+            }
+
+        } else if (pt.equals("MODIS")) {
             for (ilam = 0; ilam < nlam; ilam++) {
-                ix = MERBAND_12_INDEX[ilam];
-                L_tosa[ilam] = L_toa[ix] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
-                Ed_tosa[ilam] = Ed_toa[ix];
-                rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
-                x[ilam] = rho_tosa_corr[ilam];
+//                ix = MODBAND_10_INDEX[ilam];
+//                L_tosa[ilam] = L_toa[ix] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
+//                Ed_tosa[ilam] = Ed_toa[ix];
+//                rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
+//                x[ilam] = rho_tosa_corr[ilam];
+                x[ilam] = modisReflectanceScales[ilam] * (modisReflectanceOffsets[ilam] - L_toa[ilam]);
             }
         }
 
@@ -381,10 +410,14 @@ public class LevMarNN {
 
         System.arraycopy(p_init, 0, p, 0, p.length);
 
-        // select the 11 bands for iterations
-        for (int i = 0; i < 11; i++) {
-            ix = MERIS_11_OUTOF_12_IX[i];
-            x11[i] = x[ix];
+        if (pt.equals("MERIS")) {
+            // select the 11 bands for iterations
+            for (int i = 0; i < 11; i++) {
+                ix = MERIS_11_OUTOF_12_IX[i];
+                x11[i] = x[ix];
+            }
+        } else if (pt.equals("MODIS")) {
+            System.arraycopy(x, 0, x11, 0, 9);
         }
         /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
         //  opts[0]=LM_INIT_MU; opts[1]=1E-15; opts[2]=1E-15; opts[3]=1E-20;
@@ -424,7 +457,11 @@ public class LevMarNN {
         /* normalize water leaving radiance reflectances */
 
         // requires first to make RLw again
-        for (int i = 0; i < 12; i++) {
+        for (
+                int i = 0;
+                i < 12; i++)
+
+        {
             rlw1[i] = rw1[i] / M_PI;
             rlw2[i] = rw2[i] / M_PI;
             if (rlw2[i] < 0.0)
@@ -460,7 +497,11 @@ public class LevMarNN {
 
         // put all results into output
         nlam = 12;
-        for (int i = 0; i < nlam; i++) {
+        for (
+                int i = 0;
+                i < nlam; i++)
+
+        {
             ix = lam29_meris12_ix[i];
             output[i] = rho_tosa_corr[i] / M_PI;
             output[i + nlam] = nn_at_data.rpath_nn[ix];
@@ -468,6 +509,7 @@ public class LevMarNN {
             output[i + nlam * 3] = nn_at_data.tdown_nn[ix];
             output[i + nlam * 4] = nn_at_data.tup_nn[ix];
         }
+
         output[60] = Math.exp(p[0]);    // aot_550
         output[61] = Math.exp(p[1]);    // ang_865_443
         output[62] = Math.exp(p[3]);    // a_pig
@@ -809,7 +851,7 @@ public class LevMarNN {
 
         @Override
         public void init(Object o) {
-            this.nn_data = (s_nn_atdata)o;
+            this.nn_data = (s_nn_atdata) o;
         }
 
         @Override
@@ -822,6 +864,11 @@ public class LevMarNN {
             nnReturnData = nnAtmoWat.nn_atmo_wat(variables, rtosa_nn.clone(), nn_data, nnReturnData);
             nn_data = nnReturnData.getNn_atdata();
             return nnReturnData.getOutputValues();
+        }
+
+        @Override
+        public Matrix getJacobianMatrix() {
+            return null;
         }
 
     }

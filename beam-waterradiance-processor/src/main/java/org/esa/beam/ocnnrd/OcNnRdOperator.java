@@ -2,13 +2,22 @@ package org.esa.beam.ocnnrd;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.util.ResourceInstaller;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.waterradiance.AuxdataProvider;
@@ -26,8 +35,8 @@ import java.util.Date;
  * @author Tom Block
  */
 @OperatorMetadata(alias = "Meris.OCNNRD", version = "1.0",
-        authors = "Tom Block, Tonio Finke, Roland Doerffer",
-        description = "An operator computing water IOPs starting from radiances.")
+                  authors = "Tom Block, Tonio Fincke, Roland Doerffer",
+                  description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
     private static final int SRC_SZA = 0;
@@ -44,6 +53,37 @@ public class OcNnRdOperator extends PixelOperator {
     private static final int SRC_SOL_FLUX_OFFSET = 25;
     private static final int SRC_LAT = 40;
     private static final int SRC_LON = 41;
+
+    String MODIS_L1B_RADIANCE_1_BAND_NAME = "EV_1KM_RefSB.8";
+    String MODIS_L1B_RADIANCE_2_BAND_NAME = "EV_1KM_RefSB.9";
+    String MODIS_L1B_RADIANCE_3_BAND_NAME = "EV_1KM_RefSB.10";
+    String MODIS_L1B_RADIANCE_4_BAND_NAME = "EV_1KM_RefSB.11";
+    String MODIS_L1B_RADIANCE_5_BAND_NAME = "EV_1KM_RefSB.12";
+    String MODIS_L1B_RADIANCE_6_BAND_NAME = "EV_1KM_RefSB.13lo";
+    String MODIS_L1B_RADIANCE_7_BAND_NAME = "EV_1KM_RefSB.14lo";
+    String MODIS_L1B_RADIANCE_8_BAND_NAME = "EV_1KM_RefSB.15";
+    String MODIS_L1B_RADIANCE_9_BAND_NAME = "EV_1KM_RefSB.16";
+    String MODIS_L1B_RADIANCE_10_BAND_NAME = "EV_1KM_RefSB.17";
+    String MODIS_L1B_RADIANCE_11_BAND_NAME = "EV_1KM_RefSB.18";
+    String MODIS_L1B_RADIANCE_12_BAND_NAME = "EV_1KM_RefSB.19";
+    /**
+     * The names of the Meris Level 1 spectral band names.
+     */
+    String[] MODIS_L1B_SPECTRAL_BAND_NAMES = {
+            MODIS_L1B_RADIANCE_1_BAND_NAME, // 0
+            MODIS_L1B_RADIANCE_2_BAND_NAME, // 1
+            MODIS_L1B_RADIANCE_3_BAND_NAME, // 2
+            MODIS_L1B_RADIANCE_4_BAND_NAME, // 3
+            MODIS_L1B_RADIANCE_5_BAND_NAME, // 4
+            MODIS_L1B_RADIANCE_6_BAND_NAME, // 5
+            MODIS_L1B_RADIANCE_7_BAND_NAME, // 6
+            MODIS_L1B_RADIANCE_8_BAND_NAME, // 7
+            MODIS_L1B_RADIANCE_9_BAND_NAME, // 8
+//            MODIS_L1B_RADIANCE_10_BAND_NAME, // 9
+//            MODIS_L1B_RADIANCE_11_BAND_NAME, // 10
+//            MODIS_L1B_RADIANCE_12_BAND_NAME, // 11
+    };
+    int MODIS_L1B_NUM_SPECTRAL_BANDS = MODIS_L1B_SPECTRAL_BAND_NAMES.length;
 
     private static final int NUM_OUTPUTS = 69;
     private static final int NUM_TARGET_BANDS = NUM_OUTPUTS + 2;
@@ -92,6 +132,9 @@ public class OcNnRdOperator extends PixelOperator {
     @Parameter(defaultValue = "35.0", description = "Use this value, if the climatology is disabled")
     private double salinity;
 
+    private String pt;
+    private int lastY = -1;
+
     // -----------------------------------
     // ----- Configurable Parameters -----
     // -----------------------------------
@@ -103,17 +146,24 @@ public class OcNnRdOperator extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        if (isValid(sourceSamples)) {
+//        if(lastY != y) {
+            System.out.println("Computing pixel " + x + "," + y);
+//            lastY = y;
+//        }
+        if (pt.equals("MODIS") || isValid(sourceSamples)) {
             final double[] input_local = input.get();
-            copyTiePointData(input_local, sourceSamples);
+            copyTiePointData(input_local, sourceSamples, pt);
             copyAuxData(x, y);
             copyRadiances(input_local, sourceSamples);
             copySolarFluxes(sourceSamples);
 
-            final int detectorIndex = getDetectorIndex(sourceSamples);
+            int detectorIndex = -1;
+            if (pt.equals("MERIS")) {
+                detectorIndex = getDetectorIndex(sourceSamples);
+            }
             final double[] output_local = output.get();
             final LevMarNN levMarNN_local = levMarNN.get();
-            final int result = levMarNN_local.levmar_nn(detectorIndex, input_local, output_local);
+            levMarNN_local.levmar_nn(detectorIndex, input_local, output_local, pt);
 
             // @todo 2 tb/tb extract method and test tb 2013-05-13
             for (int i = 0; i < output_local.length; i++) {
@@ -129,26 +179,37 @@ public class OcNnRdOperator extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        sampleConfigurer.defineSample(SRC_SZA, EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
-        sampleConfigurer.defineSample(SRC_SAA, EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
-        sampleConfigurer.defineSample(SRC_VZA, EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME);
-        sampleConfigurer.defineSample(SRC_VAA, EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME);
-        sampleConfigurer.defineSample(SRC_PRESS, "atm_press");
-        sampleConfigurer.defineSample(SRC_OZ, "ozone");
-        sampleConfigurer.defineSample(SRC_MWIND, "merid_wind");
-        sampleConfigurer.defineSample(SRC_ZWIND, "zonal_wind");
+        if (pt.equals("MERIS")) {
 
-        for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
-            sampleConfigurer.defineSample(SRC_RAD_OFFSET + i, EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]);
-        }
-        sampleConfigurer.defineSample(SRC_DETECTOR, EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
-        sampleConfigurer.defineSample(SRC_MASK, "_mask_");
-        if (csvMode) {
+            sampleConfigurer.defineSample(SRC_SZA, EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
+            sampleConfigurer.defineSample(SRC_SAA, EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
+            sampleConfigurer.defineSample(SRC_VZA, EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME);
+            sampleConfigurer.defineSample(SRC_VAA, EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME);
+            sampleConfigurer.defineSample(SRC_PRESS, "atm_press");
+            sampleConfigurer.defineSample(SRC_OZ, "ozone");
+            sampleConfigurer.defineSample(SRC_MWIND, "merid_wind");
+            sampleConfigurer.defineSample(SRC_ZWIND, "zonal_wind");
+
             for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
-                sampleConfigurer.defineSample(SRC_SOL_FLUX_OFFSET + i, "solar_flux_" + (i + 1));
+                sampleConfigurer.defineSample(SRC_RAD_OFFSET + i, EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]);
             }
-            sampleConfigurer.defineSample(SRC_LAT, EnvisatConstants.MERIS_LAT_DS_NAME);
-            sampleConfigurer.defineSample(SRC_LON, EnvisatConstants.MERIS_LON_DS_NAME);
+            sampleConfigurer.defineSample(SRC_DETECTOR, EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
+            sampleConfigurer.defineSample(SRC_MASK, "_mask_");
+            if (csvMode) {
+                for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
+                    sampleConfigurer.defineSample(SRC_SOL_FLUX_OFFSET + i, "solar_flux_" + (i + 1));
+                }
+                sampleConfigurer.defineSample(SRC_LAT, EnvisatConstants.MERIS_LAT_DS_NAME);
+                sampleConfigurer.defineSample(SRC_LON, EnvisatConstants.MERIS_LON_DS_NAME);
+            }
+        } else if (pt.equals("MODIS")) {
+            sampleConfigurer.defineSample(SRC_SZA, "SolarZenith");
+            sampleConfigurer.defineSample(SRC_SAA, "SolarAzimuth");
+            sampleConfigurer.defineSample(SRC_VZA, "SensorZenith");
+            sampleConfigurer.defineSample(SRC_VAA, "SensorAzimuth");
+            for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+                sampleConfigurer.defineSample(SRC_RAD_OFFSET + i, MODIS_L1B_SPECTRAL_BAND_NAMES[i]);
+            }
         }
     }
 
@@ -214,7 +275,7 @@ public class OcNnRdOperator extends PixelOperator {
         targetProduct.setAutoGrouping(autoGrouping);
         if (csvMode) {
             targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
-                    targetProduct.getSceneRasterHeight());
+                                               targetProduct.getSceneRasterHeight());
         }
     }
 
@@ -242,14 +303,30 @@ public class OcNnRdOperator extends PixelOperator {
     @Override
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
-
-        if (isCsvMode(sourceProduct)) {
-            csvMode = true;
-            maskExpression = "true";
-        } else {
-            solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES, sourceProduct);
+        final String productType = sourceProduct.getProductType();
+        if (productType.equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
+                productType.equals(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) ||
+                productType.equals(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME) ||
+                productType.equals(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME) ||
+                productType.equals(EnvisatConstants.MERIS_FRG_L1B_PRODUCT_TYPE_NAME)
+                ) {
+            pt = "MERIS";
+        } else if (productType.equals("MYD021KM")
+//                || productType.equals("MYD02HKM") || productType.equals("MYD02QKM")
+                ) {
+            pt = "MODIS";
         }
-        sourceProduct.addBand("_mask_", maskExpression);
+        if (pt.equals("MERIS")) {
+            if (isCsvMode(sourceProduct)) {
+                csvMode = true;
+                maskExpression = "true";
+            } else {
+                solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES, sourceProduct);
+            }
+            sourceProduct.addBand("_mask_", maskExpression);
+        } else if (pt.equals("MODIS")) {
+            solarFluxes = getSolarFluxes(MODIS_L1B_SPECTRAL_BAND_NAMES, sourceProduct);
+        }
 
         final ProductData.UTC startTime = sourceProduct.getStartTime();
         if (startTime != null && useClimatology) {
@@ -261,7 +338,7 @@ public class OcNnRdOperator extends PixelOperator {
             @Override
             protected LevMarNN initialValue() {
                 try {
-                    return new LevMarNN();
+                    return new LevMarNN(pt);
                 } catch (IOException e) {
                     // @todo 3 tb/tb improve error handling here ... tb 2013-05-20
                     e.printStackTrace();
@@ -284,21 +361,32 @@ public class OcNnRdOperator extends PixelOperator {
     }
 
     // package access for testing only tb 2013-05-13
-    static void copyTiePointData(double[] inputs, Sample[] sourceSamples) {
+    static void copyTiePointData(double[] inputs, Sample[] sourceSamples, String pt) {
         inputs[0] = sourceSamples[SRC_SZA].getDouble();
         inputs[1] = sourceSamples[SRC_SAA].getDouble();
         inputs[2] = sourceSamples[SRC_VZA].getDouble();
         inputs[3] = sourceSamples[SRC_VAA].getDouble();
-        inputs[4] = sourceSamples[SRC_PRESS].getDouble();
-        inputs[5] = sourceSamples[SRC_OZ].getDouble();
-        inputs[6] = sourceSamples[SRC_MWIND].getDouble();
-        inputs[7] = sourceSamples[SRC_ZWIND].getDouble();
+        if (pt.equals("MERIS")) {
+            inputs[4] = sourceSamples[SRC_PRESS].getDouble();
+            inputs[5] = sourceSamples[SRC_OZ].getDouble();
+            inputs[6] = sourceSamples[SRC_MWIND].getDouble();
+            inputs[7] = sourceSamples[SRC_ZWIND].getDouble();
+        } else if (pt.equals("MODIS")) {
+            inputs[4] = 1019;
+            inputs[5] = 330;
+        }
     }
 
     // package access for testing only tb 2013-05-13
-    static void copyRadiances(double[] inputs, Sample[] sourceSamples) {
-        for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
-            inputs[10 + i] = sourceSamples[SRC_RAD_OFFSET + i].getDouble();
+    void copyRadiances(double[] inputs, Sample[] sourceSamples) {
+        if (pt.equals("MERIS")) {
+            for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
+                inputs[10 + i] = sourceSamples[SRC_RAD_OFFSET + i].getDouble();
+            }
+        } else if (pt.equals("MODIS")) {
+            for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+                inputs[10 + i] = sourceSamples[SRC_RAD_OFFSET + i].getDouble();
+            }
         }
     }
 
@@ -370,10 +458,15 @@ public class OcNnRdOperator extends PixelOperator {
 
     private void copySolarFluxes(Sample[] sourceSamples) {
         final double[] input_local = input.get();
-        if (csvMode) {
-            copySolarFluxes(input_local, sourceSamples);
-        } else {
-            System.arraycopy(solarFluxes, 0, input_local, 25, 15);
+        if (pt.equals("MERIS")) {
+
+            if (csvMode) {
+                copySolarFluxes(input_local, sourceSamples);
+            } else {
+                System.arraycopy(solarFluxes, 0, input_local, 25, 15);
+            }
+        } else if (pt.equals("MODIS")) {
+            System.arraycopy(solarFluxes, 0, input_local, 25, 9);
         }
     }
 
