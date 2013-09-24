@@ -1,6 +1,7 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
 import Jama.Matrix;
+import org.esa.beam.ocnnrd.SensorType;
 import org.esa.beam.siocs.abstractprocessor.BreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.CostFunction;
 import org.esa.beam.siocs.abstractprocessor.ForwardModel;
@@ -21,6 +22,7 @@ public class LevMarNN {
 
     private static final double DEG_2_RAD = (3.1415927 / 180.0);
     private final CostFunction costFunction;
+    private final SensorType sensorType;
 
     private double[][] frlam = new double[FR_TAB][15];
     private double[][] fredtoa = new double[FR_TAB][15];
@@ -89,7 +91,7 @@ public class LevMarNN {
     private double[] x11;
 
 
-    public LevMarNN(String pt) throws IOException {
+    public LevMarNN(SensorType pt) throws IOException {
         x = new double[NLAM];
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
@@ -168,9 +170,11 @@ public class LevMarNN {
         p_init[6] = Math.log(0.01);  // bspm
         p_init[7] = Math.log(0.01);  // bwit
 
-        if (pt.equals("MERIS")) {
+        sensorType = pt;
+
+        if (pt == SensorType.MERIS) {
             x11 = new double[11];
-        } else if (pt.equals("MODIS")) {
+        } else if (pt == SensorType.MODIS) {
             x11 = new double[9];
         }
 
@@ -192,7 +196,7 @@ public class LevMarNN {
         nn_at_data.prepare = -1;
     }
 
-    public int levmar_nn(int detector, double[] input, double[] output, String pt) {
+    public int levmar_nn(int detector, double[] input, double[] output) {
         // @todo 1 tb/** these two are never written, only read from ... tb 2013-05-14
         double[] rw1 = new double[NLAM];
         double[] rw2 = new double[NLAM];
@@ -227,9 +231,9 @@ public class LevMarNN {
         final double cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
 
         int countOfSpectralBands = -1;
-        if (pt.equals("MERIS")) {
+        if (sensorType == SensorType.MERIS) {
             countOfSpectralBands = 15;
-        } else if (pt.equals("MODIS")) {
+        } else if (sensorType == SensorType.MODIS) {
             countOfSpectralBands = 9;
         }
 
@@ -265,14 +269,14 @@ public class LevMarNN {
         /*+++ ozone correction +++*/
 
         nlam = 12;
-        if (pt.equals("MERIS")) {
+        if (sensorType == SensorType.MERIS) {
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
                 trans_ozond[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
                 trans_ozonu[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
                 trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
             }
-        } else if (pt.equals("MODIS")) {
+        } else if (sensorType == SensorType.MODIS) {
             nlam = 9;
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
@@ -287,7 +291,7 @@ public class LevMarNN {
 //            L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
 //        }
 
-        if (pt.equals("MERIS")) {
+        if (sensorType == SensorType.MERIS) {
 
         /* +++ water vapour correction for band 9 +++++ */
 
@@ -360,7 +364,7 @@ public class LevMarNN {
                 }
             }
 
-        } else if (pt.equals("MODIS")) {
+        } else if (sensorType == SensorType.MODIS) {
             for (ilam = 0; ilam < nlam; ilam++) {
 //                ix = MODBAND_10_INDEX[ilam];
 //                L_tosa[ilam] = L_toa[ix] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
@@ -410,13 +414,13 @@ public class LevMarNN {
 
         System.arraycopy(p_init, 0, p, 0, p.length);
 
-        if (pt.equals("MERIS")) {
+        if (sensorType == SensorType.MERIS) {
             // select the 11 bands for iterations
             for (int i = 0; i < 11; i++) {
                 ix = MERIS_11_OUTOF_12_IX[i];
                 x11[i] = x[ix];
             }
-        } else if (pt.equals("MODIS")) {
+        } else if (sensorType == SensorType.MODIS) {
             System.arraycopy(x, 0, x11, 0, 9);
         }
         /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */

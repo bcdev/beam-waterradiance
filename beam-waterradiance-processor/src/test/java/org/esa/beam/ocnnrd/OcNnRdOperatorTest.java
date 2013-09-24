@@ -49,7 +49,7 @@ public class OcNnRdOperatorTest {
         final TestSample[] samples = createTestSamples(8);
         final double[] inputs = new double[8];
 
-        OcNnRdOperator.copyTiePointData(inputs, samples, "MERIS");
+        OcNnRdOperator.copyTiePointData(inputs, samples, SensorType.MERIS);
 
         for (int i = 0; i < inputs.length; i++) {
             assertEquals(i, inputs[i], 1e-8);
@@ -57,11 +57,27 @@ public class OcNnRdOperatorTest {
     }
 
     @Test
-    public void testCopyRadiances() {
+    public void testCopyRadiances_MERIS() {
         final TestSample[] samples = createTestSamples(23);
         final double[] inputs = new double[25];
 
-        new OcNnRdOperator().copyRadiances(inputs, samples);
+        OcNnRdOperator.copyRadiances(inputs, samples, new MerisSensorConfig());
+
+        for (int i = 0; i < 10; i++) {
+            assertEquals(0.0, inputs[i], 1e-8);
+        }
+
+        for (int i = 10; i < inputs.length; i++) {
+            assertEquals(i - 2, inputs[i], 1e-8);
+        }
+    }
+
+    @Test
+    public void testCopyRadiances_MODIS() {
+        final TestSample[] samples = createTestSamples(19);
+        final double[] inputs = new double[19];
+
+        OcNnRdOperator.copyRadiances(inputs, samples, new ModisSensorConfig());
 
         for (int i = 0; i < 10; i++) {
             assertEquals(0.0, inputs[i], 1e-8);

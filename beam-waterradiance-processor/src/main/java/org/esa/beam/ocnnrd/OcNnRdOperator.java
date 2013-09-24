@@ -132,8 +132,9 @@ public class OcNnRdOperator extends PixelOperator {
     @Parameter(defaultValue = "35.0", description = "Use this value, if the climatology is disabled")
     private double salinity;
 
-    private String pt;
+    private SensorType sensorType;
     private int lastY = -1;
+    private SensorConfig sensorConfig;
 
     // -----------------------------------
     // ----- Configurable Parameters -----
@@ -147,23 +148,23 @@ public class OcNnRdOperator extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 //        if(lastY != y) {
-            System.out.println("Computing pixel " + x + "," + y);
+        System.out.println("Computing pixel " + x + "," + y);
 //            lastY = y;
 //        }
-        if (pt.equals("MODIS") || isValid(sourceSamples)) {
+        if (sensorType == SensorType.MODIS || isValid(sourceSamples)) {
             final double[] input_local = input.get();
-            copyTiePointData(input_local, sourceSamples, pt);
+            copyTiePointData(input_local, sourceSamples, sensorType);
             copyAuxData(x, y);
-            copyRadiances(input_local, sourceSamples);
+            copyRadiances(input_local, sourceSamples, sensorConfig);
             copySolarFluxes(sourceSamples);
 
             int detectorIndex = -1;
-            if (pt.equals("MERIS")) {
+            if (sensorType == SensorType.MERIS) {
                 detectorIndex = getDetectorIndex(sourceSamples);
             }
             final double[] output_local = output.get();
             final LevMarNN levMarNN_local = levMarNN.get();
-            levMarNN_local.levmar_nn(detectorIndex, input_local, output_local, pt);
+            levMarNN_local.levmar_nn(detectorIndex, input_local, output_local);
 
             // @todo 2 tb/tb extract method and test tb 2013-05-13
             for (int i = 0; i < output_local.length; i++) {
@@ -179,7 +180,7 @@ public class OcNnRdOperator extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        if (pt.equals("MERIS")) {
+        if (sensorType == SensorType.MERIS) {
 
             sampleConfigurer.defineSample(SRC_SZA, EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
             sampleConfigurer.defineSample(SRC_SAA, EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
@@ -202,7 +203,7 @@ public class OcNnRdOperator extends PixelOperator {
                 sampleConfigurer.defineSample(SRC_LAT, EnvisatConstants.MERIS_LAT_DS_NAME);
                 sampleConfigurer.defineSample(SRC_LON, EnvisatConstants.MERIS_LON_DS_NAME);
             }
-        } else if (pt.equals("MODIS")) {
+        } else if (sensorType == SensorType.MODIS) {
             sampleConfigurer.defineSample(SRC_SZA, "SolarZenith");
             sampleConfigurer.defineSample(SRC_SAA, "SolarAzimuth");
             sampleConfigurer.defineSample(SRC_VZA, "SensorZenith");
@@ -303,20 +304,8 @@ public class OcNnRdOperator extends PixelOperator {
     @Override
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
-        final String productType = sourceProduct.getProductType();
-        if (productType.equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) ||
-                productType.equals(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) ||
-                productType.equals(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME) ||
-                productType.equals(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME) ||
-                productType.equals(EnvisatConstants.MERIS_FRG_L1B_PRODUCT_TYPE_NAME)
-                ) {
-            pt = "MERIS";
-        } else if (productType.equals("MYD021KM")
-//                || productType.equals("MYD02HKM") || productType.equals("MYD02QKM")
-                ) {
-            pt = "MODIS";
-        }
-        if (pt.equals("MERIS")) {
+        sensorConfig = SensorConfigFactory.fromTypeString(sourceProduct.getProductType());
+        if (this.sensorType == SensorType.MERIS) {
             if (isCsvMode(sourceProduct)) {
                 csvMode = true;
                 maskExpression = "true";
@@ -324,7 +313,7 @@ public class OcNnRdOperator extends PixelOperator {
                 solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES, sourceProduct);
             }
             sourceProduct.addBand("_mask_", maskExpression);
-        } else if (pt.equals("MODIS")) {
+        } else if (this.sensorType == SensorType.MODIS) {
             solarFluxes = getSolarFluxes(MODIS_L1B_SPECTRAL_BAND_NAMES, sourceProduct);
         }
 
@@ -338,7 +327,7 @@ public class OcNnRdOperator extends PixelOperator {
             @Override
             protected LevMarNN initialValue() {
                 try {
-                    return new LevMarNN(pt);
+                    return new LevMarNN(sensorType);
                 } catch (IOException e) {
                     // @todo 3 tb/tb improve error handling here ... tb 2013-05-20
                     e.printStackTrace();
@@ -361,32 +350,26 @@ public class OcNnRdOperator extends PixelOperator {
     }
 
     // package access for testing only tb 2013-05-13
-    static void copyTiePointData(double[] inputs, Sample[] sourceSamples, String pt) {
+    static void copyTiePointData(double[] inputs, Sample[] sourceSamples, SensorType pt) {
         inputs[0] = sourceSamples[SRC_SZA].getDouble();
         inputs[1] = sourceSamples[SRC_SAA].getDouble();
         inputs[2] = sourceSamples[SRC_VZA].getDouble();
         inputs[3] = sourceSamples[SRC_VAA].getDouble();
-        if (pt.equals("MERIS")) {
+        if (pt == SensorType.MERIS) {
             inputs[4] = sourceSamples[SRC_PRESS].getDouble();
             inputs[5] = sourceSamples[SRC_OZ].getDouble();
             inputs[6] = sourceSamples[SRC_MWIND].getDouble();
             inputs[7] = sourceSamples[SRC_ZWIND].getDouble();
-        } else if (pt.equals("MODIS")) {
+        } else if (pt == SensorType.MODIS) {
             inputs[4] = 1019;
             inputs[5] = 330;
         }
     }
 
     // package access for testing only tb 2013-05-13
-    void copyRadiances(double[] inputs, Sample[] sourceSamples) {
-        if (pt.equals("MERIS")) {
-            for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
-                inputs[10 + i] = sourceSamples[SRC_RAD_OFFSET + i].getDouble();
-            }
-        } else if (pt.equals("MODIS")) {
-            for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                inputs[10 + i] = sourceSamples[SRC_RAD_OFFSET + i].getDouble();
-            }
+    static void copyRadiances(double[] inputs, Sample[] sourceSamples, SensorConfig sensorConfig) {
+        for (int i = 0; i < sensorConfig.getNumSpectralBands(); i++) {
+            inputs[10 + i] = sourceSamples[SRC_RAD_OFFSET + i].getDouble();
         }
     }
 
@@ -458,14 +441,14 @@ public class OcNnRdOperator extends PixelOperator {
 
     private void copySolarFluxes(Sample[] sourceSamples) {
         final double[] input_local = input.get();
-        if (pt.equals("MERIS")) {
+        if (sensorType == SensorType.MERIS) {
 
             if (csvMode) {
                 copySolarFluxes(input_local, sourceSamples);
             } else {
                 System.arraycopy(solarFluxes, 0, input_local, 25, 15);
             }
-        } else if (pt.equals("MODIS")) {
+        } else if (sensorType == SensorType.MODIS) {
             System.arraycopy(solarFluxes, 0, input_local, 25, 9);
         }
     }

@@ -40,6 +40,15 @@
             <dialogTitle>WaterRadiance (MERIS)</dialogTitle>
             <targetProductNameSuffix>_water</targetProductNameSuffix>
         </action>
+        <action>
+            <id>OcNnRdId</id>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <parent>tools</parent>
+            <text>OcNnRd (MERIS)...</text>
+            <operatorName>Meris.OCNNRD</operatorName>
+            <dialogTitle>OcNnRd (MERIS)</dialogTitle>
+            <targetProductNameSuffix>_ocnnrd</targetProductNameSuffix>
+        </action>
     </extension>
 
 </module>

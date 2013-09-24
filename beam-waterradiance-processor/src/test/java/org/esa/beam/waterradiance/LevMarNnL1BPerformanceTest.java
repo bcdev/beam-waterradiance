@@ -56,7 +56,7 @@ public class LevMarNnL1BPerformanceTest {
     }
 
     @Test
-    @Ignore
+//    @Ignore
     public void testNnInC() throws Exception {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(waterRadianceOpSpi);
         final String testProductPath = getTestProductPath();
@@ -84,7 +84,7 @@ public class LevMarNnL1BPerformanceTest {
     }
 
     @Test
-    @Ignore
+//    @Ignore
     public void testNnInJava() throws GraphException, IOException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(ocNnRdSpi);
         final String testProductPath = getTestProductPath();
@@ -114,8 +114,10 @@ public class LevMarNnL1BPerformanceTest {
     @Ignore
     public void testNnInOlafsCrashJava() throws GraphException, IOException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(ocNnRdSpi);
-        final String testProductPath = "C:\\Users\\tonio\\Desktop\\ocnnrd\\MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1";
-        final Product product = ProductIO.readProduct(testProductPath);
+        final URL resource = LevMarNnL1BPerformanceTest.class.getResource("../../../../MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1");
+        final Product product = ProductIO.readProduct(new File(resource.getPath()));
+//        final String testProductPath = "C:\\Users\\tonio\\Desktop\\ocnnrd\\MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1";
+//        final Product product = ProductIO.readProduct(testProductPath);
         final String targetFilePath = targetDirectory.getPath() + File.separator + "nn_olaf_crash_java.dim";
 
         try {

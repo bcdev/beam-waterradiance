@@ -1,5 +1,7 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
+import org.esa.beam.ocnnrd.OcNnRdOperator;
+import org.esa.beam.ocnnrd.SensorType;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,7 +59,7 @@ public class LevMarNNAcceptanceTest {
 
     @Before
     public void setUp() throws IOException {
-        levMarNN = new LevMarNN("MERIS");
+        levMarNN = new LevMarNN(SensorType.MERIS);
     }
 
     @Test
@@ -105,7 +107,7 @@ public class LevMarNNAcceptanceTest {
                 SUN_SPECTRAL_FLUXES_NORMAN);
         final double[] output = new double[75];
 
-        int result_1 = levMarNN.levmar_nn(181, input, output, "MERIS");
+        int result_1 = levMarNN.levmar_nn(181, input, output);
         assertEquals(0, result_1);
         assertArrayEquals(expected_Norman, output, 1e-7);
     }
@@ -156,7 +158,7 @@ public class LevMarNNAcceptanceTest {
 
         final double[] output = new double[75];
 
-        int result_1 = levMarNN.levmar_nn(873, input, output, "MERIS");
+        int result_1 = levMarNN.levmar_nn(873, input, output);
         assertEquals(0, result_1);
         assertArrayEquals(expected_20060116_ocean, output, 1e-7);
     }
@@ -207,7 +209,7 @@ public class LevMarNNAcceptanceTest {
 
         final double[] output = new double[75];
 
-        int result_1 = levMarNN.levmar_nn(748, input, output, "MERIS");
+        int result_1 = levMarNN.levmar_nn(748, input, output);
         assertEquals(0, result_1);
         assertArrayEquals(expected_20060116_cloud, output, 1e-2);
     }
@@ -258,7 +260,7 @@ public class LevMarNNAcceptanceTest {
 
         final double[] output = new double[75];
 
-        int result_1 = levMarNN.levmar_nn(723, input, output, "MERIS");
+        int result_1 = levMarNN.levmar_nn(723, input, output);
         assertEquals(0, result_1);
         assertArrayEquals(expected_20060116_land, output, 1e-2);
     }
