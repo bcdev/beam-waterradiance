@@ -1,7 +1,7 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
 import Jama.Matrix;
-import org.esa.beam.ocnnrd.SensorType;
+import org.esa.beam.ocnnrd.Sensor;
 import org.esa.beam.siocs.abstractprocessor.BreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.CostFunction;
 import org.esa.beam.siocs.abstractprocessor.ForwardModel;
@@ -9,11 +9,7 @@ import org.esa.beam.siocs.abstractprocessor.support.ChiSquareCostFunction;
 import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 public class LevMarNN {
 
@@ -22,7 +18,7 @@ public class LevMarNN {
 
     private static final double DEG_2_RAD = (3.1415927 / 180.0);
     private final CostFunction costFunction;
-    private final SensorType sensorType;
+    private final Sensor sensorType;
 
     private double[][] frlam = new double[FR_TAB][15];
     private double[][] fredtoa = new double[FR_TAB][15];
@@ -41,7 +37,7 @@ public class LevMarNN {
 
     private static final double[] modisReflectanceScales = {1.7005885E-5f, 9.557186E-6f, 6.1540863E-6f, 4.824122E-6f,
             3.8021312E-6f, 2.2562692E-6f, 2.3084365E-6f, 2.1856329E-6f, 1.9265376E-6f};
-    private static final double[] modisReflectanceOffsets =  {316.9722f, 316.9722f, 316.9722f, 316.9722f, 316.9722f,
+    private static final double[] modisReflectanceOffsets = {316.9722f, 316.9722f, 316.9722f, 316.9722f, 316.9722f,
             316.9722f, 316.9722f, 316.9722f, 316.9722f};
 
     double M_PI = 3.1416;
@@ -91,7 +87,7 @@ public class LevMarNN {
     private double[] x11;
 
 
-    public LevMarNN(SensorType pt) throws IOException {
+    public LevMarNN(Sensor pt) throws IOException {
         x = new double[NLAM];
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
@@ -172,9 +168,9 @@ public class LevMarNN {
 
         sensorType = pt;
 
-        if (pt == SensorType.MERIS) {
+        if (pt == Sensor.MERIS) {
             x11 = new double[11];
-        } else if (pt == SensorType.MODIS) {
+        } else if (pt == Sensor.MODIS) {
             x11 = new double[9];
         }
 
@@ -231,9 +227,9 @@ public class LevMarNN {
         final double cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
 
         int countOfSpectralBands = -1;
-        if (sensorType == SensorType.MERIS) {
+        if (sensorType == Sensor.MERIS) {
             countOfSpectralBands = 15;
-        } else if (sensorType == SensorType.MODIS) {
+        } else if (sensorType == Sensor.MODIS) {
             countOfSpectralBands = 9;
         }
 
@@ -269,14 +265,14 @@ public class LevMarNN {
         /*+++ ozone correction +++*/
 
         nlam = 12;
-        if (sensorType == SensorType.MERIS) {
+        if (sensorType == Sensor.MERIS) {
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
                 trans_ozond[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
                 trans_ozonu[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
                 trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
             }
-        } else if (sensorType == SensorType.MODIS) {
+        } else if (sensorType == Sensor.MODIS) {
             nlam = 9;
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
@@ -291,7 +287,7 @@ public class LevMarNN {
 //            L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
 //        }
 
-        if (sensorType == SensorType.MERIS) {
+        if (sensorType == Sensor.MERIS) {
 
         /* +++ water vapour correction for band 9 +++++ */
 
@@ -364,7 +360,7 @@ public class LevMarNN {
                 }
             }
 
-        } else if (sensorType == SensorType.MODIS) {
+        } else if (sensorType == Sensor.MODIS) {
             for (ilam = 0; ilam < nlam; ilam++) {
 //                ix = MODBAND_10_INDEX[ilam];
 //                L_tosa[ilam] = L_toa[ix] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
@@ -414,13 +410,13 @@ public class LevMarNN {
 
         System.arraycopy(p_init, 0, p, 0, p.length);
 
-        if (sensorType == SensorType.MERIS) {
+        if (sensorType == Sensor.MERIS) {
             // select the 11 bands for iterations
             for (int i = 0; i < 11; i++) {
                 ix = MERIS_11_OUTOF_12_IX[i];
                 x11[i] = x[ix];
             }
-        } else if (sensorType == SensorType.MODIS) {
+        } else if (sensorType == Sensor.MODIS) {
             System.arraycopy(x, 0, x11, 0, 9);
         }
         /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */

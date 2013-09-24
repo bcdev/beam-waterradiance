@@ -22,7 +22,7 @@ public class SensorConfigFactoryTest {
     @Test
     public void testFromTypeString_invalidType() {
         try {
-            SensorType.fromTypeString("Tonios private sensor");
+            SensorConfigFactory.fromTypeString("Tonios private sensor");
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException expected) {
             assertEquals("Invalid Product Type: Tonios private sensor", expected.getMessage());

@@ -2,22 +2,13 @@ package org.esa.beam.ocnnrd;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.util.ResourceInstaller;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.waterradiance.AuxdataProvider;
@@ -35,8 +26,8 @@ import java.util.Date;
  * @author Tom Block
  */
 @OperatorMetadata(alias = "Meris.OCNNRD", version = "1.0",
-                  authors = "Tom Block, Tonio Fincke, Roland Doerffer",
-                  description = "An operator computing water IOPs starting from radiances.")
+        authors = "Tom Block, Tonio Fincke, Roland Doerffer",
+        description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
     private static final int SRC_SZA = 0;
@@ -132,7 +123,6 @@ public class OcNnRdOperator extends PixelOperator {
     @Parameter(defaultValue = "35.0", description = "Use this value, if the climatology is disabled")
     private double salinity;
 
-    private SensorType sensorType;
     private int lastY = -1;
     private SensorConfig sensorConfig;
 
@@ -151,7 +141,8 @@ public class OcNnRdOperator extends PixelOperator {
         System.out.println("Computing pixel " + x + "," + y);
 //            lastY = y;
 //        }
-        if (sensorType == SensorType.MODIS || isValid(sourceSamples)) {
+        final Sensor sensorType = sensorConfig.getSensor();
+        if (sensorType == Sensor.MODIS || isValid(sourceSamples)) {
             final double[] input_local = input.get();
             copyTiePointData(input_local, sourceSamples, sensorType);
             copyAuxData(x, y);
@@ -159,7 +150,7 @@ public class OcNnRdOperator extends PixelOperator {
             copySolarFluxes(sourceSamples);
 
             int detectorIndex = -1;
-            if (sensorType == SensorType.MERIS) {
+            if (sensorType == Sensor.MERIS) {
                 detectorIndex = getDetectorIndex(sourceSamples);
             }
             final double[] output_local = output.get();
@@ -180,8 +171,8 @@ public class OcNnRdOperator extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        if (sensorType == SensorType.MERIS) {
-
+        // @todo 2 tb/** delegate sample configuration to SensorConfig tb 2013-09-24
+        if (sensorConfig.getSensor() == Sensor.MERIS) {
             sampleConfigurer.defineSample(SRC_SZA, EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
             sampleConfigurer.defineSample(SRC_SAA, EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
             sampleConfigurer.defineSample(SRC_VZA, EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME);
@@ -203,7 +194,7 @@ public class OcNnRdOperator extends PixelOperator {
                 sampleConfigurer.defineSample(SRC_LAT, EnvisatConstants.MERIS_LAT_DS_NAME);
                 sampleConfigurer.defineSample(SRC_LON, EnvisatConstants.MERIS_LON_DS_NAME);
             }
-        } else if (sensorType == SensorType.MODIS) {
+        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
             sampleConfigurer.defineSample(SRC_SZA, "SolarZenith");
             sampleConfigurer.defineSample(SRC_SAA, "SolarAzimuth");
             sampleConfigurer.defineSample(SRC_VZA, "SensorZenith");
@@ -276,7 +267,7 @@ public class OcNnRdOperator extends PixelOperator {
         targetProduct.setAutoGrouping(autoGrouping);
         if (csvMode) {
             targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
-                                               targetProduct.getSceneRasterHeight());
+                    targetProduct.getSceneRasterHeight());
         }
     }
 
@@ -305,7 +296,7 @@ public class OcNnRdOperator extends PixelOperator {
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
         sensorConfig = SensorConfigFactory.fromTypeString(sourceProduct.getProductType());
-        if (this.sensorType == SensorType.MERIS) {
+        if (sensorConfig.getSensor() == Sensor.MERIS) {
             if (isCsvMode(sourceProduct)) {
                 csvMode = true;
                 maskExpression = "true";
@@ -313,7 +304,7 @@ public class OcNnRdOperator extends PixelOperator {
                 solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES, sourceProduct);
             }
             sourceProduct.addBand("_mask_", maskExpression);
-        } else if (this.sensorType == SensorType.MODIS) {
+        } else if (sensorConfig.getSensor()== Sensor.MODIS) {
             solarFluxes = getSolarFluxes(MODIS_L1B_SPECTRAL_BAND_NAMES, sourceProduct);
         }
 
@@ -327,7 +318,7 @@ public class OcNnRdOperator extends PixelOperator {
             @Override
             protected LevMarNN initialValue() {
                 try {
-                    return new LevMarNN(sensorType);
+                    return new LevMarNN(sensorConfig.getSensor());
                 } catch (IOException e) {
                     // @todo 3 tb/tb improve error handling here ... tb 2013-05-20
                     e.printStackTrace();
@@ -350,17 +341,17 @@ public class OcNnRdOperator extends PixelOperator {
     }
 
     // package access for testing only tb 2013-05-13
-    static void copyTiePointData(double[] inputs, Sample[] sourceSamples, SensorType pt) {
+    static void copyTiePointData(double[] inputs, Sample[] sourceSamples, Sensor pt) {
         inputs[0] = sourceSamples[SRC_SZA].getDouble();
         inputs[1] = sourceSamples[SRC_SAA].getDouble();
         inputs[2] = sourceSamples[SRC_VZA].getDouble();
         inputs[3] = sourceSamples[SRC_VAA].getDouble();
-        if (pt == SensorType.MERIS) {
+        if (pt == Sensor.MERIS) {
             inputs[4] = sourceSamples[SRC_PRESS].getDouble();
             inputs[5] = sourceSamples[SRC_OZ].getDouble();
             inputs[6] = sourceSamples[SRC_MWIND].getDouble();
             inputs[7] = sourceSamples[SRC_ZWIND].getDouble();
-        } else if (pt == SensorType.MODIS) {
+        } else if (pt == Sensor.MODIS) {
             inputs[4] = 1019;
             inputs[5] = 330;
         }
@@ -441,14 +432,15 @@ public class OcNnRdOperator extends PixelOperator {
 
     private void copySolarFluxes(Sample[] sourceSamples) {
         final double[] input_local = input.get();
-        if (sensorType == SensorType.MERIS) {
+        final Sensor sensorType = sensorConfig.getSensor();
+        if (sensorType == Sensor.MERIS) {
 
             if (csvMode) {
                 copySolarFluxes(input_local, sourceSamples);
             } else {
                 System.arraycopy(solarFluxes, 0, input_local, 25, 15);
             }
-        } else if (sensorType == SensorType.MODIS) {
+        } else if (sensorType == Sensor.MODIS) {
             System.arraycopy(solarFluxes, 0, input_local, 25, 9);
         }
     }

@@ -49,7 +49,7 @@ public class OcNnRdOperatorTest {
         final TestSample[] samples = createTestSamples(8);
         final double[] inputs = new double[8];
 
-        OcNnRdOperator.copyTiePointData(inputs, samples, SensorType.MERIS);
+        OcNnRdOperator.copyTiePointData(inputs, samples, Sensor.MERIS);
 
         for (int i = 0; i < inputs.length; i++) {
             assertEquals(i, inputs[i], 1e-8);

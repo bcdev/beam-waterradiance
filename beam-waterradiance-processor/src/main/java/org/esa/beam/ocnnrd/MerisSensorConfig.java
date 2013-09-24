@@ -8,4 +8,9 @@ class MerisSensorConfig implements SensorConfig {
     public int getNumSpectralBands() {
         return EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS;
     }
+
+    @Override
+    public Sensor getSensor() {
+        return Sensor.MERIS;
+    }
 }

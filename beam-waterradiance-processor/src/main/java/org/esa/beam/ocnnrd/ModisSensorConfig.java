@@ -27,7 +27,11 @@ class ModisSensorConfig implements SensorConfig {
 
     @Override
     public int getNumSpectralBands() {
-        return MODIS_L1B_NUM_SPECTRAL_BANDS
-                ;
+        return MODIS_L1B_NUM_SPECTRAL_BANDS;
+    }
+
+    @Override
+    public Sensor getSensor() {
+        return Sensor.MODIS;
     }
 }
