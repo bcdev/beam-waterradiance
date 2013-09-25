@@ -78,6 +78,20 @@ public class MerisSensorConfigTest {
         }
     }
 
+    @Test
+    public void testCopySolarFluxes() {
+        double[] input = new double[40];
+        final double[] solarFluxes = new double[15];
+        for (int i = 0; i < solarFluxes.length; i++) {
+            solarFluxes[i] = i;
+        }
+
+        input = merisSensorConfig.copySolarFluxes(input, solarFluxes);
+        for (int i = 0; i < solarFluxes.length; i++) {
+            assertEquals(solarFluxes[i], input[i + 25], 1e-8);
+        }
+    }
+
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {
         assertEquals(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME, testSampleConfigurer.get(0));
         assertEquals(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME, testSampleConfigurer.get(1));

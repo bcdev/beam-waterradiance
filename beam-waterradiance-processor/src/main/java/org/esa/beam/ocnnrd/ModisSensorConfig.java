@@ -64,4 +64,10 @@ class ModisSensorConfig implements SensorConfig {
         inputs[4] = 1019.0;
         inputs[5] = 330.0;
     }
+
+    @Override
+    public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
+        System.arraycopy(solarFluxes, 0, input, 25, 9);
+        return input;
+    }
 }

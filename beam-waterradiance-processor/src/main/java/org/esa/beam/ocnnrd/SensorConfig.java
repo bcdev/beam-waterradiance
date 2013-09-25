@@ -13,4 +13,6 @@ public interface SensorConfig {
     void configureSourceSamples(SampleConfigurer sampleConfigurer, boolean csvMode);
 
     void copyTiePointData(double[] inputs, Sample[] sourceSamples);
+
+    double[] copySolarFluxes(double[] input, double[] solarFluxes);
 }

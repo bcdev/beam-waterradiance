@@ -87,4 +87,18 @@ public class ModisSensorConfigTest {
         assertEquals(1019.0, inputs[4], 1e-8);
         assertEquals(330.0, inputs[5], 1e-8);
     }
+
+    @Test
+    public void testCopySolarFluxes() {
+        double[] input = new double[40];
+        final double[] solarFluxes = new double[9];
+        for (int i = 0; i < solarFluxes.length; i++) {
+            solarFluxes[i] = i;
+        }
+
+        input = modisSensorConfig.copySolarFluxes(input, solarFluxes);
+        for (int i = 0; i < solarFluxes.length; i++) {
+            assertEquals(solarFluxes[i], input[i + 25], 1e-8);
+        }
+    }
 } 

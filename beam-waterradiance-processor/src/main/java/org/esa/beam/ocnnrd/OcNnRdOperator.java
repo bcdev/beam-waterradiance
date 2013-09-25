@@ -339,16 +339,10 @@ public class OcNnRdOperator extends PixelOperator {
 
     private void copySolarFluxes(Sample[] sourceSamples) {
         final double[] input_local = input.get();
-        final Sensor sensorType = sensorConfig.getSensor();
-        if (sensorType == Sensor.MERIS) {
-
-            if (csvMode) {
-                copySolarFluxes(input_local, sourceSamples);
-            } else {
-                System.arraycopy(solarFluxes, 0, input_local, 25, 15);
-            }
-        } else if (sensorType == Sensor.MODIS) {
-            System.arraycopy(solarFluxes, 0, input_local, 25, 9);
+        if (csvMode) {
+            copySolarFluxes(input_local, sourceSamples);
+        } else {
+            solarFluxes = sensorConfig.copySolarFluxes(input_local, solarFluxes);
         }
     }
 

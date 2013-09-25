@@ -59,4 +59,10 @@ class MerisSensorConfig implements SensorConfig {
         inputs[6] = sourceSamples[Constants.SRC_MWIND].getDouble();
         inputs[7] = sourceSamples[Constants.SRC_ZWIND].getDouble();
     }
+
+    @Override
+    public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
+        System.arraycopy(solarFluxes, 0, input, 25, 15);
+        return input;
+    }
 }
