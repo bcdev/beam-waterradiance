@@ -1,5 +1,7 @@
 package org.esa.beam.ocnnrd;
 
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+
 class ModisSensorConfig implements SensorConfig {
 
     private static String MODIS_L1B_RADIANCE_1_BAND_NAME = "EV_1KM_RefSB.8";
@@ -33,5 +35,17 @@ class ModisSensorConfig implements SensorConfig {
     @Override
     public Sensor getSensor() {
         return Sensor.MODIS;
+    }
+
+    @Override
+    public void configureSourceSamples(SampleConfigurer sampleConfigurer, boolean csvMode) {
+        sampleConfigurer.defineSample(Constants.SRC_SZA, "SolarZenith");
+        sampleConfigurer.defineSample(Constants.SRC_SAA, "SolarAzimuth");
+        sampleConfigurer.defineSample(Constants.SRC_VZA, "SensorZenith");
+        sampleConfigurer.defineSample(Constants.SRC_VAA, "SensorAzimuth");
+
+        for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            sampleConfigurer.defineSample(Constants.SRC_RAD_OFFSET + i, MODIS_L1B_SPECTRAL_BAND_NAMES[i]);
+        }
     }
 }

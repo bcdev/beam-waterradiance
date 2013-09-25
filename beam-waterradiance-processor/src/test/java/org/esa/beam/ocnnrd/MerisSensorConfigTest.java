@@ -7,7 +7,6 @@ import static org.junit.Assert.*;
 
 public class MerisSensorConfigTest {
 
-
     private MerisSensorConfig merisSensorConfig;
 
     @Before
@@ -24,4 +23,47 @@ public class MerisSensorConfigTest {
     public void testGetSensorType() {
         assertEquals(Sensor.MERIS, merisSensorConfig.getSensor());
     }
-} 
+
+    @Test
+    public void testConfigureSourceSamples_noCsvMode()  {
+        final TestSampleConfigurer testSampleConfigurer = new TestSampleConfigurer();
+
+        merisSensorConfig.configureSourceSamples(testSampleConfigurer, false);
+
+        assertBasicSamples(testSampleConfigurer);
+    }
+
+    @Test
+    public void testConfigureSourceSamples_csvMode()  {
+        final TestSampleConfigurer testSampleConfigurer = new TestSampleConfigurer();
+
+        merisSensorConfig.configureSourceSamples(testSampleConfigurer, true);
+
+        assertBasicSamples(testSampleConfigurer);
+
+        for (int i = 1; i < 16; i++) {
+            assertEquals("solar_flux_" + i, testSampleConfigurer.get(24 + i));
+        }
+
+        assertEquals(EnvisatConstants.MERIS_LAT_DS_NAME, testSampleConfigurer.get(40));
+        assertEquals(EnvisatConstants.MERIS_LON_DS_NAME, testSampleConfigurer.get(41));
+    }
+
+    private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {
+        assertEquals(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME, testSampleConfigurer.get(0));
+        assertEquals(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME, testSampleConfigurer.get(1));
+        assertEquals(EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME, testSampleConfigurer.get(2));
+        assertEquals(EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME, testSampleConfigurer.get(3));
+        assertEquals("atm_press", testSampleConfigurer.get(4));
+        assertEquals("ozone", testSampleConfigurer.get(5));
+        assertEquals("merid_wind", testSampleConfigurer.get(6));
+        assertEquals("zonal_wind", testSampleConfigurer.get(7));
+
+        for (int i = 1; i < 16; i++) {
+            assertEquals("radiance_" + i, testSampleConfigurer.get(7 + i));
+        }
+
+        assertEquals(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME, testSampleConfigurer.get(23));
+        assertEquals("_mask_", testSampleConfigurer.get(24));
+    }
+}

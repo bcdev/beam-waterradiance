@@ -30,21 +30,6 @@ import java.util.Date;
         description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
-    private static final int SRC_SZA = 0;
-    private static final int SRC_SAA = 1;
-    private static final int SRC_VZA = 2;
-    private static final int SRC_VAA = 3;
-    private static final int SRC_PRESS = 4;
-    private static final int SRC_OZ = 5;
-    private static final int SRC_MWIND = 6;
-    private static final int SRC_ZWIND = 7;
-    private static final int SRC_RAD_OFFSET = 8;
-    private static final int SRC_DETECTOR = 23;
-    private static final int SRC_MASK = 24;
-    private static final int SRC_SOL_FLUX_OFFSET = 25;
-    private static final int SRC_LAT = 40;
-    private static final int SRC_LON = 41;
-
     String MODIS_L1B_RADIANCE_1_BAND_NAME = "EV_1KM_RefSB.8";
     String MODIS_L1B_RADIANCE_2_BAND_NAME = "EV_1KM_RefSB.9";
     String MODIS_L1B_RADIANCE_3_BAND_NAME = "EV_1KM_RefSB.10";
@@ -74,7 +59,6 @@ public class OcNnRdOperator extends PixelOperator {
 //            MODIS_L1B_RADIANCE_11_BAND_NAME, // 10
 //            MODIS_L1B_RADIANCE_12_BAND_NAME, // 11
     };
-    int MODIS_L1B_NUM_SPECTRAL_BANDS = MODIS_L1B_SPECTRAL_BAND_NAMES.length;
 
     private static final int NUM_OUTPUTS = 69;
     private static final int NUM_TARGET_BANDS = NUM_OUTPUTS + 2;
@@ -168,41 +152,9 @@ public class OcNnRdOperator extends PixelOperator {
         }
     }
 
-
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        // @todo 2 tb/** delegate sample configuration to SensorConfig tb 2013-09-24
-        if (sensorConfig.getSensor() == Sensor.MERIS) {
-            sampleConfigurer.defineSample(SRC_SZA, EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
-            sampleConfigurer.defineSample(SRC_SAA, EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
-            sampleConfigurer.defineSample(SRC_VZA, EnvisatConstants.MERIS_VIEW_ZENITH_DS_NAME);
-            sampleConfigurer.defineSample(SRC_VAA, EnvisatConstants.MERIS_VIEW_AZIMUTH_DS_NAME);
-            sampleConfigurer.defineSample(SRC_PRESS, "atm_press");
-            sampleConfigurer.defineSample(SRC_OZ, "ozone");
-            sampleConfigurer.defineSample(SRC_MWIND, "merid_wind");
-            sampleConfigurer.defineSample(SRC_ZWIND, "zonal_wind");
-
-            for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
-                sampleConfigurer.defineSample(SRC_RAD_OFFSET + i, EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES[i]);
-            }
-            sampleConfigurer.defineSample(SRC_DETECTOR, EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
-            sampleConfigurer.defineSample(SRC_MASK, "_mask_");
-            if (csvMode) {
-                for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
-                    sampleConfigurer.defineSample(SRC_SOL_FLUX_OFFSET + i, "solar_flux_" + (i + 1));
-                }
-                sampleConfigurer.defineSample(SRC_LAT, EnvisatConstants.MERIS_LAT_DS_NAME);
-                sampleConfigurer.defineSample(SRC_LON, EnvisatConstants.MERIS_LON_DS_NAME);
-            }
-        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
-            sampleConfigurer.defineSample(SRC_SZA, "SolarZenith");
-            sampleConfigurer.defineSample(SRC_SAA, "SolarAzimuth");
-            sampleConfigurer.defineSample(SRC_VZA, "SensorZenith");
-            sampleConfigurer.defineSample(SRC_VAA, "SensorAzimuth");
-            for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
-                sampleConfigurer.defineSample(SRC_RAD_OFFSET + i, MODIS_L1B_SPECTRAL_BAND_NAMES[i]);
-            }
-        }
+        sensorConfig.configureSourceSamples(sampleConfigurer, csvMode);
     }
 
     @Override
@@ -330,7 +282,7 @@ public class OcNnRdOperator extends PixelOperator {
 
     // package access for testing only tb 2013-05-13
     static boolean isValid(Sample[] sourceSamples) {
-        return sourceSamples[SRC_MASK].getBoolean();
+        return sourceSamples[Constants.SRC_MASK].getBoolean();
     }
 
     // package access for testing only tb 2013-05-13
@@ -342,15 +294,15 @@ public class OcNnRdOperator extends PixelOperator {
 
     // package access for testing only tb 2013-05-13
     static void copyTiePointData(double[] inputs, Sample[] sourceSamples, Sensor pt) {
-        inputs[0] = sourceSamples[SRC_SZA].getDouble();
-        inputs[1] = sourceSamples[SRC_SAA].getDouble();
-        inputs[2] = sourceSamples[SRC_VZA].getDouble();
-        inputs[3] = sourceSamples[SRC_VAA].getDouble();
+        inputs[0] = sourceSamples[Constants.SRC_SZA].getDouble();
+        inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();
+        inputs[2] = sourceSamples[Constants.SRC_VZA].getDouble();
+        inputs[3] = sourceSamples[Constants.SRC_VAA].getDouble();
         if (pt == Sensor.MERIS) {
-            inputs[4] = sourceSamples[SRC_PRESS].getDouble();
-            inputs[5] = sourceSamples[SRC_OZ].getDouble();
-            inputs[6] = sourceSamples[SRC_MWIND].getDouble();
-            inputs[7] = sourceSamples[SRC_ZWIND].getDouble();
+            inputs[4] = sourceSamples[Constants.SRC_PRESS].getDouble();
+            inputs[5] = sourceSamples[Constants.SRC_OZ].getDouble();
+            inputs[6] = sourceSamples[Constants.SRC_MWIND].getDouble();
+            inputs[7] = sourceSamples[Constants.SRC_ZWIND].getDouble();
         } else if (pt == Sensor.MODIS) {
             inputs[4] = 1019;
             inputs[5] = 330;
@@ -360,7 +312,7 @@ public class OcNnRdOperator extends PixelOperator {
     // package access for testing only tb 2013-05-13
     static void copyRadiances(double[] inputs, Sample[] sourceSamples, SensorConfig sensorConfig) {
         for (int i = 0; i < sensorConfig.getNumSpectralBands(); i++) {
-            inputs[10 + i] = sourceSamples[SRC_RAD_OFFSET + i].getDouble();
+            inputs[10 + i] = sourceSamples[Constants.SRC_RAD_OFFSET + i].getDouble();
         }
     }
 
@@ -381,13 +333,13 @@ public class OcNnRdOperator extends PixelOperator {
     // package access for testing only tb 2013-05-13
     static void copySolarFluxes(double[] inputs, Sample[] sourceSamples) {
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
-            inputs[25 + i] = sourceSamples[SRC_SOL_FLUX_OFFSET + i].getDouble();
+            inputs[25 + i] = sourceSamples[Constants.SRC_SOL_FLUX_OFFSET + i].getDouble();
         }
     }
 
     // package access for testing only tb 2013-05-13
     static int getDetectorIndex(Sample[] sourceSamples) {
-        return sourceSamples[SRC_DETECTOR].getInt();
+        return sourceSamples[Constants.SRC_DETECTOR].getInt();
     }
 
     private static void installAuxdata() {
