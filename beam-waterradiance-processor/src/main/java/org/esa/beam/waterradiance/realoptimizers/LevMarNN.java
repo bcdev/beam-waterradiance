@@ -5,7 +5,6 @@ import org.esa.beam.ocnnrd.Sensor;
 import org.esa.beam.siocs.abstractprocessor.BreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.CostFunction;
 import org.esa.beam.siocs.abstractprocessor.ForwardModel;
-import org.esa.beam.siocs.abstractprocessor.support.ChiSquareCostFunction;
 import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
 
@@ -28,6 +27,7 @@ public class LevMarNN {
     private static final int NLAM = 40;
     private static final int LM_INFO_SZ = 10;
 
+
     private static final double[] H_2_O_COR_POLY = new double[]{0.3832989, 1.6527957, -1.5635101, 0.5311913};
 
     private static final double[] MERBAND_12 = {412.3, 442.3, 489.7, 509.6, 559.5, 619.4, 664.3, 680.6, 708.1, 753.1, 778.2, 864.6};
@@ -42,7 +42,9 @@ public class LevMarNN {
 
     double M_PI = 3.1416;
 
+    //@todo adapt to modis and seawifs
     static int[] lam29_meris12_ix = {1, 2, 4, 6, 11, 12, 15, 19, 20, 22, 24, 25};
+    //@todo adapt to modis and seawifs
     double[] ozon_meris12 = {0.0002179, 0.002814, 0.02006, 0.04081, 0.104, 0.109, 0.0505, 0.03526, 0.01881, 0.008897, 0.007693, 0.002192}; // L.Bourg 2010
 
     private final NnResources nnResources;
@@ -182,8 +184,7 @@ public class LevMarNN {
         smile_tab_ini();
         model = new nn_atmo_watForwardModel();
         breakingCriterion = new DefaultBreakingCriterion(150, 1e-10);
-//        breakingCriterion = new DefaultBreakingCriterion(10, 1e-6);
-        costFunction = new ChiSquareCostFunction();
+        costFunction = new OcNnRdCostFunction();
         optimizer = new LevenbergMarquardtOptimizer(p.length, x11.length);
         optimizer.init(model, costFunction, breakingCriterion);
 
