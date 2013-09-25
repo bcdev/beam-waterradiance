@@ -138,7 +138,7 @@ public class OcNnRdOperator extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 //        if(lastY != y) {
-        System.out.println("Computing pixel " + x + "," + y);
+        //System.out.println("Computing pixel " + x + "," + y);
 //            lastY = y;
 //        }
         final Sensor sensorType = sensorConfig.getSensor();

@@ -157,13 +157,13 @@ public class LevMarNnL1BPerformanceTest {
         assertNotNull(product);
 
         try {
-            assertBandValue("rl_tosa_1", 21, 21, 0.059958883,  product);
-            assertBandValue("rl_tosa_4", 61, 49, 0.02576415,  product);
-            assertBandValue("rl_tosa_7", 25, 71, 0.0094091315,  product);
-            assertBandValue("rl_tosa_10", 55, 70, 0.006421028,  product);
-            assertBandValue("rl_path_1", 92, 39, 0.1539577692747116,  product);   //0.15234639159958366
-            assertBandValue("aot_550", 5, 20, 0.08877553045749664,  product);
-            assertBandValue("ang_864_443", 15, 60, 1.9363973140716553,  product);
+            assertBandValue("rl_tosa_1", 21, 21, 0.059958883, product);
+            assertBandValue("rl_tosa_4", 61, 49, 0.02576415, product);
+            assertBandValue("rl_tosa_7", 25, 71, 0.0094091315, product);
+            assertBandValue("rl_tosa_10", 55, 70, 0.006421028, product);
+            assertBandValue("rl_path_1", 92, 39, 0.1539577692747116, product);   //0.15234639159958366
+            assertBandValue("aot_550", 5, 20, 0.08877553045749664, product);
+            assertBandValue("ang_864_443", 15, 60, 1.9363973140716553, product);
         } finally {
             product.dispose();
         }

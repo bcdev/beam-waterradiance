@@ -1,15 +1,7 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
 
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.core.runtime.internal.Platform;
-import org.esa.beam.ocnnrd.OcNnRdOperator;
-import org.esa.beam.util.ResourceInstaller;
-import org.esa.beam.util.SystemUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
+import java.util.Map;
 
 public class NnResources {
 
@@ -51,10 +43,12 @@ public class NnResources {
 
     private String getResourcePath(String name) {
         String homepath;
-        if(System.getenv().get("OS").contains("Windows")) {
-            homepath = System.getenv().get("HOMEPATH");
+        final Map<String, String> getenv = System.getenv();
+        final String os = getenv.get("OS");
+        if (os != null && os.contains("Windows")) {
+            homepath = getenv.get("HOMEPATH");
         } else {
-            homepath = System.getenv().get("HOME");
+            homepath = getenv.get("HOME");
         }
         String auxpath = "/.beam/beam-waterradiance-processor/";
         StringBuilder builder = new StringBuilder();
