@@ -11,6 +11,11 @@ class MerisSensorConfig implements SensorConfig {
     }
 
     @Override
+    public String[] getSpectralBandNames() {
+        return EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES;
+    }
+
+    @Override
     public Sensor getSensor() {
         return Sensor.MERIS;
     }

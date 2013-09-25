@@ -30,36 +30,6 @@ import java.util.Date;
         description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
-    String MODIS_L1B_RADIANCE_1_BAND_NAME = "EV_1KM_RefSB.8";
-    String MODIS_L1B_RADIANCE_2_BAND_NAME = "EV_1KM_RefSB.9";
-    String MODIS_L1B_RADIANCE_3_BAND_NAME = "EV_1KM_RefSB.10";
-    String MODIS_L1B_RADIANCE_4_BAND_NAME = "EV_1KM_RefSB.11";
-    String MODIS_L1B_RADIANCE_5_BAND_NAME = "EV_1KM_RefSB.12";
-    String MODIS_L1B_RADIANCE_6_BAND_NAME = "EV_1KM_RefSB.13lo";
-    String MODIS_L1B_RADIANCE_7_BAND_NAME = "EV_1KM_RefSB.14lo";
-    String MODIS_L1B_RADIANCE_8_BAND_NAME = "EV_1KM_RefSB.15";
-    String MODIS_L1B_RADIANCE_9_BAND_NAME = "EV_1KM_RefSB.16";
-    String MODIS_L1B_RADIANCE_10_BAND_NAME = "EV_1KM_RefSB.17";
-    String MODIS_L1B_RADIANCE_11_BAND_NAME = "EV_1KM_RefSB.18";
-    String MODIS_L1B_RADIANCE_12_BAND_NAME = "EV_1KM_RefSB.19";
-    /**
-     * The names of the Meris Level 1 spectral band names.
-     */
-    String[] MODIS_L1B_SPECTRAL_BAND_NAMES = {
-            MODIS_L1B_RADIANCE_1_BAND_NAME, // 0
-            MODIS_L1B_RADIANCE_2_BAND_NAME, // 1
-            MODIS_L1B_RADIANCE_3_BAND_NAME, // 2
-            MODIS_L1B_RADIANCE_4_BAND_NAME, // 3
-            MODIS_L1B_RADIANCE_5_BAND_NAME, // 4
-            MODIS_L1B_RADIANCE_6_BAND_NAME, // 5
-            MODIS_L1B_RADIANCE_7_BAND_NAME, // 6
-            MODIS_L1B_RADIANCE_8_BAND_NAME, // 7
-            MODIS_L1B_RADIANCE_9_BAND_NAME, // 8
-//            MODIS_L1B_RADIANCE_10_BAND_NAME, // 9
-//            MODIS_L1B_RADIANCE_11_BAND_NAME, // 10
-//            MODIS_L1B_RADIANCE_12_BAND_NAME, // 11
-    };
-
     private static final int NUM_OUTPUTS = 69;
     private static final int NUM_TARGET_BANDS = NUM_OUTPUTS + 2;
 
@@ -107,7 +77,6 @@ public class OcNnRdOperator extends PixelOperator {
     @Parameter(defaultValue = "35.0", description = "Use this value, if the climatology is disabled")
     private double salinity;
 
-    private int lastY = -1;
     private SensorConfig sensorConfig;
 
     // -----------------------------------
@@ -204,6 +173,7 @@ public class OcNnRdOperator extends PixelOperator {
         addBand(productConfigurer, "temperature", ProductData.TYPE_INT32, "", "Temperature");
         addBand(productConfigurer, "salinity", ProductData.TYPE_INT32, "", "Salinity");
 
+        // @todo 1 tb/** what to do in the general case? This is ENVSAT specific ... tb 2013-09-25
         productConfigurer.copyBands(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
         productConfigurer.copyBands(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
 
@@ -223,6 +193,7 @@ public class OcNnRdOperator extends PixelOperator {
         }
     }
 
+    //@todo 4 tb/** make static and add test
     private void addBand(ProductConfigurer productConfigurer, String name, int type, String unit, String description) {
         Band band = productConfigurer.addBand(name, type);
         band.setDescription(description);
@@ -230,6 +201,7 @@ public class OcNnRdOperator extends PixelOperator {
         band.setNoDataValue(Float.NaN);
     }
 
+    //@todo 4 tb/** make static and add test
     private void addSpectralBands(ProductConfigurer productConfigurer,
                                   String bandNameFormat, String unit, String descriptionFormat) {
         for (int i = 0; i < SPECTRAL_INDEXES.length; i++) {
@@ -253,11 +225,11 @@ public class OcNnRdOperator extends PixelOperator {
                 csvMode = true;
                 maskExpression = "true";
             } else {
-                solarFluxes = getSolarFluxes(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES, sourceProduct);
+                solarFluxes = getSolarFluxes(sensorConfig.getSpectralBandNames(), sourceProduct);
             }
             sourceProduct.addBand("_mask_", maskExpression);
-        } else if (sensorConfig.getSensor()== Sensor.MODIS) {
-            solarFluxes = getSolarFluxes(MODIS_L1B_SPECTRAL_BAND_NAMES, sourceProduct);
+        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
+            solarFluxes = getSolarFluxes(sensorConfig.getSpectralBandNames(), sourceProduct);
         }
 
         final ProductData.UTC startTime = sourceProduct.getStartTime();

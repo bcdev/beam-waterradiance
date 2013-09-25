@@ -1,9 +1,11 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class MerisSensorConfigTest {
 
@@ -25,7 +27,7 @@ public class MerisSensorConfigTest {
     }
 
     @Test
-    public void testConfigureSourceSamples_noCsvMode()  {
+    public void testConfigureSourceSamples_noCsvMode() {
         final TestSampleConfigurer testSampleConfigurer = new TestSampleConfigurer();
 
         merisSensorConfig.configureSourceSamples(testSampleConfigurer, false);
@@ -34,7 +36,7 @@ public class MerisSensorConfigTest {
     }
 
     @Test
-    public void testConfigureSourceSamples_csvMode()  {
+    public void testConfigureSourceSamples_csvMode() {
         final TestSampleConfigurer testSampleConfigurer = new TestSampleConfigurer();
 
         merisSensorConfig.configureSourceSamples(testSampleConfigurer, true);
@@ -47,6 +49,17 @@ public class MerisSensorConfigTest {
 
         assertEquals(EnvisatConstants.MERIS_LAT_DS_NAME, testSampleConfigurer.get(40));
         assertEquals(EnvisatConstants.MERIS_LON_DS_NAME, testSampleConfigurer.get(41));
+    }
+
+    @Test
+    public void testGetSpectralBandNames() {
+        final String[] spectralBandNames = merisSensorConfig.getSpectralBandNames();
+        assertNotNull(spectralBandNames);
+        assertEquals(15, spectralBandNames.length);
+
+        for (int i = 0; i < 15; i++) {
+            assertEquals("radiance_" + (i + 1), spectralBandNames[i]);
+        }
     }
 
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {

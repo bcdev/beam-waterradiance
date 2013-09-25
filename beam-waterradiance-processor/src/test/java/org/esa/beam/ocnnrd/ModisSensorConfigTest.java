@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class ModisSensorConfigTest {
 
@@ -19,6 +20,23 @@ public class ModisSensorConfigTest {
     @Test
     public void testGetNumSpectralBands() {
         assertEquals(9, modisSensorConfig.getNumSpectralBands());
+    }
+
+    @Test
+    public void testGetSpectralBandNames() {
+        final String[] spectralBandNames = modisSensorConfig.getSpectralBandNames();
+        assertNotNull(spectralBandNames);
+        assertEquals(9, spectralBandNames.length);
+
+        assertEquals("EV_1KM_RefSB.8", spectralBandNames[0]);
+        assertEquals("EV_1KM_RefSB.9", spectralBandNames[1]);
+        assertEquals("EV_1KM_RefSB.10", spectralBandNames[2]);
+        assertEquals("EV_1KM_RefSB.11", spectralBandNames[3]);
+        assertEquals("EV_1KM_RefSB.12", spectralBandNames[4]);
+        assertEquals("EV_1KM_RefSB.13lo", spectralBandNames[5]);
+        assertEquals("EV_1KM_RefSB.14lo", spectralBandNames[6]);
+        assertEquals("EV_1KM_RefSB.15", spectralBandNames[7]);
+        assertEquals("EV_1KM_RefSB.16", spectralBandNames[8]);
     }
 
     @Test

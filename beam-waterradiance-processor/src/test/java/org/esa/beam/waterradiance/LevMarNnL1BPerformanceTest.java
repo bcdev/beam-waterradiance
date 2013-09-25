@@ -84,7 +84,7 @@ public class LevMarNnL1BPerformanceTest {
     }
 
     @Test
-    @Ignore
+//    @Ignore
     public void testNnInJava() throws GraphException, IOException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(ocNnRdSpi);
         final String testProductPath = getTestProductPath();

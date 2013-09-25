@@ -33,6 +33,11 @@ class ModisSensorConfig implements SensorConfig {
     }
 
     @Override
+    public String[] getSpectralBandNames() {
+        return MODIS_L1B_SPECTRAL_BAND_NAMES;
+    }
+
+    @Override
     public Sensor getSensor() {
         return Sensor.MODIS;
     }
