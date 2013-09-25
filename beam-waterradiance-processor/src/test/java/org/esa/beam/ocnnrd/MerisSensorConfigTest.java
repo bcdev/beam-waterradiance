@@ -62,6 +62,22 @@ public class MerisSensorConfigTest {
         }
     }
 
+    @Test
+    public void testCopyTiePointData() {
+        final double[] inputs = new double[8];
+        final TestSample[] sourceSamples = new TestSample[8];
+        for (int i = 0; i < 8; i++) {
+            sourceSamples[i] = new TestSample();
+            sourceSamples[i].set((double) i);
+        }
+
+        merisSensorConfig.copyTiePointData(inputs, sourceSamples);
+
+        for (int i = 0; i < 8; i++) {
+            assertEquals(i, inputs[i], 1e-8);
+        }
+    }
+
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {
         assertEquals(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME, testSampleConfigurer.get(0));
         assertEquals(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME, testSampleConfigurer.get(1));

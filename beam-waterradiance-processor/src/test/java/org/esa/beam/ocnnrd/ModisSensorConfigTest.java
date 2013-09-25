@@ -69,4 +69,22 @@ public class ModisSensorConfigTest {
         assertEquals("EV_1KM_RefSB.15", testSampleConfigurer.get(15));
         assertEquals("EV_1KM_RefSB.16", testSampleConfigurer.get(16));
     }
+
+    @Test
+    public void testCopyTiePointData() {
+        final double[] inputs = new double[6];
+        final TestSample[] sourceSamples = new TestSample[4];
+        for (int i = 0; i < sourceSamples.length; i++) {
+            sourceSamples[i] = new TestSample();
+            sourceSamples[i].set((double)i);
+        }
+
+        modisSensorConfig.copyTiePointData(inputs, sourceSamples);
+
+        for (int i = 0; i < sourceSamples.length; i++) {
+            assertEquals(i, inputs[i], 1e-8);
+        }
+        assertEquals(1019.0, inputs[4], 1e-8);
+        assertEquals(330.0, inputs[5], 1e-8);
+    }
 } 

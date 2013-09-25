@@ -17,5 +17,4 @@ public class SensorConfigFactory {
         }
         throw new IllegalArgumentException("Invalid Product Type: " + productTypeName);
     }
-
 }

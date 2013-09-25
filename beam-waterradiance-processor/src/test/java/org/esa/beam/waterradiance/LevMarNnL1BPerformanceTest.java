@@ -56,7 +56,7 @@ public class LevMarNnL1BPerformanceTest {
     }
 
     @Test
-    @Ignore
+//    @Ignore
     public void testNnInC() throws Exception {
         GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(waterRadianceOpSpi);
         final String testProductPath = getTestProductPath();

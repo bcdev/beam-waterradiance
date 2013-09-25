@@ -1,6 +1,7 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
+import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
 class MerisSensorConfig implements SensorConfig {
@@ -45,5 +46,17 @@ class MerisSensorConfig implements SensorConfig {
             sampleConfigurer.defineSample(Constants.SRC_LAT, EnvisatConstants.MERIS_LAT_DS_NAME);
             sampleConfigurer.defineSample(Constants.SRC_LON, EnvisatConstants.MERIS_LON_DS_NAME);
         }
+    }
+
+    @Override
+    public void copyTiePointData(double[] inputs, Sample[] sourceSamples) {
+        inputs[0] = sourceSamples[Constants.SRC_SZA].getDouble();
+        inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();
+        inputs[2] = sourceSamples[Constants.SRC_VZA].getDouble();
+        inputs[3] = sourceSamples[Constants.SRC_VAA].getDouble();
+        inputs[4] = sourceSamples[Constants.SRC_PRESS].getDouble();
+        inputs[5] = sourceSamples[Constants.SRC_OZ].getDouble();
+        inputs[6] = sourceSamples[Constants.SRC_MWIND].getDouble();
+        inputs[7] = sourceSamples[Constants.SRC_ZWIND].getDouble();
     }
 }

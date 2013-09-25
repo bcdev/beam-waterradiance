@@ -3,9 +3,7 @@ package org.esa.beam.ocnnrd;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.Operator;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -42,18 +40,6 @@ public class OcNnRdOperatorTest {
         assertEquals(Double.NaN, samples[0].getDouble(), 1e-8);
         assertEquals(Double.NaN, samples[1].getDouble(), 1e-8);
         assertEquals(Double.NaN, samples[2].getDouble(), 1e-8);
-    }
-
-    @Test
-    public void testMerisTiePointData() {
-        final TestSample[] samples = createTestSamples(8);
-        final double[] inputs = new double[8];
-
-        OcNnRdOperator.copyTiePointData(inputs, samples, Sensor.MERIS);
-
-        for (int i = 0; i < inputs.length; i++) {
-            assertEquals(i, inputs[i], 1e-8);
-        }
     }
 
     @Test
@@ -158,74 +144,5 @@ public class OcNnRdOperatorTest {
         final OcNnRdOperator.Spi spi = new OcNnRdOperator.Spi();
         final Class<? extends Operator> operatorClass = spi.getOperatorClass();
         assertTrue(operatorClass.isAssignableFrom(OcNnRdOperator.class));
-    }
-
-    private static class TestSample implements WritableSample {
-
-        private boolean boolValue;
-        private double doubleValue;
-        private int intValue;
-
-        @Override
-        public RasterDataNode getNode() {
-            return null;
-        }
-
-        @Override
-        public int getIndex() {
-            return 0;
-        }
-
-        @Override
-        public int getDataType() {
-            return 0;
-        }
-
-        @Override
-        public boolean getBit(int i) {
-            return false;
-        }
-
-        @Override
-        public boolean getBoolean() {
-            return boolValue;
-        }
-
-        public void set(boolean boolValue) {
-            this.boolValue = boolValue;
-        }
-
-        @Override
-        public int getInt() {
-            return intValue;
-        }
-
-        @Override
-        public float getFloat() {
-            return 0;
-        }
-
-        @Override
-        public double getDouble() {
-            return doubleValue;
-        }
-
-        @Override
-        public void set(int i, boolean b) {
-        }
-
-        @Override
-        public void set(int i) {
-            intValue = i;
-        }
-
-        @Override
-        public void set(float v) {
-        }
-
-        @Override
-        public void set(double v) {
-            doubleValue = v;
-        }
     }
 }

@@ -97,7 +97,7 @@ public class OcNnRdOperator extends PixelOperator {
         final Sensor sensorType = sensorConfig.getSensor();
         if (sensorType == Sensor.MODIS || isValid(sourceSamples)) {
             final double[] input_local = input.get();
-            copyTiePointData(input_local, sourceSamples, sensorType);
+            sensorConfig.copyTiePointData(input_local, sourceSamples);
             copyAuxData(x, y);
             copyRadiances(input_local, sourceSamples, sensorConfig);
             copySolarFluxes(sourceSamples);
@@ -261,23 +261,6 @@ public class OcNnRdOperator extends PixelOperator {
     static void setToInvalid(WritableSample[] targetSamples, int numTargetBands) {
         for (int i = 0; i < numTargetBands; i++) {
             targetSamples[i].set(Double.NaN);
-        }
-    }
-
-    // package access for testing only tb 2013-05-13
-    static void copyTiePointData(double[] inputs, Sample[] sourceSamples, Sensor pt) {
-        inputs[0] = sourceSamples[Constants.SRC_SZA].getDouble();
-        inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();
-        inputs[2] = sourceSamples[Constants.SRC_VZA].getDouble();
-        inputs[3] = sourceSamples[Constants.SRC_VAA].getDouble();
-        if (pt == Sensor.MERIS) {
-            inputs[4] = sourceSamples[Constants.SRC_PRESS].getDouble();
-            inputs[5] = sourceSamples[Constants.SRC_OZ].getDouble();
-            inputs[6] = sourceSamples[Constants.SRC_MWIND].getDouble();
-            inputs[7] = sourceSamples[Constants.SRC_ZWIND].getDouble();
-        } else if (pt == Sensor.MODIS) {
-            inputs[4] = 1019;
-            inputs[5] = 330;
         }
     }
 
