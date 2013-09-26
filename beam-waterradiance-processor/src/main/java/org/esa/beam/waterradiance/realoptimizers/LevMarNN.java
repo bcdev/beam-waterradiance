@@ -2,6 +2,7 @@ package org.esa.beam.waterradiance.realoptimizers;
 
 import Jama.Matrix;
 import org.esa.beam.ocnnrd.Sensor;
+import org.esa.beam.ocnnrd.SensorConfig;
 import org.esa.beam.siocs.abstractprocessor.BreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.CostFunction;
 import org.esa.beam.siocs.abstractprocessor.ForwardModel;
@@ -17,7 +18,7 @@ public class LevMarNN {
 
     private static final double DEG_2_RAD = (3.1415927 / 180.0);
     private final CostFunction costFunction;
-    private final Sensor sensorType;
+    private final SensorConfig sensorConfig;
 
     private double[][] frlam = new double[FR_TAB][15];
     private double[][] fredtoa = new double[FR_TAB][15];
@@ -89,7 +90,7 @@ public class LevMarNN {
     private double[] x11;
 
 
-    public LevMarNN(Sensor pt) throws IOException {
+    public LevMarNN(SensorConfig sensorConfig) throws IOException {
         x = new double[NLAM];
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
@@ -168,11 +169,11 @@ public class LevMarNN {
         p_init[6] = Math.log(0.01);  // bspm
         p_init[7] = Math.log(0.01);  // bwit
 
-        sensorType = pt;
+        this.sensorConfig = sensorConfig;
 
-        if (pt == Sensor.MERIS) {
+        if (sensorConfig.getSensor() == Sensor.MERIS) {
             x11 = new double[11];
-        } else if (pt == Sensor.MODIS) {
+        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
             x11 = new double[9];
         }
 
@@ -227,13 +228,7 @@ public class LevMarNN {
 
         final double cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
 
-        int countOfSpectralBands = -1;
-        if (sensorType == Sensor.MERIS) {
-            countOfSpectralBands = 15;
-        } else if (sensorType == Sensor.MODIS) {
-            countOfSpectralBands = 9;
-        }
-
+        int countOfSpectralBands = sensorConfig.getNumSpectralBands();
         for (int i = 0; i < countOfSpectralBands; i++) {
             L_toa[i] = input[i + 10];
             solar_flux[i] = input[i + 25];
@@ -266,14 +261,14 @@ public class LevMarNN {
         /*+++ ozone correction +++*/
 
         nlam = 12;
-        if (sensorType == Sensor.MERIS) {
+        if (sensorConfig.getSensor() == Sensor.MERIS) {
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
                 trans_ozond[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
                 trans_ozonu[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
                 trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
             }
-        } else if (sensorType == Sensor.MODIS) {
+        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
             nlam = 9;
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
@@ -288,7 +283,7 @@ public class LevMarNN {
 //            L_toa_ocz[i] = L_toa[ix] / trans_ozon[i]; // shall be both ways RD20120318
 //        }
 
-        if (sensorType == Sensor.MERIS) {
+        if (sensorConfig.getSensor() == Sensor.MERIS) {
 
         /* +++ water vapour correction for band 9 +++++ */
 
@@ -361,7 +356,7 @@ public class LevMarNN {
                 }
             }
 
-        } else if (sensorType == Sensor.MODIS) {
+        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
             for (ilam = 0; ilam < nlam; ilam++) {
 //                ix = MODBAND_10_INDEX[ilam];
 //                L_tosa[ilam] = L_toa[ix] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
@@ -411,13 +406,13 @@ public class LevMarNN {
 
         System.arraycopy(p_init, 0, p, 0, p.length);
 
-        if (sensorType == Sensor.MERIS) {
+        if (sensorConfig.getSensor() == Sensor.MERIS) {
             // select the 11 bands for iterations
             for (int i = 0; i < 11; i++) {
                 ix = MERIS_11_OUTOF_12_IX[i];
                 x11[i] = x[ix];
             }
-        } else if (sensorType == Sensor.MODIS) {
+        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
             System.arraycopy(x, 0, x11, 0, 9);
         }
         /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */

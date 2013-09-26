@@ -242,7 +242,7 @@ public class OcNnRdOperator extends PixelOperator {
             @Override
             protected LevMarNN initialValue() {
                 try {
-                    return new LevMarNN(sensorConfig.getSensor());
+                    return new LevMarNN(sensorConfig);
                 } catch (IOException e) {
                     // @todo 3 tb/tb improve error handling here ... tb 2013-05-20
                     e.printStackTrace();
