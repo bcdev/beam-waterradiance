@@ -1,5 +1,8 @@
 package org.esa.beam.ocnnrd;
 
+import org.esa.beam.framework.datamodel.MetadataAttribute;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
@@ -16,15 +19,15 @@ class ModisSensorConfig implements SensorConfig {
     private static String MODIS_L1B_RADIANCE_9_BAND_NAME = "EV_1KM_RefSB.16";
 
     private static String[] MODIS_L1B_SPECTRAL_BAND_NAMES = {
-            MODIS_L1B_RADIANCE_1_BAND_NAME, // 0
-            MODIS_L1B_RADIANCE_2_BAND_NAME, // 1
-            MODIS_L1B_RADIANCE_3_BAND_NAME, // 2
-            MODIS_L1B_RADIANCE_4_BAND_NAME, // 3
-            MODIS_L1B_RADIANCE_5_BAND_NAME, // 4
-            MODIS_L1B_RADIANCE_6_BAND_NAME, // 5
-            MODIS_L1B_RADIANCE_7_BAND_NAME, // 6
-            MODIS_L1B_RADIANCE_8_BAND_NAME, // 7
-            MODIS_L1B_RADIANCE_9_BAND_NAME, // 8
+            MODIS_L1B_RADIANCE_1_BAND_NAME,
+            MODIS_L1B_RADIANCE_2_BAND_NAME,
+            MODIS_L1B_RADIANCE_3_BAND_NAME,
+            MODIS_L1B_RADIANCE_4_BAND_NAME,
+            MODIS_L1B_RADIANCE_5_BAND_NAME,
+            MODIS_L1B_RADIANCE_6_BAND_NAME,
+            MODIS_L1B_RADIANCE_7_BAND_NAME,
+            MODIS_L1B_RADIANCE_8_BAND_NAME,
+            MODIS_L1B_RADIANCE_9_BAND_NAME,
     };
     private static int MODIS_L1B_NUM_SPECTRAL_BANDS = MODIS_L1B_SPECTRAL_BAND_NAMES.length;
 
@@ -49,7 +52,6 @@ class ModisSensorConfig implements SensorConfig {
         sampleConfigurer.defineSample(Constants.SRC_SAA, "SolarAzimuth");
         sampleConfigurer.defineSample(Constants.SRC_VZA, "SensorZenith");
         sampleConfigurer.defineSample(Constants.SRC_VAA, "SensorAzimuth");
-
         for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             sampleConfigurer.defineSample(Constants.SRC_RAD_OFFSET + i, MODIS_L1B_SPECTRAL_BAND_NAMES[i]);
         }
@@ -66,8 +68,26 @@ class ModisSensorConfig implements SensorConfig {
     }
 
     @Override
+    public double[] getSolarFluxes(Product sourceProduct) {
+        double[] solarFluxes;
+        final String globalMetadataName = "GLOBAL_METADATA";
+        final String solarFluxesName = "Solar_Irradiance_on_RSB_Detectors_over_pi";
+        final ProductData productData =
+                sourceProduct.getMetadataRoot().getElement(globalMetadataName).getAttribute(solarFluxesName).getData();
+        solarFluxes = new double[MODIS_L1B_NUM_SPECTRAL_BANDS];
+        int[] startPositionInProductData = new int[]{180, 190, 200, 210, 220, 230, 250, 270, 280};
+        for(int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            for(int j = 0; j < 10; j++) {
+                solarFluxes[i] += productData.getElemDoubleAt(startPositionInProductData[i] + j);
+            }
+            solarFluxes[i] /= 10;
+        }
+        return solarFluxes;
+    }
+
+    @Override
     public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
-        System.arraycopy(solarFluxes, 0, input, 25, 9);
+        System.arraycopy(solarFluxes, 0, input, Constants.SRC_SOL_FLUX_OFFSET, MODIS_L1B_NUM_SPECTRAL_BANDS);
         return input;
     }
 }

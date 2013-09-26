@@ -1,6 +1,9 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,6 +82,27 @@ public class MerisSensorConfigTest {
     }
 
     @Test
+    public void testGetSolarFluxes() {
+        final Product product = new Product("test", "type", 5, 5);
+        assertEquals(15, merisSensorConfig.getNumSpectralBands());
+        float[] testFluxes = new float[]{23.6f, 34.7f, 102.3f, 14.7f, 71.5f, 63.4f, 102.87f, 94.5f, 61f, 12.3f, 14.1f,
+            29.7f, 1023f, 60.1f, 51.9f};
+        for(int i = 0; i < merisSensorConfig.getNumSpectralBands(); i++) {
+            product.addBand(createBandWithSolarFlux(merisSensorConfig.getSpectralBandNames()[i], testFluxes[i]));
+        }
+        final Band schnick = createBandWithSolarFlux("schnick", 23.6f);
+        final Band schnack = createBandWithSolarFlux("schnack", 34.7f);
+        product.addBand(schnick);
+        product.addBand(schnack);
+
+        final double[] solarFluxes = merisSensorConfig.getSolarFluxes(product);
+        assertEquals(15, solarFluxes.length);
+        for(int i = 0; i < merisSensorConfig.getNumSpectralBands(); i++) {
+            assertEquals(testFluxes[i], solarFluxes[i], 1e-8);
+        }
+    }
+
+    @Test
     public void testCopySolarFluxes() {
         double[] input = new double[40];
         final double[] solarFluxes = new double[15];
@@ -109,4 +133,11 @@ public class MerisSensorConfigTest {
         assertEquals(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME, testSampleConfigurer.get(23));
         assertEquals("_mask_", testSampleConfigurer.get(24));
     }
+
+    private Band createBandWithSolarFlux(String schnick1, float solarFlux) {
+        final Band schnick = new Band(schnick1, ProductData.TYPE_INT16, 5, 5);
+        schnick.setSolarFlux(solarFlux);
+        return schnick;
+    }
+
 }

@@ -1,6 +1,7 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
@@ -61,8 +62,18 @@ class MerisSensorConfig implements SensorConfig {
     }
 
     @Override
+    public double[] getSolarFluxes(Product sourceProduct) {
+        double[] solarFluxes = new double[getNumSpectralBands()];
+        for (int i = 0; i < getNumSpectralBands(); i++) {
+            solarFluxes[i] = sourceProduct.getBand(getSpectralBandNames()[i]).getSolarFlux();
+        }
+        return solarFluxes;
+    }
+
+    @Override
     public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
-        System.arraycopy(solarFluxes, 0, input, 25, 15);
+        System.arraycopy(solarFluxes, 0, input, Constants.SRC_SOL_FLUX_OFFSET,
+                         EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS);
         return input;
     }
 }

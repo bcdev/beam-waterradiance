@@ -75,20 +75,6 @@ public class OcNnRdOperatorTest {
     }
 
     @Test
-    public void testGetSolarFluxes() {
-        final Product product = new Product("test", "type", 5, 5);
-        final Band schnick = createbandWithSolaFlux("schnick", 23.6f);
-        final Band schnack = createbandWithSolaFlux("schnack", 34.7f);
-        product.addBand(schnick);
-        product.addBand(schnack);
-
-        final double[] solarFluxes = OcNnRdOperator.getSolarFluxes(new String[]{"schnick", "schnack"}, product);
-        assertEquals(2, solarFluxes.length);
-        assertEquals(23.6, solarFluxes[0], 1e-6);
-        assertEquals(34.7, solarFluxes[1], 1e-6);
-    }
-
-    @Test
     public void testIsCsvMode() {
         final Product product = new Product("csv_test", "type", 5, 5);
 
@@ -122,12 +108,6 @@ public class OcNnRdOperatorTest {
 
         final int detectorIndex = OcNnRdOperator.getDetectorIndex(samples);
         assertEquals(776, detectorIndex);
-    }
-
-    private Band createbandWithSolaFlux(String schnick1, float solarFlux) {
-        final Band schnick = new Band(schnick1, ProductData.TYPE_INT16, 5, 5);
-        schnick.setSolarFlux(solarFlux);
-        return schnick;
     }
 
     private TestSample[] createTestSamples(int count) {

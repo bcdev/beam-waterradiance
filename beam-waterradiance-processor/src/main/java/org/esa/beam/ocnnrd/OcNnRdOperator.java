@@ -2,13 +2,22 @@ package org.esa.beam.ocnnrd;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.util.ResourceInstaller;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.waterradiance.AuxdataProvider;
@@ -26,8 +35,8 @@ import java.util.Date;
  * @author Tom Block
  */
 @OperatorMetadata(alias = "Meris.OCNNRD", version = "1.0",
-        authors = "Tom Block, Tonio Fincke, Roland Doerffer",
-        description = "An operator computing water IOPs starting from radiances.")
+                  authors = "Tom Block, Tonio Fincke, Roland Doerffer",
+                  description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
     private static final int NUM_OUTPUTS = 69;
@@ -189,7 +198,7 @@ public class OcNnRdOperator extends PixelOperator {
         targetProduct.setAutoGrouping(autoGrouping);
         if (csvMode) {
             targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
-                    targetProduct.getSceneRasterHeight());
+                                               targetProduct.getSceneRasterHeight());
         }
     }
 
@@ -225,11 +234,11 @@ public class OcNnRdOperator extends PixelOperator {
                 csvMode = true;
                 maskExpression = "true";
             } else {
-                solarFluxes = getSolarFluxes(sensorConfig.getSpectralBandNames(), sourceProduct);
+                solarFluxes = sensorConfig.getSolarFluxes(sourceProduct);
             }
             sourceProduct.addBand("_mask_", maskExpression);
         } else if (sensorConfig.getSensor() == Sensor.MODIS) {
-            solarFluxes = getSolarFluxes(sensorConfig.getSpectralBandNames(), sourceProduct);
+            solarFluxes = sensorConfig.getSolarFluxes(sourceProduct);
         }
 
         final ProductData.UTC startTime = sourceProduct.getStartTime();
@@ -269,15 +278,6 @@ public class OcNnRdOperator extends PixelOperator {
         for (int i = 0; i < sensorConfig.getNumSpectralBands(); i++) {
             inputs[10 + i] = sourceSamples[Constants.SRC_RAD_OFFSET + i].getDouble();
         }
-    }
-
-    // package access for testing only tb 2013-05-13
-    static double[] getSolarFluxes(String[] radBandNames, Product sourceProduct) {
-        double[] solarFluxes = new double[radBandNames.length];
-        for (int i = 0; i < radBandNames.length; i++) {
-            solarFluxes[i] = sourceProduct.getBand(radBandNames[i]).getSolarFlux();
-        }
-        return solarFluxes;
     }
 
     // package access for testing only tb 2013-05-13
@@ -342,7 +342,7 @@ public class OcNnRdOperator extends PixelOperator {
         if (csvMode) {
             copySolarFluxes(input_local, sourceSamples);
         } else {
-            solarFluxes = sensorConfig.copySolarFluxes(input_local, solarFluxes);
+            sensorConfig.copySolarFluxes(input_local, solarFluxes);
         }
     }
 

@@ -1,7 +1,14 @@
 package org.esa.beam.ocnnrd;
 
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.MetadataAttribute;
+import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
@@ -89,6 +96,17 @@ public class ModisSensorConfigTest {
     }
 
     @Test
+    public void testGetSolarFluxes() {
+        final Product product = createProductWithSolarFluxMetadata();
+        final double[] solarFluxes = modisSensorConfig.getSolarFluxes(product);
+        assertEquals(9, solarFluxes.length);
+        double[] expectedResults = new double[]{184.5, 194.5, 204.5, 214.5, 224.5, 234.5, 254.5, 274.5, 284.5};
+        for(int i = 0; i < solarFluxes.length; i++) {
+            assertEquals(expectedResults[i], solarFluxes[i], 1e-8);
+        }
+    }
+
+    @Test
     public void testCopySolarFluxes() {
         double[] input = new double[40];
         final double[] solarFluxes = new double[9];
@@ -101,4 +119,24 @@ public class ModisSensorConfigTest {
             assertEquals(solarFluxes[i], input[i + 25], 1e-8);
         }
     }
-} 
+
+    private Product createProductWithSolarFluxMetadata() {
+        final Product product = new Product("test", "type", 5, 5);
+        double[] solarFluxes = new double[330];
+        int[] startPositionInProductData = new int[]{180, 190, 200, 210, 220, 230, 250, 270, 280};
+        for(int i = 0; i < startPositionInProductData.length; i++) {
+            for(int j = 0; j < 10; j++) {
+                solarFluxes[startPositionInProductData[i] + j] = startPositionInProductData[i] + j;
+            }
+        }
+        final ProductData productData = ProductData.createInstance(solarFluxes);
+        final MetadataAttribute attribute = new MetadataAttribute("Solar_Irradiance_on_RSB_Detectors_over_pi",
+                                                                  productData, true);
+        final MetadataElement globalMetadataElement = new MetadataElement("GLOBAL_METADATA");
+        globalMetadataElement.addAttribute(attribute);
+
+        product.getMetadataRoot().addElement(globalMetadataElement);
+        return product;
+    }
+
+}
