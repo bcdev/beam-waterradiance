@@ -28,7 +28,6 @@ public class LevMarNN {
     private static final int NLAM = 40;
     private static final int LM_INFO_SZ = 10;
 
-
     private static final double[] H_2_O_COR_POLY = new double[]{0.3832989, 1.6527957, -1.5635101, 0.5311913};
 
     private static final double[] MERBAND_12 = {412.3, 442.3, 489.7, 509.6, 559.5, 619.4, 664.3, 680.6, 708.1, 753.1, 778.2, 864.6};
