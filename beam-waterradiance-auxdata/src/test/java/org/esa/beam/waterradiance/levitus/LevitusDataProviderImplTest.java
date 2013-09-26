@@ -1,5 +1,6 @@
 package org.esa.beam.waterradiance.levitus;
 
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.waterradiance.AuxdataProvider;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
@@ -18,20 +19,20 @@ public class LevitusDataProviderImplTest {
 
     @Test
     public void testGetSalinity() throws Exception {
-        AuxdataProvider dataProvider = AuxdataProviderFactory.createDataProvider();
-        Calendar calendar = createUTCCalendar();
-        double lat = 53.5;
-        double lon = 8.5;
+        final AuxdataProvider dataProvider = AuxdataProviderFactory.createDataProvider();
+        final Calendar calendar = createUTCCalendar();
+        final double lat = 53.5;
+        final double lon = 8.5;
 
-        calendar.set(2011, 0, 16);
+        calendar.set(2011, Calendar.JANUARY, 16);
         double salinity0 = dataProvider.getSalinity(calendar.getTime(), lat, lon);
         assertEquals(32.5769, salinity0, 1.0E-4);
 
-        calendar.set(2011, 1, 16);
+        calendar.set(2011, Calendar.FEBRUARY, 16);
         double salinity1 = dataProvider.getSalinity(calendar.getTime(), lat, lon);
         assertEquals(32.3815, salinity1, 1.0E-4);
 
-        calendar.set(2011, 0, 31);
+        calendar.set(2011, Calendar.JANUARY, 31);
         double fract = LevitusDataProviderImpl.calculateLinearFraction(
                 ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar());
         double expected = LevitusDataProviderImpl.interpolate(salinity0, salinity1, fract);
@@ -107,25 +108,21 @@ public class LevitusDataProviderImplTest {
         assertEquals(1, LevitusDataProviderImpl.calculateUpperMonth(20, 0));
     }
 
-    // Why do we have tests that test functionality of java.util classes???? tb 2013-05-31
-//    @Test
-//    public void testGetMaximumFieldValueOfCalendar() throws Exception {
-//        Calendar calendar = createUTCCalendar();
-//        calendar.set(Calendar.YEAR, 2012);
-//
-//        calendar.set(Calendar.MONTH, 1); // February
-//        assertEquals(29, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-//        assertEquals(28, calendar.getLeastMaximum(Calendar.DAY_OF_MONTH));
-//        assertEquals(31, calendar.getMaximum(Calendar.DAY_OF_MONTH));
-//
-//        calendar.set(Calendar.MONTH, 2); // March
-//        assertEquals(31, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-//        assertEquals(28, calendar.getLeastMaximum(Calendar.DAY_OF_MONTH));
-//        assertEquals(31, calendar.getMaximum(Calendar.DAY_OF_MONTH));
-//    }
+    @Test
+    public void testProductContainsPixel() {
+        final Product product = new Product("testing", "test", 10, 8);
+
+        assertFalse(LevitusDataProviderImpl.productContainsPixel(product, -1, 6));
+        assertFalse(LevitusDataProviderImpl.productContainsPixel(product, 10, 4));
+
+        assertFalse(LevitusDataProviderImpl.productContainsPixel(product, 5, -1));
+        assertFalse(LevitusDataProviderImpl.productContainsPixel(product, 8, 8));
+
+        assertTrue(LevitusDataProviderImpl.productContainsPixel(product, 8, 5));
+        assertTrue(LevitusDataProviderImpl.productContainsPixel(product, 0, 0));
+    }
 
     private static Calendar createUTCCalendar() {
         return Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
     }
-
 }

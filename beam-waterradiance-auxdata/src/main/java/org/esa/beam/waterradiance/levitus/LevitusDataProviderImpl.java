@@ -17,7 +17,8 @@ import java.util.Date;
  */
 public class LevitusDataProviderImpl implements AuxdataProvider {
 
-    public static final int LEVITUS_CENTER_DAY = 16;
+    private static final int LEVITUS_CENTER_DAY = 16;
+
     private GeoCoding salinityGeoCoding;
     private GeoCoding temperatureGeoCoding;
     private final Product salinityProduct;
@@ -32,13 +33,8 @@ public class LevitusDataProviderImpl implements AuxdataProvider {
     public LevitusDataProviderImpl(Product salinityProduct, Product tempProduct) {
         this.salinityProduct = salinityProduct;
         this.tempProduct = tempProduct;
-        salinityGeoCoding = this.salinityProduct.getGeoCoding();
-        temperatureGeoCoding = this.tempProduct.getGeoCoding();
-    }
-
-    private static boolean productContainsPixel(Product product, int x, int y) {
-        return x >= 0 && x < product.getSceneRasterWidth() &&
-                y >= 0 && y < product.getSceneRasterHeight();
+        salinityGeoCoding = salinityProduct.getGeoCoding();
+        temperatureGeoCoding = tempProduct.getGeoCoding();
     }
 
     public double getSalinity(Date date, double lat, double lon) throws Exception {
@@ -80,6 +76,11 @@ public class LevitusDataProviderImpl implements AuxdataProvider {
 
     static double interpolate(double lowerValue, double upperValue, double fraction) {
         return (lowerValue * (1 - fraction) + upperValue * fraction);
+    }
+
+    static boolean productContainsPixel(Product product, int x, int y) {
+        return x >= 0 && x < product.getSceneRasterWidth() &&
+                y >= 0 && y < product.getSceneRasterHeight();
     }
 
     static double calculateLinearFraction(Calendar calendar) {
