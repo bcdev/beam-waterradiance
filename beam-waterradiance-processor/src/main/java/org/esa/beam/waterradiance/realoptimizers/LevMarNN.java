@@ -9,7 +9,11 @@ import org.esa.beam.siocs.abstractprocessor.ForwardModel;
 import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class LevMarNN {
 
@@ -42,8 +46,9 @@ public class LevMarNN {
 
     double M_PI = 3.1416;
 
-    //@todo adapt to modis and seawifs
     static int[] lam29_meris12_ix = {1, 2, 4, 6, 11, 12, 15, 19, 20, 22, 24, 25};
+    private static final int[] lam29_modis9_ix = {1, 2, 4, 8, 9, 15, 18, 21, 26};
+    private static final int[] lam29_seawifs8_ix = {1, 2, 4, 6, 10, 16, 23, 25};
     //@todo adapt to modis and seawifs
     double[] ozon_meris12 = {0.0002179, 0.002814, 0.02006, 0.04081, 0.104, 0.109, 0.0505, 0.03526, 0.01881, 0.008897, 0.007693, 0.002192}; // L.Bourg 2010
 
@@ -340,7 +345,8 @@ public class LevMarNN {
                 for (ilam = 0; ilam < nlam; ilam++) {
                     ix = MERBAND_12_INDEX[ilam];
                     // L_tosa[ilam] = ((L_toa[ix]-L_rayl_smile[ilam])-L_rayl_toa_tosa[ilam])/(trans_ozon[ilam]*trans_rayl_smile[ilam]);
-                    L_tosa[ilam] = L_toa[ix] / (trans_ozon[ilam] * trans_rayl_press[ilam]/**trans_rayl_smile[ilam]*/) - L_rayl_toa_tosa[ilam] + L_rayl_smile[ilam];//*trans_rayl_smile[ilam]);
+                    L_tosa[ilam] = L_toa[ix] / (trans_ozon[ilam] * trans_rayl_press[ilam]/**trans_rayl_smile[ilam]*/)
+                            - L_rayl_toa_tosa[ilam] + L_rayl_smile[ilam];//*trans_rayl_smile[ilam]);
                     Ed_tosa[ilam] = Ed_toa_smile_corr[ilam];//*trans_rayl_smiled[ilam]*trans_rayl_pressd[ilam];
                     rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
                     x[ilam] = rho_tosa_corr[ilam];
@@ -491,13 +497,22 @@ public class LevMarNN {
         /*********************************************************/
 
         // put all results into output
-        nlam = 12;
-        for (
-                int i = 0;
-                i < nlam; i++)
-
-        {
-            ix = lam29_meris12_ix[i];
+        int[] sensorLambdas;
+        if (sensorConfig.getSensor() == Sensor.MERIS) {
+            sensorLambdas = lam29_meris12_ix;
+            nlam = 12;
+        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
+            sensorLambdas = lam29_modis9_ix;
+            nlam = 9;
+        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+            sensorLambdas = lam29_seawifs8_ix;
+            nlam = 8;
+        }else {
+            sensorLambdas = lam29_meris12_ix;
+            nlam = 12;
+        }
+        for (int i = 0; i < nlam; i++) {
+            ix = sensorLambdas[i];
             output[i] = rho_tosa_corr[i] / M_PI;
             output[i + nlam] = nn_at_data.rpath_nn[ix];
             output[i + nlam * 2] = nn_at_data.rw_nn[ix];
