@@ -1,14 +1,21 @@
 package org.esa.beam.waterradiance.seadas;
 
+import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.waterradiance.AtmosphericAuxdata;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
 
-public class SeadasAuxdataImpl implements AtmosphericAuxdata{
+public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     private final File auxDataDirectory;
+    private final static long milli_seconds_per_day = 24 * 60 * 60 * 1000;
+    private final static String ozone_band_name = "Geophysical Data/ozone";
 
     private SeadasAuxdataImpl(File auxDataDirectory) {
         this.auxDataDirectory = auxDataDirectory;
@@ -16,7 +23,60 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata{
 
     @Override
     public double getOzone(Date date, double lat, double lon) throws Exception {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+
+        //@todo try to do most of the work in the constructor
+        double fraction = getDateFraction(date);
+        Calendar calendar = ProductData.UTC.create(date, 0).getAsCalendar();
+        final int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+        int dayOffset = 0;
+        if (hourOfDay < 12) {
+            dayOffset = -1;
+        }
+        int firstDay = calendar.get(Calendar.DAY_OF_YEAR) + dayOffset;
+        int firstYear = calendar.get(Calendar.YEAR);
+        int secondDay = calendar.get(Calendar.DAY_OF_YEAR) + dayOffset + 1;
+        int secondYear = firstYear;
+        if (firstDay < 1) {
+            firstYear--;
+            if (firstYear % 4 == 0) {
+                firstDay = 366;
+            } else {
+                firstDay = 365;
+            }
+        } else if (secondDay > 365 || (secondYear % 4 == 0 && secondDay > 366)) {
+            secondYear++;
+            secondDay = 1;
+        }
+
+        final double firstOzone = getOzone((float) lat, lon, firstDay, firstYear);
+        final double secondOzone = getOzone((float) lat, lon, secondDay, secondYear);
+        return (1 - fraction) * firstOzone + fraction * secondOzone;
+    }
+
+    private double getOzone(float lat, double lon, int day, int year) throws IOException {
+        //@todo ensure that each product is only read once for one operator call
+        //@todo consider case when day is < 100
+        String productPath = auxDataDirectory.getPath() +
+                "//" + year + "//" + day + "//N" + year + day + "00_O3_TOMSOMI_24h.hdf";
+        final Product product = ProductIO.readProduct(new File(productPath));
+        PixelPos pixelPos = new PixelPos(lat, (float) lon);
+        if (product.getSceneRasterWidth() == 288) {
+            pixelPos = new PixelPos(lat, (float) (lon * 0.8));
+        }
+        return Double.parseDouble(product.getBand(ozone_band_name).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
+    }
+
+    private double getDateFraction(Date date) {
+        //@todo this can be done better
+        final long productTimeInMillis = date.getTime();
+        final long millisOnProductDay = productTimeInMillis % milli_seconds_per_day;
+        double fraction;
+        if (millisOnProductDay < (milli_seconds_per_day / 2)) {
+            fraction = 0.5 + ((double) millisOnProductDay / milli_seconds_per_day);
+        } else {
+            fraction = -0.5 + ((double) millisOnProductDay / milli_seconds_per_day);
+        }
+        return fraction;
     }
 
     @Override
@@ -31,7 +91,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata{
 
     public static SeadasAuxdataImpl create(String auxPath) throws IOException {
         final File auxDataDirectory = new File(auxPath);
-        if(!auxDataDirectory.isDirectory()) {
+        if (!auxDataDirectory.isDirectory()) {
             throw new IOException();
         }
         return new SeadasAuxdataImpl(auxDataDirectory);
