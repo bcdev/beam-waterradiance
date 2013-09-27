@@ -6,7 +6,7 @@ import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.util.ResourceInstaller;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.math.MathUtils;
-import org.esa.beam.waterradiance.AuxdataProvider;
+import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.util.Date;
 /**
  * @author Marco Peters
  */
-public class LevitusDataProviderImpl implements AuxdataProvider {
+public class LevitusAuxdataImpl implements SalinityTemperatureAuxdata {
 
     private static File AUXDATA_DIR;
 
@@ -33,14 +33,14 @@ public class LevitusDataProviderImpl implements AuxdataProvider {
     private Product temperatureProduct;
 
 
-    public static LevitusDataProviderImpl create() throws IOException {
+    public static LevitusAuxdataImpl create() throws IOException {
         if (!isAuxDataResourceInitialized) {
             initializeResourceAccess();
         }
 
         final Product salinityProduct = ProductIO.readProduct(new File(AUXDATA_DIR, SALINITY_FILE_NAME));
         final Product temperatureProduct = ProductIO.readProduct(new File(AUXDATA_DIR, TEMPERATURE_FILE_NAME));
-        return new LevitusDataProviderImpl(salinityProduct, temperatureProduct);
+        return new LevitusAuxdataImpl(salinityProduct, temperatureProduct);
     }
 
     public double getSalinity(Date date, double lat, double lon) throws Exception {
@@ -97,7 +97,7 @@ public class LevitusDataProviderImpl implements AuxdataProvider {
      * @param salinityProduct the product containing the salinity data
      * @param temperatureProduct     the product containing the temperature data
      */
-    private LevitusDataProviderImpl(Product salinityProduct, Product temperatureProduct) {
+    private LevitusAuxdataImpl(Product salinityProduct, Product temperatureProduct) {
         this.salinityProduct = salinityProduct;
         this.temperatureProduct = temperatureProduct;
         salinityGeoCoding = salinityProduct.getGeoCoding();
@@ -106,7 +106,7 @@ public class LevitusDataProviderImpl implements AuxdataProvider {
 
     private static void initializeResourceAccess() {
         AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-auxdata/auxdata");
-        final URL sourceUrl = ResourceInstaller.getSourceUrl(LevitusDataProviderImpl.class);
+        final URL sourceUrl = ResourceInstaller.getSourceUrl(LevitusAuxdataImpl.class);
         final ResourceInstaller installer = new ResourceInstaller(sourceUrl, "../auxdata/", AUXDATA_DIR);
         try {
             installer.install(".*.nc", ProgressMonitor.NULL);

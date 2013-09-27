@@ -8,7 +8,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
-import org.esa.beam.waterradiance.AuxdataProvider;
+import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
 import org.esa.beam.waterradiance.realoptimizers.LevMarNN;
 
@@ -46,7 +46,7 @@ public class OcNnRdOperator extends PixelOperator {
 
     private double[] solarFluxes;
 
-    private AuxdataProvider auxdataProvider = null;
+    private SalinityTemperatureAuxdata salinityTemperatureAuxdata = null;
     private Date date = null;
     private ThreadLocal<LevMarNN> levMarNN;
 
@@ -221,7 +221,7 @@ public class OcNnRdOperator extends PixelOperator {
         final ProductData.UTC startTime = sourceProduct.getStartTime();
         if (startTime != null && useClimatology) {
             date = startTime.getAsDate();
-            auxdataProvider = createAuxdataDataProvider();
+            salinityTemperatureAuxdata = createAuxdataDataProvider();
         }
 
         levMarNN = new ThreadLocal<LevMarNN>() {
@@ -240,8 +240,8 @@ public class OcNnRdOperator extends PixelOperator {
 
     @Override
     public void dispose() {
-        if (auxdataProvider != null) {
-            auxdataProvider.dispose();
+        if (salinityTemperatureAuxdata != null) {
+            salinityTemperatureAuxdata.dispose();
         }
         super.dispose();
     }
@@ -282,9 +282,9 @@ public class OcNnRdOperator extends PixelOperator {
         return sourceSamples[Constants.SRC_DETECTOR].getInt();
     }
 
-    private static AuxdataProvider createAuxdataDataProvider() {
+    private static SalinityTemperatureAuxdata createAuxdataDataProvider() {
         try {
-            return AuxdataProviderFactory.createDataProvider();
+            return AuxdataProviderFactory.createSalinityTemperatureDataProvider();
         } catch (IOException e) {
             throw new OperatorException("Unable to create provider for auxiliary data.", e);
         }
@@ -293,13 +293,13 @@ public class OcNnRdOperator extends PixelOperator {
     @SuppressWarnings("MismatchedReadAndWriteOfArray")
     private void copyAuxData(int x, int y) {
         final double[] input_local = input.get();
-        if (auxdataProvider != null) {
+        if (salinityTemperatureAuxdata != null) {
             try {
                 final GeoCoding geoCoding = sourceProduct.getGeoCoding();
                 GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
                 synchronized (this) {
-                    input_local[8] = auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
-                    input_local[9] = auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+                    input_local[8] = salinityTemperatureAuxdata.getTemperature(date, geoPos.getLat(), geoPos.getLon());
+                    input_local[9] = salinityTemperatureAuxdata.getSalinity(date, geoPos.getLat(), geoPos.getLon());
                 }
             } catch (Exception e) {
                 throw new OperatorException(e);

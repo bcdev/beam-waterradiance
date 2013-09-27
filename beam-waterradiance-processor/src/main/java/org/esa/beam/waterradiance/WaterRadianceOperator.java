@@ -69,7 +69,7 @@ public class WaterRadianceOperator extends PixelOperator {
     private boolean csvMode = false;
 
     private double[] solarFluxes;
-    private AuxdataProvider auxdataProvider = null;
+    private SalinityTemperatureAuxdata salinityTemperatureAuxdata = null;
     private Date date = null;
     private final LevMarNnLib lib = LevMarNnLib.INSTANCE;
     private final double[] input = new double[40];
@@ -108,11 +108,11 @@ public class WaterRadianceOperator extends PixelOperator {
             input[6] = sourceSamples[SRC_MWIND].getDouble();
             input[7] = sourceSamples[SRC_ZWIND].getDouble();
             try {
-                if (auxdataProvider != null) {
+                if (salinityTemperatureAuxdata != null) {
                     GeoCoding geoCoding = sourceProduct.getGeoCoding();
                     GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
-                    input[8] = auxdataProvider.getTemperature(date, geoPos.getLat(), geoPos.getLon());
-                    input[9] = auxdataProvider.getSalinity(date, geoPos.getLat(), geoPos.getLon());
+                    input[8] = salinityTemperatureAuxdata.getTemperature(date, geoPos.getLat(), geoPos.getLon());
+                    input[9] = salinityTemperatureAuxdata.getSalinity(date, geoPos.getLat(), geoPos.getLon());
                 } else {
                     input[8] = temperature;
                     input[9] = salinity;
@@ -166,7 +166,7 @@ public class WaterRadianceOperator extends PixelOperator {
         ProductData.UTC startTime = sourceProduct.getStartTime();
         if (startTime != null && useClimatology) {
             date = startTime.getAsDate();
-            auxdataProvider = createAuxdataDataProvider();
+            salinityTemperatureAuxdata = createAuxdataDataProvider();
         }
     }
 
@@ -262,8 +262,8 @@ public class WaterRadianceOperator extends PixelOperator {
 
     @Override
     public void dispose() {
-        if (auxdataProvider != null) {
-            auxdataProvider.dispose();
+        if (salinityTemperatureAuxdata != null) {
+            salinityTemperatureAuxdata.dispose();
         }
 
         // @todo 3 tb/** check for other resources we need to release tb 2013-09-27
@@ -291,9 +291,9 @@ public class WaterRadianceOperator extends PixelOperator {
         }
     }
 
-    private AuxdataProvider createAuxdataDataProvider() {
+    private SalinityTemperatureAuxdata createAuxdataDataProvider() {
         try {
-            return AuxdataProviderFactory.createDataProvider();
+            return AuxdataProviderFactory.createSalinityTemperatureDataProvider();
         } catch (IOException ioe) {
             throw new OperatorException("Not able to create provider for auxiliary data.", ioe);
         }
