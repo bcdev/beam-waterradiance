@@ -1,32 +1,18 @@
 package org.esa.beam.ocnnrd;
 
-import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
-import org.esa.beam.util.ResourceInstaller;
-import org.esa.beam.util.SystemUtils;
+import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.waterradiance.AuxdataProvider;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
 import org.esa.beam.waterradiance.realoptimizers.LevMarNN;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Date;
 
 /**
@@ -35,8 +21,8 @@ import java.util.Date;
  * @author Tom Block
  */
 @OperatorMetadata(alias = "Meris.OCNNRD", version = "1.0",
-                  authors = "Tom Block, Tonio Fincke, Roland Doerffer",
-                  description = "An operator computing water IOPs starting from radiances.")
+        authors = "Tom Block, Tonio Fincke, Roland Doerffer",
+        description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
     private static final int NUM_OUTPUTS = 69;
@@ -87,15 +73,6 @@ public class OcNnRdOperator extends PixelOperator {
     private double salinity;
 
     private SensorConfig sensorConfig;
-
-    // -----------------------------------
-    // ----- Configurable Parameters -----
-    // -----------------------------------
-
-    static {
-        installAuxdata();
-    }
-
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -198,7 +175,7 @@ public class OcNnRdOperator extends PixelOperator {
         targetProduct.setAutoGrouping(autoGrouping);
         if (csvMode) {
             targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
-                                               targetProduct.getSceneRasterHeight());
+                    targetProduct.getSceneRasterHeight());
         }
     }
 
@@ -261,6 +238,14 @@ public class OcNnRdOperator extends PixelOperator {
         };
     }
 
+    @Override
+    public void dispose() {
+        if (auxdataProvider != null) {
+            auxdataProvider.dispose();
+        }
+        super.dispose();
+    }
+
     // package access for testing only tb 2013-05-13
     static boolean isValid(Sample[] sourceSamples) {
         return sourceSamples[Constants.SRC_MASK].getBoolean();
@@ -295,18 +280,6 @@ public class OcNnRdOperator extends PixelOperator {
     // package access for testing only tb 2013-05-13
     static int getDetectorIndex(Sample[] sourceSamples) {
         return sourceSamples[Constants.SRC_DETECTOR].getInt();
-    }
-
-    private static void installAuxdata() {
-        // @ todo 3 tb/** move auxdata access classes to separate package? tb 2013-05-13
-        final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
-        final URL sourceUrl = ResourceInstaller.getSourceUrl(OcNnRdOperator.class);
-        final ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
-        try {
-            installer.install(".*", ProgressMonitor.NULL);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to install auxdata of the Meris.OCNNRD module");
-        }
     }
 
     private static AuxdataProvider createAuxdataDataProvider() {
