@@ -1,14 +1,16 @@
 package org.esa.beam.waterradiance.levitus;
 
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import com.bc.ceres.core.ProgressMonitor;
+import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.util.ResourceInstaller;
+import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.waterradiance.AuxdataProvider;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -17,24 +19,28 @@ import java.util.Date;
  */
 public class LevitusDataProviderImpl implements AuxdataProvider {
 
+    private static File AUXDATA_DIR;
+
+    private static final String SALINITY_FILE_NAME = "Levitus-Annual-Salinity.nc";
+    private static final String TEMPERATURE_FILE_NAME = "Levitus-Annual-Temperature.nc";
+
     private static final int LEVITUS_CENTER_DAY = 16;
+    private static boolean isAuxDataResourceInitialized = false;
 
     private GeoCoding salinityGeoCoding;
     private GeoCoding temperatureGeoCoding;
     private final Product salinityProduct;
-    private Product tempProduct;
+    private Product temperatureProduct;
 
-    /**
-     * Creates an instance of this <code></>LevitusDataProvider</code> implementation.
-     *
-     * @param salinityProduct the product containing the salinity data
-     * @param tempProduct     the product containing the temperature data
-     */
-    public LevitusDataProviderImpl(Product salinityProduct, Product tempProduct) {
-        this.salinityProduct = salinityProduct;
-        this.tempProduct = tempProduct;
-        salinityGeoCoding = salinityProduct.getGeoCoding();
-        temperatureGeoCoding = tempProduct.getGeoCoding();
+
+    public static LevitusDataProviderImpl create() throws IOException {
+        if (!isAuxDataResourceInitialized) {
+            initializeResourceAccess();
+        }
+
+        final Product salinityProduct = ProductIO.readProduct(new File(AUXDATA_DIR, SALINITY_FILE_NAME));
+        final Product temperatureProduct = ProductIO.readProduct(new File(AUXDATA_DIR, TEMPERATURE_FILE_NAME));
+        return new LevitusDataProviderImpl(salinityProduct, temperatureProduct);
     }
 
     public double getSalinity(Date date, double lat, double lon) throws Exception {
@@ -61,17 +67,53 @@ public class LevitusDataProviderImpl implements AuxdataProvider {
         PixelPos pixelPos = temperatureGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
         int x = MathUtils.floorInt(pixelPos.x);
         int y = MathUtils.floorInt(pixelPos.y);
-        if (!productContainsPixel(tempProduct, x, y)) {
+        if (!productContainsPixel(temperatureProduct, x, y)) {
             return Double.NaN;
         }
 
-        Band lowerBand = tempProduct.getBandAt(dateDependentValues.lowerMonth);
-        Band upperBand = tempProduct.getBandAt(dateDependentValues.upperMonth);
+        Band lowerBand = temperatureProduct.getBandAt(dateDependentValues.lowerMonth);
+        Band upperBand = temperatureProduct.getBandAt(dateDependentValues.upperMonth);
         double[] lowPixel = new double[1];
         double[] upperPixel = new double[1];
         lowerBand.readPixels(x, y, 1, 1, lowPixel);
         upperBand.readPixels(x, y, 1, 1, upperPixel);
         return interpolate(lowPixel[0], upperPixel[0], dateDependentValues.linearFraction);
+    }
+
+    @Override
+    public void dispose() {
+        if (salinityProduct != null)  {
+            salinityProduct.dispose();
+        }
+
+        if (temperatureProduct != null) {
+            temperatureProduct.dispose();
+        }
+    }
+
+    /**
+     * Creates an instance of this <code></>LevitusDataProvider</code> implementation.
+     *
+     * @param salinityProduct the product containing the salinity data
+     * @param temperatureProduct     the product containing the temperature data
+     */
+    private LevitusDataProviderImpl(Product salinityProduct, Product temperatureProduct) {
+        this.salinityProduct = salinityProduct;
+        this.temperatureProduct = temperatureProduct;
+        salinityGeoCoding = salinityProduct.getGeoCoding();
+        temperatureGeoCoding = temperatureProduct.getGeoCoding();
+    }
+
+    private static void initializeResourceAccess() {
+        AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-auxdata/auxdata");
+        final URL sourceUrl = ResourceInstaller.getSourceUrl(LevitusDataProviderImpl.class);
+        final ResourceInstaller installer = new ResourceInstaller(sourceUrl, "../auxdata/", AUXDATA_DIR);
+        try {
+            installer.install(".*.nc", ProgressMonitor.NULL);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to install auxdata of the beam-levitus-auxdata module");
+        }
+        isAuxDataResourceInitialized = true;
     }
 
     static double interpolate(double lowerValue, double upperValue, double fraction) {
@@ -118,5 +160,4 @@ public class LevitusDataProviderImpl implements AuxdataProvider {
             upperMonth = calculateUpperMonth(day, month);
         }
     }
-
 }

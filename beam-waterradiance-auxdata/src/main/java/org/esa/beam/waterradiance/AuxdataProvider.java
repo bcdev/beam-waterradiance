@@ -33,4 +33,5 @@ public interface AuxdataProvider {
      */
     double getTemperature(Date date, double lat, double lon) throws Exception;
 
+    void dispose();
 }

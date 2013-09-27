@@ -260,6 +260,16 @@ public class WaterRadianceOperator extends PixelOperator {
         }
     }
 
+    @Override
+    public void dispose() {
+        if (auxdataProvider != null) {
+            auxdataProvider.dispose();
+        }
+
+        // @todo 3 tb/** check for other resources we need to release tb 2013-09-27
+        super.dispose();
+    }
+
     private void addBand(ProductConfigurer productConfigurer, String name, int type, String unit, String description) {
         Band band = productConfigurer.addBand(name, type);
         band.setDescription(description);

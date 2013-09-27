@@ -6,6 +6,7 @@ import org.esa.beam.waterradiance.AuxdataProvider;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -16,6 +17,12 @@ import static org.junit.Assert.*;
  * @author Marco Peters
  */
 public class LevitusDataProviderImplTest {
+
+    @Test
+    public void testCreate() throws IOException {
+        final LevitusDataProviderImpl provider = LevitusDataProviderImpl.create();
+        assertNotNull(provider);
+    }
 
     @Test
     public void testGetSalinity() throws Exception {
@@ -47,15 +54,15 @@ public class LevitusDataProviderImplTest {
         double lat = 53.5;
         double lon = 8.5;
 
-        calendar.set(2011, 0, 16);
+        calendar.set(2011, Calendar.JANUARY, 16);
         double temperature0 = dataProvider.getTemperature(calendar.getTime(), lat, lon);
         assertEquals(5.5981, temperature0, 1.0E-4);
 
-        calendar.set(2011, 1, 16);
+        calendar.set(2011, Calendar.FEBRUARY, 16);
         double temperature1 = dataProvider.getTemperature(calendar.getTime(), lat, lon);
         assertEquals(4.2726, temperature1, 1.0E-4);
 
-        calendar.set(2011, 0, 31);
+        calendar.set(2011, Calendar.JANUARY, 31);
         double fract = LevitusDataProviderImpl.calculateLinearFraction(
                 ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar());
         double expected = LevitusDataProviderImpl.interpolate(temperature0, temperature1, fract);
