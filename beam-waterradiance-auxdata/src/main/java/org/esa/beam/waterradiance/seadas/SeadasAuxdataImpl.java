@@ -25,9 +25,8 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     }
 
     @Override
-    public double getOzone(Date date, double lat, double lon) throws Exception {
+    public double getOzone(Date date, double lat, double lon) throws IOException {
 
-        //@todo try to do most of the work in the constructor
         Calendar calendar = ProductData.UTC.create(date, 0).getAsCalendar();
         utcCalendar.clear();
         utcCalendar.setTime(date);
@@ -52,9 +51,8 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
             secondYear++;
             secondDay = 1;
         }
-
-        final double firstOzone = getOzone((float) lat, lon, firstDay, firstYear);
-        final double secondOzone = getOzone((float) lat, lon, secondDay, secondYear);
+        final double firstOzone = getOzone((float) lat, lon, getProduct(firstDay, firstYear));
+        final double secondOzone = getOzone((float) lat, lon, getProduct(secondDay, secondYear));
         return (1 - fraction) * firstOzone + fraction * secondOzone;
     }
 
@@ -67,7 +65,15 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return "" + day;
     }
 
-    private double getOzone(float lat, double lon, int day, int year) throws IOException {
+    private double getOzone(float lat, double lon, Product product) throws IOException {
+        PixelPos pixelPos = new PixelPos(lat, (float) lon);
+        if (product.getSceneRasterWidth() == 288) {
+            pixelPos = new PixelPos(lat, (float) (lon * 0.8));
+        }
+        return Double.parseDouble(product.getBand(ozone_band_name).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
+    }
+
+    private Product getProduct(int day, int year) throws IOException {
         final String dayInFittingLength = getDayInFittingLength(day);
         String productID = "" + year + dayInFittingLength;
         final Product product;
@@ -76,14 +82,14 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         } else {
             String productPath = auxDataDirectory.getPath() +
                     "//" + year + "//" + day + "//N" + year + dayInFittingLength + "00_O3_TOMSOMI_24h.hdf";
-            product = ProductIO.readProduct(new File(productPath));
+            try {
+                product = ProductIO.readProduct(new File(productPath));
+            } catch (IOException e) {
+                throw new IOException("Could not find product for given day");
+            }
             productMap.put(productID, product);
         }
-        PixelPos pixelPos = new PixelPos(lat, (float) lon);
-        if (product.getSceneRasterWidth() == 288) {
-            pixelPos = new PixelPos(lat, (float) (lon * 0.8));
-        }
-        return Double.parseDouble(product.getBand(ozone_band_name).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
+        return product;
     }
 
     static double getDateFraction(Calendar calendar, double fractionOffset) {

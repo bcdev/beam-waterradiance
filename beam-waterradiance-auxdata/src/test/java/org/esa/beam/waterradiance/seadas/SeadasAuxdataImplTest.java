@@ -43,18 +43,19 @@ public class SeadasAuxdataImplTest {
         }
     }
 
-//            @todo what to do when date is out of validity range?
-//    @Test
-//    public void testGetOzoneWithInvalidValue() {
-//        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-//        calendar.set(2005, Calendar.JUNE, 15, 6, 0, 0);
-//        try {
-//            final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
-//            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 83, 52);
-//        } catch (Exception unexpected) {
-//            fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
-//        }
-//    }
+//    @todo what to do when date is out of validity range?
+    @Test
+    public void testGetOzoneWithInvalidValue() {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(2005, Calendar.JUNE, 15, 6, 0, 0);
+        try {
+            final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
+            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 83, 52);
+            fail("Exception expected");
+        } catch (Exception expected) {
+            assertEquals("Could not find product for given day", expected.getMessage());
+        }
+    }
 
     @Test
     public void testGetOzoneForProductAfterNoon() {
