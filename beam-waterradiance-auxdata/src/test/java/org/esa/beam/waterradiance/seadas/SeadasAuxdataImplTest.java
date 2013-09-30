@@ -261,7 +261,50 @@ public class SeadasAuxdataImplTest {
     }
 
     @Test
+    public void testCreateTimeSpan_varyOffset() {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(2008, Calendar.OCTOBER, 18, 17, 22, 11);
+
+        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, -1);
+        assertNotNull(timeSpan);
+        assertEquals(2008, timeSpan.getStartYear());
+        assertEquals(291, timeSpan.getStartDay());
+        assertEquals(2008, timeSpan.getEndYear());
+        assertEquals(292, timeSpan.getEndDay());
+    }
+
+    @Test
     public void testCreateTimeSpanForSurfacePressure() {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(2007, Calendar.SEPTEMBER, 17, 17, 22, 11);
+
+        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, 0, 0);
+        assertNotNull(timeSpan);
+        assertEquals(2007, timeSpan.getStartYear());
+        assertEquals(260, timeSpan.getStartDay());
+        assertEquals(2, timeSpan.getStartInterval());
+        assertEquals(2007, timeSpan.getEndYear());
+        assertEquals(260, timeSpan.getEndDay());
+        assertEquals(3, timeSpan.getEndInterval());
+    }
+
+    @Test
+    public void testCreateTimeSpanForSurfacePressureWithDateOverlap_1() {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(2007, Calendar.SEPTEMBER, 17, 2, 2, 11);
+
+        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, -1, 0);
+        assertNotNull(timeSpan);
+        assertEquals(2007, timeSpan.getStartYear());
+        assertEquals(259, timeSpan.getStartDay());
+        assertEquals(3, timeSpan.getStartInterval());
+        assertEquals(2007, timeSpan.getEndYear());
+        assertEquals(260, timeSpan.getEndDay());
+        assertEquals(0, timeSpan.getEndInterval());
+    }
+
+    @Test
+    public void testCreateTimeSpanForSurfacePressureWithDateOverlap_2() {
         final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
         calendar.set(2007, Calendar.SEPTEMBER, 17, 22, 22, 11);
 
@@ -273,19 +316,6 @@ public class SeadasAuxdataImplTest {
         assertEquals(2007, timeSpan.getEndYear());
         assertEquals(261, timeSpan.getEndDay());
         assertEquals(0, timeSpan.getEndInterval());
-    }
-
-    @Test
-    public void testCreateTimeSpan_varyOffset() {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2008, Calendar.OCTOBER, 18, 17, 22, 11);
-
-        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, -1);
-        assertNotNull(timeSpan);
-        assertEquals(2008, timeSpan.getStartYear());
-        assertEquals(291, timeSpan.getStartDay());
-        assertEquals(2008, timeSpan.getEndYear());
-        assertEquals(292, timeSpan.getEndDay());
     }
 
     @Test
