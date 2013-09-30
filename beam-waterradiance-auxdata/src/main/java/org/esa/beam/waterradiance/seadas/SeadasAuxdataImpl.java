@@ -13,7 +13,8 @@ import java.util.*;
 public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     private final File auxDataDirectory;
-    private final static long milli_seconds_per_day = 24 * 60 * 60 * 1000;
+    private final static long MILLI_SECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+    public static final long HALF_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 2;
     private final static String ozone_band_name = "Geophysical Data/ozone";
     private static final Calendar utcCalendar= GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
 
@@ -26,7 +27,9 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
         //@todo try to do most of the work in the constructor
         Calendar calendar = ProductData.UTC.create(date, 0).getAsCalendar();
-        double fraction = getDateFraction(date, 0.5);
+        utcCalendar.clear();
+        utcCalendar.setTime(date);
+        double fraction = getDateFraction(utcCalendar, 0.5);
         final int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
         int dayOffset = 0;
         if (hourOfDay < 12) {
@@ -66,23 +69,23 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return Double.parseDouble(product.getBand(ozone_band_name).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
     }
 
-    static double getDateFraction(Date date, double fractionOffset) {
-        //@todo this can be done better
-//        final long productTimeInMillis = date.getTime();
-//        final long millisOnProductDay = productTimeInMillis % milli_seconds_per_day;
-        utcCalendar.clear();
-        utcCalendar.setTime(date);
-        int millisOnProductDay = utcCalendar.get(Calendar.MILLISECOND);
-        millisOnProductDay += 1000.0 * utcCalendar.get(Calendar.SECOND);
-        millisOnProductDay += 60000.0 * utcCalendar.get(Calendar.MINUTE);
-        millisOnProductDay += 3600000.0 * utcCalendar.get(Calendar.HOUR_OF_DAY);
+    static double getDateFraction(Calendar calendar, double fractionOffset) {
+        final int millisOnProductDay = calculateMillisOnDay(calendar);
         double fraction;
-        if (millisOnProductDay < (milli_seconds_per_day / 2)) {
-            fraction = fractionOffset + ((double) millisOnProductDay / milli_seconds_per_day);
+        if (millisOnProductDay < HALF_MILLI_SECONDS_PER_DAY) {
+            fraction = fractionOffset + ((double) millisOnProductDay / MILLI_SECONDS_PER_DAY);
         } else {
-            fraction = -fractionOffset + ((double) millisOnProductDay / milli_seconds_per_day);
+            fraction = -fractionOffset + ((double) millisOnProductDay / MILLI_SECONDS_PER_DAY);
         }
         return fraction;
+    }
+
+    private static int calculateMillisOnDay(Calendar calendar) {
+        int millisOnProductDay = calendar.get(Calendar.MILLISECOND);
+        millisOnProductDay += 1000.0 * calendar.get(Calendar.SECOND);
+        millisOnProductDay += 60000.0 * calendar.get(Calendar.MINUTE);
+        millisOnProductDay += 3600000.0 * calendar.get(Calendar.HOUR_OF_DAY);
+        return millisOnProductDay;
     }
 
     @Override
