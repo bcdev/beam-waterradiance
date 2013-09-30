@@ -139,4 +139,109 @@ public class SeadasAuxdataImplTest {
 
         assertEquals(0.02373842592592597, SeadasAuxdataImpl.getDateFraction(calendar, 0.7), 1e-8);
     }
+
+    @Test
+    public void testGetDayString() {
+         assertEquals("000", SeadasAuxdataImpl.getDayString(0));
+         assertEquals("009", SeadasAuxdataImpl.getDayString(9));
+         assertEquals("010", SeadasAuxdataImpl.getDayString(10));
+         assertEquals("099", SeadasAuxdataImpl.getDayString(99));
+         assertEquals("100", SeadasAuxdataImpl.getDayString(100));
+         assertEquals("114", SeadasAuxdataImpl.getDayString(114));
+    }
+
+    @Test
+    public void testGetDayOffset() {
+         assertEquals(-1, SeadasAuxdataImpl.getDayOffset(0));
+         assertEquals(-1, SeadasAuxdataImpl.getDayOffset(11));
+         assertEquals(0, SeadasAuxdataImpl.getDayOffset(12));
+         assertEquals(0, SeadasAuxdataImpl.getDayOffset(23));
+    }
+
+    @Test
+    public void testCreateTimeSpan() {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(2007, Calendar.SEPTEMBER, 17, 17, 22, 11);
+
+        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, 0);
+        assertNotNull(timeSpan);
+        assertEquals(2007, timeSpan.getStartYear());
+        assertEquals(260, timeSpan.getStartDay());
+        assertEquals(2007, timeSpan.getEndYear());
+        assertEquals(261, timeSpan.getEndDay());
+    }
+
+    @Test
+    public void testCreateTimeSpan_varyOffset() {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(2008, Calendar.OCTOBER, 18, 17, 22, 11);
+
+        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, -1);
+        assertNotNull(timeSpan);
+        assertEquals(2008, timeSpan.getStartYear());
+        assertEquals(291, timeSpan.getStartDay());
+        assertEquals(2008, timeSpan.getEndYear());
+        assertEquals(292, timeSpan.getEndDay());
+    }
+
+    @Test
+    public void testAdjustForOverlappingYears_startYear() {
+        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
+        timeSpan.setStartDay(0);
+        timeSpan.setStartYear(2006);
+
+        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
+        assertEquals(365, timeSpan.getStartDay());
+        assertEquals(2005, timeSpan.getStartYear());
+    }
+
+    @Test
+    public void testAdjustForOverlappingYears_startYear_leapYear() {
+        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
+        timeSpan.setStartDay(0);
+        timeSpan.setStartYear(2005);
+
+        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
+        assertEquals(366, timeSpan.getStartDay());
+        assertEquals(2004, timeSpan.getStartYear());
+    }
+
+    @Test
+    public void testAdjustForOverlappingYears_endYear() {
+        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
+        timeSpan.setStartDay(365);
+        timeSpan.setEndDay(366);
+        timeSpan.setEndYear(2007);
+
+        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
+        assertEquals(1, timeSpan.getEndDay());
+        assertEquals(2008, timeSpan.getEndYear());
+    }
+
+    @Test
+    public void testAdjustForOverlappingYears_endYear_leapYear() {
+        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
+        timeSpan.setStartDay(365);
+        timeSpan.setEndDay(367);
+        timeSpan.setEndYear(2000);
+
+        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
+        assertEquals(1, timeSpan.getEndDay());
+        assertEquals(2001, timeSpan.getEndYear());
+    }
+
+    @Test
+    public void testAdjustForOverlappingYears_noAdjustments() {
+        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
+        timeSpan.setStartDay(219);
+        timeSpan.setStartYear(2012);
+        timeSpan.setEndDay(220);
+        timeSpan.setEndYear(2012);
+
+        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
+        assertEquals(219, timeSpan.getStartDay());
+        assertEquals(2012, timeSpan.getStartYear());
+        assertEquals(220, timeSpan.getEndDay());
+        assertEquals(2012, timeSpan.getEndYear());
+    }
 }

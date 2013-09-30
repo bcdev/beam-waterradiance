@@ -3,7 +3,6 @@ package org.esa.beam.waterradiance.seadas;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.waterradiance.AtmosphericAuxdata;
 
 import java.io.File;
@@ -12,54 +11,67 @@ import java.util.*;
 
 public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
-    private final File auxDataDirectory;
-    private final static long MILLI_SECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-    public static final long HALF_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 2;
-    private final static String ozone_band_name = "Geophysical Data/ozone";
-    private static final Calendar utcCalendar= GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-    private final Map<String,Product> productMap;
+    private static final long MILLI_SECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+    private static final long HALF_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 2;
+    private static final String OZONE_BAND_NAME = "Geophysical Data/ozone";
+    private static final Calendar utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
 
-    private SeadasAuxdataImpl(File auxDataDirectory) {
-        this.auxDataDirectory = auxDataDirectory;
-        productMap = new HashMap<String, Product>();
+    private final File auxDataDirectory;
+    private final Map<String, Product> productMap;
+
+    public static SeadasAuxdataImpl create(String auxPath) throws IOException {
+        final File auxDataDirectory = new File(auxPath);
+        if (!auxDataDirectory.isDirectory()) {
+            throw new IOException();
+        }
+        return new SeadasAuxdataImpl(auxDataDirectory);
     }
 
     @Override
     public double getOzone(Date date, double lat, double lon) throws IOException {
+        setCalendar(date);
+        final double dateFraction = getDateFraction(utcCalendar, 0.5);
 
-        Calendar calendar = ProductData.UTC.create(date, 0).getAsCalendar();
-        utcCalendar.clear();
-        utcCalendar.setTime(date);
-        double fraction = getDateFraction(utcCalendar, 0.5);
-        final int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+        int dayOffset = getDayOffset(getHourOfDay());
+
+        TimeSpan timeSpan = createTimeSpan(utcCalendar, dayOffset);
+        timeSpan = adjustForOverlappingYears(timeSpan);
+
+        final Product startProduct = getProduct(timeSpan.getStartDay(), timeSpan.getStartYear());
+        final Product endproduct = getProduct(timeSpan.getEndDay(), timeSpan.getEndYear());
+
+        final double firstOzone = getOzone((float) lat, lon, startProduct);
+        final double secondOzone = getOzone((float) lat, lon, endproduct);
+
+        return (1.0 - dateFraction) * firstOzone + dateFraction * secondOzone;
+    }
+
+    @Override
+    public double getSurfacePressure(Date date, double lat, double lon) throws Exception {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void dispose() {
+        for (Product product : productMap.values()) {
+            product.dispose();
+        }
+        productMap.clear();
+    }
+
+    static int getDayOffset(int hourOfDay) {
         int dayOffset = 0;
         if (hourOfDay < 12) {
             dayOffset = -1;
         }
-        int firstDay = calendar.get(Calendar.DAY_OF_YEAR) + dayOffset;
-        int firstYear = calendar.get(Calendar.YEAR);
-        int secondDay = calendar.get(Calendar.DAY_OF_YEAR) + dayOffset + 1;
-        int secondYear = firstYear;
-        if (firstDay < 1) {
-            firstYear--;
-            if (firstYear % 4 == 0) {
-                firstDay = 366;
-            } else {
-                firstDay = 365;
-            }
-        } else if (secondDay > 365 || (secondYear % 4 == 0 && secondDay > 366)) {
-            secondYear++;
-            secondDay = 1;
-        }
-        final double firstOzone = getOzone((float) lat, lon, getProduct(firstDay, firstYear));
-        final double secondOzone = getOzone((float) lat, lon, getProduct(secondDay, secondYear));
-        return (1 - fraction) * firstOzone + fraction * secondOzone;
+        return dayOffset;
     }
 
-    private String getDayInFittingLength(int day) {
-        if(day < 10) {
+    // package access for testing only tb 2013-09-30
+    static String getDayString(int day) {
+        if (day < 10) {
             return "00" + day;
-        } else if(day < 100) {
+        } else if (day < 100) {
             return "0" + day;
         }
         return "" + day;
@@ -70,14 +82,23 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         if (product.getSceneRasterWidth() == 288) {
             pixelPos = new PixelPos(lat, (float) (lon * 0.8));
         }
-        return Double.parseDouble(product.getBand(ozone_band_name).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
+        return Double.parseDouble(product.getBand(OZONE_BAND_NAME).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
+    }
+
+    private int getHourOfDay() {
+        return utcCalendar.get(Calendar.HOUR_OF_DAY);
+    }
+
+    private void setCalendar(Date date) {
+        utcCalendar.clear();
+        utcCalendar.setTime(date);
     }
 
     private Product getProduct(int day, int year) throws IOException {
-        final String dayInFittingLength = getDayInFittingLength(day);
+        final String dayInFittingLength = getDayString(day);
         String productID = "" + year + dayInFittingLength;
         final Product product;
-        if(productMap.containsKey(productID)) {
+        if (productMap.containsKey(productID)) {
             product = productMap.get(productID);
         } else {
             String productPath = auxDataDirectory.getPath() +
@@ -111,24 +132,84 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return millisOnProductDay;
     }
 
-    @Override
-    public double getSurfacePressure(Date date, double lat, double lon) throws Exception {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    static TimeSpan createTimeSpan(Calendar calendar, int dayOffset) {
+        final TimeSpan timeSpan = new TimeSpan();
+        final int startYear = calendar.get(Calendar.YEAR);
+        timeSpan.setStartYear(startYear);
+
+        int startDay = calendar.get(Calendar.DAY_OF_YEAR) + dayOffset;
+        timeSpan.setStartDay(startDay);
+        timeSpan.setEndYear(startYear);
+        timeSpan.setEndDay(startDay + 1);
+        return timeSpan;
     }
 
-    @Override
-    public void dispose() {
-        for (Product product : productMap.values()) {
-            product.dispose();
+    static TimeSpan adjustForOverlappingYears(TimeSpan timeSpan) {
+        int startDay = timeSpan.getStartDay();
+        int startYear = timeSpan.getStartYear();
+        int endDay = timeSpan.getEndDay();
+        int endYear = timeSpan.getEndYear();
+
+        if (startDay < 1) {
+            startYear--;
+            if (startYear % 4 == 0) {
+                startDay = 366;
+            } else {
+                startDay = 365;
+            }
+        } else if (endDay > 365 || (endYear % 4 == 0 && endDay > 366)) {
+            endYear++;
+            endDay = 1;
         }
-        productMap.clear();
+
+        timeSpan.setStartDay(startDay);
+        timeSpan.setStartYear(startYear);
+        timeSpan.setEndDay(endDay);
+        timeSpan.setEndYear(endYear);
+        return timeSpan;
     }
 
-    public static SeadasAuxdataImpl create(String auxPath) throws IOException {
-        final File auxDataDirectory = new File(auxPath);
-        if (!auxDataDirectory.isDirectory()) {
-            throw new IOException();
+    private SeadasAuxdataImpl(File auxDataDirectory) {
+        this.auxDataDirectory = auxDataDirectory;
+        productMap = new HashMap<String, Product>();
+    }
+
+    public static class TimeSpan {
+        private int startYear;
+        private int startDay;
+        private int endYear;
+        private int endDay;
+
+        int getStartYear() {
+            return startYear;
         }
-        return new SeadasAuxdataImpl(auxDataDirectory);
+
+        void setStartYear(int startYear) {
+            this.startYear = startYear;
+        }
+
+        int getStartDay() {
+            return startDay;
+        }
+
+        void setStartDay(int startDay) {
+            this.startDay = startDay;
+        }
+
+        int getEndYear() {
+            return endYear;
+        }
+
+        void setEndYear(int endYear) {
+            this.endYear = endYear;
+        }
+
+        int getEndDay() {
+            return endDay;
+        }
+
+        void setEndDay(int endDay) {
+            this.endDay = endDay;
+        }
     }
 }
