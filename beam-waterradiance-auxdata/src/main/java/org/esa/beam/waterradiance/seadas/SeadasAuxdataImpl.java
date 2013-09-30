@@ -56,11 +56,20 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return (1 - fraction) * firstOzone + fraction * secondOzone;
     }
 
+    private String getDayInFittingLength(int day) {
+        if(day < 10) {
+            return "00" + day;
+        } else if(day < 100) {
+            return "0" + day;
+        }
+        return "" + day;
+    }
+
     private double getOzone(float lat, double lon, int day, int year) throws IOException {
         //@todo ensure that each product is only read once for one operator call
         //@todo consider case when day is < 100
         String productPath = auxDataDirectory.getPath() +
-                "//" + year + "//" + day + "//N" + year + day + "00_O3_TOMSOMI_24h.hdf";
+                "//" + year + "//" + day + "//N" + year + getDayInFittingLength(day) + "00_O3_TOMSOMI_24h.hdf";
         final Product product = ProductIO.readProduct(new File(productPath));
         PixelPos pixelPos = new PixelPos(lat, (float) lon);
         if (product.getSceneRasterWidth() == 288) {
