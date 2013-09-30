@@ -60,11 +60,11 @@ public class SeadasAuxdataImplTest {
     public void testGetOzoneForProductAfterNoon() {
         final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
         calendar.set(2005, Calendar.JUNE, 15, 18, 0, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         try {
             final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 83, 65);
-            // @todo 2 tb/** increase accuracy  tb 2013-09-30
-            assertEquals(297.0, ozone, 1e-3);
+            assertEquals(297.0, ozone, 1e-8);
         } catch (Exception unexpected) {
             fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
         }
@@ -74,11 +74,11 @@ public class SeadasAuxdataImplTest {
     public void testGetOzoneForProductBeforeNoon() {
         final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
         calendar.set(2005, Calendar.JUNE, 16, 6, 0, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         try {
             final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 83, 65);
-            // @todo 2 tb/** increase accuracy  tb 2013-09-30                                              (
-            assertEquals(309.0, ozone, 1e-3);
+            assertEquals(309.0, ozone, 1e-8);
         } catch (Exception unexpected) {
             fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
         }
