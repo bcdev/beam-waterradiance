@@ -17,9 +17,11 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     public static final long HALF_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 2;
     private final static String ozone_band_name = "Geophysical Data/ozone";
     private static final Calendar utcCalendar= GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+    private final Map<String,Product> productMap;
 
     private SeadasAuxdataImpl(File auxDataDirectory) {
         this.auxDataDirectory = auxDataDirectory;
+        productMap = new HashMap<String, Product>();
     }
 
     @Override
@@ -66,11 +68,17 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     }
 
     private double getOzone(float lat, double lon, int day, int year) throws IOException {
-        //@todo ensure that each product is only read once for one operator call
-        //@todo consider case when day is < 100
-        String productPath = auxDataDirectory.getPath() +
-                "//" + year + "//" + day + "//N" + year + getDayInFittingLength(day) + "00_O3_TOMSOMI_24h.hdf";
-        final Product product = ProductIO.readProduct(new File(productPath));
+        final String dayInFittingLength = getDayInFittingLength(day);
+        String productID = "" + year + dayInFittingLength;
+        final Product product;
+        if(productMap.containsKey(productID)) {
+            product = productMap.get(productID);
+        } else {
+            String productPath = auxDataDirectory.getPath() +
+                    "//" + year + "//" + day + "//N" + year + dayInFittingLength + "00_O3_TOMSOMI_24h.hdf";
+            product = ProductIO.readProduct(new File(productPath));
+            productMap.put(productID, product);
+        }
         PixelPos pixelPos = new PixelPos(lat, (float) lon);
         if (product.getSceneRasterWidth() == 288) {
             pixelPos = new PixelPos(lat, (float) (lon * 0.8));
@@ -104,7 +112,10 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     @Override
     public void dispose() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        for (Product product : productMap.values()) {
+            product.dispose();
+        }
+        productMap.clear();
     }
 
     public static SeadasAuxdataImpl create(String auxPath) throws IOException {
