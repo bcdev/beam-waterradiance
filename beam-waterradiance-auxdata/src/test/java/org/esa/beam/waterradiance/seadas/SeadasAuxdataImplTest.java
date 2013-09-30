@@ -43,7 +43,6 @@ public class SeadasAuxdataImplTest {
         }
     }
 
-//    @todo what to do when date is out of validity range?
     @Test
     public void testGetOzoneWithInvalidValue() {
         final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
@@ -53,7 +52,7 @@ public class SeadasAuxdataImplTest {
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 83, 52);
             fail("Exception expected");
         } catch (Exception expected) {
-            assertEquals("Could not find product for given day", expected.getMessage());
+            assertEquals("Could not retrieve ozone for given day", expected.getMessage());
         }
     }
 
@@ -83,6 +82,80 @@ public class SeadasAuxdataImplTest {
         } catch (Exception unexpected) {
             fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
         }
+    }
+
+    @Test
+    public void testGetSurfacePressureWithInvalidValue() {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(2005, Calendar.JUNE, 15, 1, 30, 0);
+        try {
+            final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
+            final double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 83, 52);
+            fail("Exception expected");
+        } catch (Exception expected) {
+            assertEquals("Could not retrieve surface pressure for given day", expected.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetSurfacePressure() {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(Calendar.MILLISECOND, 0);
+        try {
+            final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
+
+            calendar.set(2005, Calendar.JUNE, 16, 6, 0, 0);
+            double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 182, 51);
+            assertEquals(1021.36, surfacePressure, 1e-8);
+
+            calendar.set(2005, Calendar.JUNE, 16, 1, 30, 0);
+            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 146, 98);
+            assertEquals(1015.49, surfacePressure, 1e-8);
+
+            calendar.set(2005, Calendar.JUNE, 15, 22, 30, 0);
+            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 146, 98);
+            assertEquals(1014.49, surfacePressure, 1e-8);
+
+            calendar.set(2005, Calendar.JUNE, 16, 10, 30, 0);
+            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 159, 92);
+            assertEquals(1014.2, surfacePressure, 1e-8);
+
+            calendar.set(2005, Calendar.JUNE, 16, 19, 30, 0);
+            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 178, 86);
+            assertEquals(1013.28, surfacePressure, 1e-8);
+
+        } catch (Exception unexpected) {
+            fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetSurfacePressureDateFraction_varyHour() {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+
+        calendar.set(2012, Calendar.JULY, 16, 12, 0, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        assertEquals(0.5, SeadasAuxdataImpl.getDateFractionForSurfacePressure(calendar), 1e-8);
+
+        calendar.set(2012, Calendar.JULY, 16, 4, 30, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        assertEquals(0.25, SeadasAuxdataImpl.getDateFractionForSurfacePressure(calendar), 1e-8);
+
+        calendar.set(2012, Calendar.JULY, 16, 19, 30, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        assertEquals(0.75, SeadasAuxdataImpl.getDateFractionForSurfacePressure(calendar), 1e-8);
+
+        calendar.set(2012, Calendar.JULY, 16, 9, 36, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        assertEquals(0.1, SeadasAuxdataImpl.getDateFractionForSurfacePressure(calendar), 1e-8);
+
+        calendar.set(2012, Calendar.JULY, 16, 14, 59, 59);
+        calendar.set(Calendar.MILLISECOND, 999);
+        assertEquals(0.9999999537037038, SeadasAuxdataImpl.getDateFractionForSurfacePressure(calendar), 1e-8);
+
+        calendar.set(2012, Calendar.JULY, 16, 23, 59, 59);
+        calendar.set(Calendar.MILLISECOND, 999);
+        assertEquals(0.4999999537037037, SeadasAuxdataImpl.getDateFractionForSurfacePressure(calendar), 1e-8);
     }
 
     @Test
