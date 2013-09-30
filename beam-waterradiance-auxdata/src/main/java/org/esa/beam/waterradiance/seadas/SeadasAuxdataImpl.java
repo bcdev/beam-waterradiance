@@ -14,8 +14,8 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     private static final long MILLI_SECONDS_PER_DAY = 24 * 60 * 60 * 1000;
     private static final long HALF_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 2;
     private static final String OZONE_BAND_NAME = "Geophysical Data/ozone";
-    private static final Calendar utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
 
+    private final Calendar utcCalendar;
     private final File auxDataDirectory;
     private final Map<String, Product> productMap;
 
@@ -38,10 +38,10 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         timeSpan = adjustForOverlappingYears(timeSpan);
 
         final Product startProduct = getProduct(timeSpan.getStartDay(), timeSpan.getStartYear());
-        final Product endproduct = getProduct(timeSpan.getEndDay(), timeSpan.getEndYear());
+        final Product endProduct = getProduct(timeSpan.getEndDay(), timeSpan.getEndYear());
 
         final double firstOzone = getOzone((float) lat, lon, startProduct);
-        final double secondOzone = getOzone((float) lat, lon, endproduct);
+        final double secondOzone = getOzone((float) lat, lon, endProduct);
 
         return (1.0 - dateFraction) * firstOzone + dateFraction * secondOzone;
     }
@@ -172,6 +172,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     private SeadasAuxdataImpl(File auxDataDirectory) {
         this.auxDataDirectory = auxDataDirectory;
         productMap = new HashMap<String, Product>();
+        utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
     }
 
     public static class TimeSpan {
