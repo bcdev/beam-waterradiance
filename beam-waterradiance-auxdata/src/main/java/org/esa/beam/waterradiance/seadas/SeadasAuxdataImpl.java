@@ -3,7 +3,6 @@ package org.esa.beam.waterradiance.seadas;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.waterradiance.AtmosphericAuxdata;
 
 import java.io.File;
@@ -52,10 +51,30 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         final Product startProduct = getTOMSOMIProduct(timeSpan.getStartDay(), timeSpan.getStartYear());
         final Product endProduct = getTOMSOMIProduct(timeSpan.getEndDay(), timeSpan.getEndYear());
 
-        final double firstOzone = getOzone((float) lat, lon, startProduct);
-        final double secondOzone = getOzone((float) lat, lon, endProduct);
+        final double startOzone = getOzone((float) lat, lon, startProduct);
+        final double endOzone = getOzone((float) lat, lon, endProduct);
 
-        return (1.0 - dateFraction) * firstOzone + dateFraction * secondOzone;
+        return (1.0 - dateFraction) * startOzone + dateFraction * endOzone;
+    }
+
+    @Override
+    public double getSurfacePressure(Date date, double lat, double lon) throws Exception {
+        setCalendar(date);
+        double fraction = getDateFractionForSurfacePressure(utcCalendar);
+
+        final int startDayOffset = getStartDayOffset(getHourOfDay());
+        final int endDayOffset = getEndDayOffset(getHourOfDay());
+
+        TimeSpan timeSpan = createTimeSpan(utcCalendar, startDayOffset, endDayOffset);
+        timeSpan = adjustForOverlappingYears(timeSpan);
+
+        final Product startProduct = getNCEPProduct(timeSpan.getStartDay(), timeSpan.getStartYear(), timeSpan.getStartInterval());
+        final Product endProduct = getNCEPProduct(timeSpan.getEndDay(), timeSpan.getEndYear(), timeSpan.getEndInterval());
+
+        final double startSurfacePressure = getSurfacePressure((float) lat, lon, startProduct);
+        final double endSurfacePressure = getSurfacePressure((float) lat, lon, endProduct);
+
+        return (1.0 - fraction) * startSurfacePressure + fraction * endSurfacePressure;
     }
 
     @Override
@@ -76,6 +95,22 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
             dayOffset = -1;
         }
         return dayOffset;
+    }
+
+    static int getStartDayOffset(int hourOfDay) {
+        int startDayOffset = 0;
+        if (hourOfDay < 3) {
+            startDayOffset = -1;
+        }
+        return startDayOffset;
+    }
+
+    static int getEndDayOffset(int hourOfDay) {
+        int endDayOffset = 0;
+        if (hourOfDay >= 21) {
+            endDayOffset = 1;
+        }
+        return endDayOffset;
     }
 
     // package access for testing only tb 2013-09-30
@@ -163,47 +198,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return fraction;
     }
 
-    @Override
-    public double getSurfacePressure(Date date, double lat, double lon) throws Exception {
-
-        Calendar calendar = ProductData.UTC.create(date, 0).getAsCalendar();
-        utcCalendar.clear();
-        utcCalendar.setTime(date);
-        double fraction = getDateFractionForSurfacePressure(utcCalendar);
-        final int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
-        int firstDayOffset = 0;
-        int secondDayOffset = 0;
-        if (hourOfDay < 3) {
-            firstDayOffset = -1;
-        } else if (hourOfDay >= 21) {
-            secondDayOffset = 1;
-        }
-        int firstDay = calendar.get(Calendar.DAY_OF_YEAR) + firstDayOffset;
-        int firstYear = calendar.get(Calendar.YEAR);
-        int secondDay = calendar.get(Calendar.DAY_OF_YEAR) + secondDayOffset;
-        int secondYear = firstYear;
-        if (firstDay < 1) {
-            firstYear--;
-            if (firstYear % 4 == 0) {
-                firstDay = 366;
-            } else {
-                firstDay = 365;
-            }
-        } else if (secondDay > 365 || (secondYear % 4 == 0 && secondDay > 366)) {
-            secondYear++;
-            secondDay = 1;
-        }
-        int firstHour = ((hourOfDay + 3) / 6) - 1;
-        if (firstHour < 0) {
-            firstHour = 3;
-        }
-        int secondHour = (firstHour + 1) % 4;
-
-        final double firstOzone = getSurfacePressure((float) lat, lon, getNCEPProduct(firstDay, firstYear, firstHour));
-        final double secondOzone = getSurfacePressure((float) lat, lon, getNCEPProduct(secondDay, secondYear, secondHour));
-        return (1 - fraction) * firstOzone + fraction * secondOzone;
-    }
-
     private double getSurfacePressure(float lat, double lon, Product product) throws IOException {
         PixelPos pixelPos = new PixelPos(lat, (float) lon);
         if (product.getSceneRasterWidth() == 288) {
@@ -229,6 +223,26 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         timeSpan.setStartDay(startDay);
         timeSpan.setEndYear(startYear);
         timeSpan.setEndDay(startDay + 1);
+        return timeSpan;
+    }
+
+    static TimeSpan createTimeSpan(Calendar calendar, int startDayOffset, int endDayOffset) {
+        final TimeSpan timeSpan = new TimeSpan();
+        final int productYear = calendar.get(Calendar.YEAR);
+        timeSpan.setStartYear(productYear);
+        final int productDay = calendar.get(Calendar.DAY_OF_YEAR);
+        timeSpan.setStartDay(productDay + startDayOffset);
+        final int productHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int startInterval = ((productHour + 3) / 6) - 1;
+        if (startInterval < 0) {
+            startInterval = 3;
+        }
+        int endInterval = (startInterval + 1) % 4;
+
+        timeSpan.setStartInterval(startInterval);
+        timeSpan.setEndYear(productYear);
+        timeSpan.setEndDay(productDay + endDayOffset);
+        timeSpan.setEndInterval(endInterval);
         return timeSpan;
     }
 
@@ -267,8 +281,10 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     public static class TimeSpan {
         private int startYear;
         private int startDay;
+        private int startInterval;
         private int endYear;
         private int endDay;
+        private int endInterval;
 
         int getStartYear() {
             return startYear;
@@ -286,6 +302,14 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
             this.startDay = startDay;
         }
 
+        public int getStartInterval() {
+            return startInterval;
+        }
+
+        public void setStartInterval(int startInterval) {
+            this.startInterval = startInterval;
+        }
+
         int getEndYear() {
             return endYear;
         }
@@ -300,6 +324,14 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
         void setEndDay(int endDay) {
             this.endDay = endDay;
+        }
+
+        public int getEndInterval() {
+            return endInterval;
+        }
+
+        public void setEndInterval(int endInterval) {
+            this.endInterval = endInterval;
         }
     }
 
