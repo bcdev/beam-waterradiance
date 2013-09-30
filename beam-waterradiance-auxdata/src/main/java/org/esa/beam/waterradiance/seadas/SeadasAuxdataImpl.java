@@ -8,14 +8,14 @@ import org.esa.beam.waterradiance.AtmosphericAuxdata;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.*;
 
 public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     private final File auxDataDirectory;
     private final static long milli_seconds_per_day = 24 * 60 * 60 * 1000;
     private final static String ozone_band_name = "Geophysical Data/ozone";
+    private static final Calendar utcCalendar= GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
 
     private SeadasAuxdataImpl(File auxDataDirectory) {
         this.auxDataDirectory = auxDataDirectory;
@@ -25,8 +25,8 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     public double getOzone(Date date, double lat, double lon) throws Exception {
 
         //@todo try to do most of the work in the constructor
-        double fraction = getDateFraction(date);
         Calendar calendar = ProductData.UTC.create(date, 0).getAsCalendar();
+        double fraction = getDateFraction(date, 0.5);
         final int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
         int dayOffset = 0;
         if (hourOfDay < 12) {
@@ -66,15 +66,21 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return Double.parseDouble(product.getBand(ozone_band_name).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
     }
 
-    private double getDateFraction(Date date) {
+    static double getDateFraction(Date date, double fractionOffset) {
         //@todo this can be done better
-        final long productTimeInMillis = date.getTime();
-        final long millisOnProductDay = productTimeInMillis % milli_seconds_per_day;
+//        final long productTimeInMillis = date.getTime();
+//        final long millisOnProductDay = productTimeInMillis % milli_seconds_per_day;
+        utcCalendar.clear();
+        utcCalendar.setTime(date);
+        int millisOnProductDay = utcCalendar.get(Calendar.MILLISECOND);
+        millisOnProductDay += 1000.0 * utcCalendar.get(Calendar.SECOND);
+        millisOnProductDay += 60000.0 * utcCalendar.get(Calendar.MINUTE);
+        millisOnProductDay += 3600000.0 * utcCalendar.get(Calendar.HOUR_OF_DAY);
         double fraction;
         if (millisOnProductDay < (milli_seconds_per_day / 2)) {
-            fraction = 0.5 + ((double) millisOnProductDay / milli_seconds_per_day);
+            fraction = fractionOffset + ((double) millisOnProductDay / milli_seconds_per_day);
         } else {
-            fraction = -0.5 + ((double) millisOnProductDay / milli_seconds_per_day);
+            fraction = -fractionOffset + ((double) millisOnProductDay / milli_seconds_per_day);
         }
         return fraction;
     }
