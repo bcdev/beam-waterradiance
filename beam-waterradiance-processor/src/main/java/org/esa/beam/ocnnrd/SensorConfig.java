@@ -18,4 +18,8 @@ public interface SensorConfig {
     double[] getSolarFluxes(Product sourceProduct);
 
     double[] copySolarFluxes(double[] input, double[] solarFluxes);
+
+    double getSurfacePressure();
+
+    double getOzone();
 }

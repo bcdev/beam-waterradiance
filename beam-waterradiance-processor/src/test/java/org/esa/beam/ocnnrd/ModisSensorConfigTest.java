@@ -120,6 +120,16 @@ public class ModisSensorConfigTest {
         }
     }
 
+    @Test
+    public void testGetSurfacePressure() {
+        assertEquals(1019.0, modisSensorConfig.getSurfacePressure(), 1e-8);
+    }
+
+    @Test
+    public void testGetOzone() {
+        assertEquals(330.0, modisSensorConfig.getOzone(), 1e-8);
+    }
+
     private Product createProductWithSolarFluxMetadata() {
         final Product product = new Product("test", "type", 5, 5);
         double[] solarFluxes = new double[330];

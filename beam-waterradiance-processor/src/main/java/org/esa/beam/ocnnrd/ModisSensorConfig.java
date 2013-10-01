@@ -30,6 +30,8 @@ class ModisSensorConfig implements SensorConfig {
             MODIS_L1B_RADIANCE_9_BAND_NAME,
     };
     private static int MODIS_L1B_NUM_SPECTRAL_BANDS = MODIS_L1B_SPECTRAL_BAND_NAMES.length;
+    private static double surfacePressureDefaultValue = 1019.0;
+    private static double ozoneDefaultValue = 330.0;
 
     @Override
     public int getNumSpectralBands() {
@@ -63,8 +65,8 @@ class ModisSensorConfig implements SensorConfig {
         inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();
         inputs[2] = sourceSamples[Constants.SRC_VZA].getDouble();
         inputs[3] = sourceSamples[Constants.SRC_VAA].getDouble();
-        inputs[4] = 1019.0;
-        inputs[5] = 330.0;
+        inputs[4] = surfacePressureDefaultValue;
+        inputs[5] = ozoneDefaultValue;
     }
 
     @Override
@@ -89,5 +91,15 @@ class ModisSensorConfig implements SensorConfig {
     public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
         System.arraycopy(solarFluxes, 0, input, Constants.SRC_SOL_FLUX_OFFSET, MODIS_L1B_NUM_SPECTRAL_BANDS);
         return input;
+    }
+
+    @Override
+    public double getSurfacePressure() {
+        return surfacePressureDefaultValue;
+    }
+
+    @Override
+    public double getOzone() {
+        return ozoneDefaultValue;
     }
 }

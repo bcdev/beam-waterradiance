@@ -7,6 +7,9 @@ import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
 class MerisSensorConfig implements SensorConfig {
 
+    private double surfacePressure;
+    private double ozone;
+
     @Override
     public int getNumSpectralBands() {
         return EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS;
@@ -55,8 +58,10 @@ class MerisSensorConfig implements SensorConfig {
         inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();
         inputs[2] = sourceSamples[Constants.SRC_VZA].getDouble();
         inputs[3] = sourceSamples[Constants.SRC_VAA].getDouble();
-        inputs[4] = sourceSamples[Constants.SRC_PRESS].getDouble();
-        inputs[5] = sourceSamples[Constants.SRC_OZ].getDouble();
+        surfacePressure = sourceSamples[Constants.SRC_PRESS].getDouble();
+        inputs[4] = surfacePressure;
+        ozone = sourceSamples[Constants.SRC_OZ].getDouble();
+        inputs[5] = ozone;
         inputs[6] = sourceSamples[Constants.SRC_MWIND].getDouble();
         inputs[7] = sourceSamples[Constants.SRC_ZWIND].getDouble();
     }
@@ -75,5 +80,15 @@ class MerisSensorConfig implements SensorConfig {
         System.arraycopy(solarFluxes, 0, input, Constants.SRC_SOL_FLUX_OFFSET,
                          EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS);
         return input;
+    }
+
+    @Override
+    public double getSurfacePressure() {
+        return surfacePressure;
+    }
+
+    @Override
+    public double getOzone() {
+        return ozone;
     }
 }

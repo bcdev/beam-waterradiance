@@ -1,15 +1,25 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.*;
-import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.waterradiance.AtmosphericAuxdata;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
+import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
 import org.esa.beam.waterradiance.realoptimizers.LevMarNN;
 
 import java.io.IOException;
@@ -21,8 +31,8 @@ import java.util.Date;
  * @author Tom Block
  */
 @OperatorMetadata(alias = "Meris.OCNNRD", version = "1.0",
-        authors = "Tom Block, Tonio Fincke, Roland Doerffer",
-        description = "An operator computing water IOPs starting from radiances.")
+                  authors = "Tom Block, Tonio Fincke, Roland Doerffer",
+                  description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
     private static final int NUM_OUTPUTS = 69;
@@ -47,6 +57,7 @@ public class OcNnRdOperator extends PixelOperator {
     private double[] solarFluxes;
 
     private SalinityTemperatureAuxdata salinityTemperatureAuxdata = null;
+    private AtmosphericAuxdata atmosphericAuxdata = null;
     private Date date = null;
     private ThreadLocal<LevMarNN> levMarNN;
 
@@ -175,7 +186,7 @@ public class OcNnRdOperator extends PixelOperator {
         targetProduct.setAutoGrouping(autoGrouping);
         if (csvMode) {
             targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
-                    targetProduct.getSceneRasterHeight());
+                                               targetProduct.getSceneRasterHeight());
         }
     }
 
@@ -221,7 +232,7 @@ public class OcNnRdOperator extends PixelOperator {
         final ProductData.UTC startTime = sourceProduct.getStartTime();
         if (startTime != null && useClimatology) {
             date = startTime.getAsDate();
-            salinityTemperatureAuxdata = createAuxdataDataProvider();
+            initAuxdataDataProviders();
         }
 
         levMarNN = new ThreadLocal<LevMarNN>() {
@@ -242,6 +253,9 @@ public class OcNnRdOperator extends PixelOperator {
     public void dispose() {
         if (salinityTemperatureAuxdata != null) {
             salinityTemperatureAuxdata.dispose();
+        }
+        if (atmosphericAuxdata != null) {
+            atmosphericAuxdata.dispose();
         }
         super.dispose();
     }
@@ -282,11 +296,17 @@ public class OcNnRdOperator extends PixelOperator {
         return sourceSamples[Constants.SRC_DETECTOR].getInt();
     }
 
-    private static SalinityTemperatureAuxdata createAuxdataDataProvider() {
+    private void initAuxdataDataProviders() {
         try {
-            return AuxdataProviderFactory.createSalinityTemperatureDataProvider();
+            salinityTemperatureAuxdata = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
         } catch (IOException e) {
-            throw new OperatorException("Unable to create provider for auxiliary data.", e);
+            throw new OperatorException("Unable to create provider for salinity and temperature auxiliary data.", e);
+        }
+        try {
+            final String auxPath = "C:\\Users\\tonio\\Desktop\\Produkte\\OC-CCI\\anc";
+            atmosphericAuxdata = AuxdataProviderFactory.createAtmosphericDataProvider(auxPath);
+        } catch (IOException e) {
+            throw new OperatorException("Unable to create provider for atmospheric auxiliary data.", e);
         }
     }
 
@@ -307,6 +327,21 @@ public class OcNnRdOperator extends PixelOperator {
         } else {
             input_local[8] = temperature;
             input_local[9] = salinity;
+        }
+        if (atmosphericAuxdata != null) {
+            try {
+                final GeoCoding geoCoding = sourceProduct.getGeoCoding();
+                GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
+                synchronized (this) {
+                    input_local[4] = atmosphericAuxdata.getSurfacePressure(date, geoPos.getLat(), geoPos.getLon());
+                    input_local[5] = atmosphericAuxdata.getOzone(date, geoPos.getLat(), geoPos.getLon());
+                }
+            } catch (Exception e) {
+                throw new OperatorException(e);
+            }
+        } else {
+            input_local[4] = sensorConfig.getSurfacePressure();
+            input_local[5] = sensorConfig.getOzone();
         }
     }
 

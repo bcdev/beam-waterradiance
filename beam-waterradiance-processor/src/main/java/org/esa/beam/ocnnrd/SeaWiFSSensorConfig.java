@@ -28,6 +28,9 @@ public class SeaWiFSSensorConfig implements SensorConfig {
 
     private static int SEAWIFS_L1B_NUM_SPECTRAL_BANDS = SEAWIFS_L1B_SPECTRAL_BAND_NAMES.length;
 
+    private static double surfacePressureDefaultValue = 1019.0;
+    private static double ozoneDefaultValue = 330.0;
+
     @Override
     public int getNumSpectralBands() {
         return SEAWIFS_L1B_NUM_SPECTRAL_BANDS;
@@ -74,5 +77,15 @@ public class SeaWiFSSensorConfig implements SensorConfig {
     public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
         System.arraycopy(solarFluxes, 0, input, Constants.SRC_SOL_FLUX_OFFSET, SEAWIFS_L1B_NUM_SPECTRAL_BANDS);
         return input;
+    }
+
+    @Override
+    public double getSurfacePressure() {
+        return surfacePressureDefaultValue;
+    }
+
+    @Override
+    public double getOzone() {
+        return ozoneDefaultValue;
     }
 }

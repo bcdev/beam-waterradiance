@@ -109,4 +109,14 @@ public class SeaWiFSSensorConfigTest {
         }
     }
 
+    @Test
+    public void testGetSurfacePressure() {
+        Assert.assertEquals(1019.0, seaWiFSSensorConfig.getSurfacePressure(), 1e-8);
+    }
+
+    @Test
+    public void testGetOzone() {
+        Assert.assertEquals(330.0, seaWiFSSensorConfig.getOzone(), 1e-8);
+    }
+
 } 
