@@ -538,7 +538,6 @@ public class LevMarNN {
         char ch;
         int i;
         a_nn res = new a_nn();
-        res.setFilename(filename);
 
 //        res = new a_nn[](a_nn*)malloc(sizeof(a_nn));
 //        res->filename=strdup(filename);
@@ -827,12 +826,14 @@ public class LevMarNN {
         double[] act_plus;
         double[][] wgt;
 
-        for (int pl = 0; pl < ff.nplanes - 1; pl++) {
-            bias = ff.bias[pl];
-            wgt = ff.wgt[pl];
-            act_plus = ff.act[pl + 1];
-            for (int i = 0; i < ff.size[pl + 1]; i++) {
-                final double x = bias[i] + scp(wgt[i], ff.act[pl], ff.size[pl]);
+        for (int pl = 0; pl < ff.getNplanes()- 1; pl++) {
+            final double[][] act = ff.getAct();
+            final int[] size = ff.getSize();
+            bias = ff.getBias()[pl];
+            wgt = ff.getWgt()[pl];
+            act_plus = act[pl + 1];
+            for (int i = 0; i < size[pl + 1]; i++) {
+                final double x = bias[i] + scp(wgt[i], act[pl], size[pl]);
                 act_plus[i] = alphaTab.get(x);
             }
         }

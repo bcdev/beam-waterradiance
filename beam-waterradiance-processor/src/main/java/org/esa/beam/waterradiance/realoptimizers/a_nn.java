@@ -1,47 +1,16 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
-/**
- * Created with IntelliJ IDEA.
- * User: tonio
- * Date: 08.05.13
- * Time: 13:41
- * To change this template use File | Settings | File Templates.
- */
-public class a_nn {
+class a_nn {
 
-    String filename;	/* where the NN is */
-    long nnin;		    /* # of inputs to the NN */
-    long nnout;		    /* # of outputs from the NN */
-    double[] inmin;		/* minima of inputs */
-    double[] inmax;		/* maxima of inputs */
-    double[] outmin;	/* minima of outputs */
-    double[] outmax;	/* maxima of outputs */
-    feedforward nn;		/* the NN */
+    private long nnin;		    /* # of inputs to the NN */
+    private long nnout;		    /* # of outputs from the NN */
+    private double[] inmin;		/* minima of inputs */
+    private double[] inmax;		/* maxima of inputs */
+    private double[] outmin;	/* minima of outputs */
+    private double[] outmax;	/* maxima of outputs */
+    private feedforward nn;		/* the NN */
 
-    public a_nn() {
-
-    }
-
-    public a_nn(String filename, long nnin, long nnout, double[] inmin, double[] inmax, double[] outmin, double[] outmax, feedforward nn) {
-        this.filename = filename;
-        this.nnin = nnin;
-        this.nnout = nnout;
-        this.inmin = inmin;
-        this.inmax = inmax;
-        this.outmin = outmin;
-        this.outmax = outmax;
-        this.nn = nn;
-    }
-
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
-
-    public long getNnin() {
+   public long getNnin() {
         return nnin;
     }
 
