@@ -1,32 +1,29 @@
 package org.esa.beam.waterradiance.seadas;
 
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.waterradiance.AtmosphericAuxdata;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     private static final String OZONE_BAND_NAME = "Geophysical Data/ozone";
+    private static final String SURFACE_PRESSURE_BAND_NAME = "Geophysical Data/press";
+
+    private static final long MILLI_SECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+    private static final long HALF_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 2;
+    private static final long QUARTER_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 4;
+    private static final long EIGHTH_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 8;
+    private static final String[] NCEP_HOURS = {"00", "06", "12", "18"};
 
     private final Calendar utcCalendar;
     private final File auxDataDirectory;
-    private final static long MILLI_SECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-    public static final long HALF_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 2;
-    public static final long QUARTER_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 4;
-    public static final long EIGTH_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 8;
-    private final static String surface_pressure_band_name = "Geophysical Data/press";
-    private final static String[] ncep_hours = {"00", "06", "12", "18"};
     private final Map<String, Product> tomsomiProductMap;
     private final Map<String, Product> ncepProductMap;
 
@@ -123,12 +120,44 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return "" + day;
     }
 
+    // package access for testing only tb 2013-10-01
+    static String getTomsomiProductPath(String auxdataPath, int year, String dayString) {
+        final StringBuilder stringBuilder = createPreFilledStringBuilder(auxdataPath, year, dayString);
+        stringBuilder.append("00_O3_TOMSOMI_24h.hdf");
+        return stringBuilder.toString();
+    }
+
+    // package access for testing only tb 2013-10-01
+    static String getNCEPProductPath(String auxdataPath, int year, String dayString, String hourString) {
+        final StringBuilder stringBuilder = createPreFilledStringBuilder(auxdataPath, year, dayString);
+        stringBuilder.append(hourString);
+        stringBuilder.append("_MET_NCEPN_6h.hdf");
+        return stringBuilder.toString();
+    }
+
+    private static StringBuilder createPreFilledStringBuilder(String auxdataPath, int year, String dayString) {
+        final StringBuilder stringBuilder = new StringBuilder(128);
+        stringBuilder.append(auxdataPath);
+        stringBuilder.append("//");
+        stringBuilder.append(year);
+        stringBuilder.append("//");
+        stringBuilder.append(dayString);
+        stringBuilder.append("//N");
+        stringBuilder.append(year);
+        stringBuilder.append(dayString);
+        return stringBuilder;
+    }
+
     private double getOzone(float lat, double lon, Product product) throws IOException {
-        PixelPos pixelPos = new PixelPos(lat, (float) lon);
+        final int xPos = MathUtils.floorInt(lat);
+        int yPos;
         if (product.getSceneRasterWidth() == 288) {
-            pixelPos = new PixelPos(lat, (float) (lon * 0.8));
+            yPos = MathUtils.floorInt(lon * 0.8);
+        } else {
+            yPos = MathUtils.floorInt(lon);
         }
-        return Double.parseDouble(product.getBand(OZONE_BAND_NAME).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
+        final Band ozoneBand = product.getBand(OZONE_BAND_NAME);
+        return ozoneBand.getSampleInt(xPos, yPos);
     }
 
     private int getHourOfDay() {
@@ -147,8 +176,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         if (tomsomiProductMap.containsKey(productID)) {
             product = tomsomiProductMap.get(productID);
         } else {
-            String productPath = auxDataDirectory.getPath() +
-                    "//" + year + "//" + day + "//N" + year + dayInFittingLength + "00_O3_TOMSOMI_24h.hdf";
+            final String productPath = getTomsomiProductPath(auxDataDirectory.getPath(), year, dayInFittingLength);
             try {
                 product = ProductIO.readProduct(new File(productPath));
             } catch (IOException e) {
@@ -159,18 +187,15 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return product;
     }
 
-
     private Product getNCEPProduct(int day, int year, int hour) throws IOException {
         final String dayInFittingLength = getDayString(day);
-        String hourInFittingLength = ncep_hours[hour];
+        String hourInFittingLength = NCEP_HOURS[hour];
         String productID = "" + year + dayInFittingLength + hourInFittingLength;
         final Product product;
         if (ncepProductMap.containsKey(productID)) {
             product = ncepProductMap.get(productID);
         } else {
-            String productPath = auxDataDirectory.getPath() +
-                    "//" + year + "//" + day + "//N" + year + dayInFittingLength + hourInFittingLength +
-                    "_MET_NCEPN_6h.hdf";
+            String productPath = getNCEPProductPath(auxDataDirectory.getPath(), year, dayInFittingLength, hourInFittingLength);
             try {
                 product = ProductIO.readProduct(new File(productPath));
             } catch (IOException e) {
@@ -183,7 +208,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     static double getDateFractionForSurfacePressure(Calendar calendar) {
         final int millisOnProductDay = calculateMillisOnDay(calendar);
-        final long millisInQuarterDay = (millisOnProductDay + EIGTH_MILLI_SECONDS_PER_DAY) % QUARTER_MILLI_SECONDS_PER_DAY;
+        final long millisInQuarterDay = (millisOnProductDay + EIGHTH_MILLI_SECONDS_PER_DAY) % QUARTER_MILLI_SECONDS_PER_DAY;
         return ((double) millisInQuarterDay / QUARTER_MILLI_SECONDS_PER_DAY);
     }
 
@@ -203,7 +228,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         if (product.getSceneRasterWidth() == 288) {
             pixelPos = new PixelPos(lat, (float) (lon * 0.8));
         }
-        return Double.parseDouble(product.getBand(surface_pressure_band_name).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
+        return Double.parseDouble(product.getBand(SURFACE_PRESSURE_BAND_NAME).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
     }
 
     private static int calculateMillisOnDay(Calendar calendar) {

@@ -9,7 +9,9 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
 
 public class SeadasAuxdataImplTest {
 
@@ -49,7 +51,7 @@ public class SeadasAuxdataImplTest {
         calendar.set(2005, Calendar.JUNE, 15, 6, 0, 0);
         try {
             final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
-            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 83, 52);
+            seadasAuxdata.getOzone(calendar.getTime(), 83, 52);
             fail("Exception expected");
         } catch (Exception expected) {
             assertEquals("Could not retrieve ozone for given day", expected.getMessage());
@@ -90,7 +92,7 @@ public class SeadasAuxdataImplTest {
         calendar.set(2005, Calendar.JUNE, 15, 1, 30, 0);
         try {
             final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
-            final double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 83, 52);
+            seadasAuxdata.getSurfacePressure(calendar.getTime(), 83, 52);
             fail("Exception expected");
         } catch (Exception expected) {
             assertEquals("Could not retrieve surface pressure for given day", expected.getMessage());
@@ -215,20 +217,20 @@ public class SeadasAuxdataImplTest {
 
     @Test
     public void testGetDayString() {
-         assertEquals("000", SeadasAuxdataImpl.getDayString(0));
-         assertEquals("009", SeadasAuxdataImpl.getDayString(9));
-         assertEquals("010", SeadasAuxdataImpl.getDayString(10));
-         assertEquals("099", SeadasAuxdataImpl.getDayString(99));
-         assertEquals("100", SeadasAuxdataImpl.getDayString(100));
-         assertEquals("114", SeadasAuxdataImpl.getDayString(114));
+        assertEquals("000", SeadasAuxdataImpl.getDayString(0));
+        assertEquals("009", SeadasAuxdataImpl.getDayString(9));
+        assertEquals("010", SeadasAuxdataImpl.getDayString(10));
+        assertEquals("099", SeadasAuxdataImpl.getDayString(99));
+        assertEquals("100", SeadasAuxdataImpl.getDayString(100));
+        assertEquals("114", SeadasAuxdataImpl.getDayString(114));
     }
 
     @Test
     public void testGetDayOffset() {
-         assertEquals(-1, SeadasAuxdataImpl.getDayOffset(0));
-         assertEquals(-1, SeadasAuxdataImpl.getDayOffset(11));
-         assertEquals(0, SeadasAuxdataImpl.getDayOffset(12));
-         assertEquals(0, SeadasAuxdataImpl.getDayOffset(23));
+        assertEquals(-1, SeadasAuxdataImpl.getDayOffset(0));
+        assertEquals(-1, SeadasAuxdataImpl.getDayOffset(11));
+        assertEquals(0, SeadasAuxdataImpl.getDayOffset(12));
+        assertEquals(0, SeadasAuxdataImpl.getDayOffset(23));
     }
 
     @Test
@@ -377,5 +379,17 @@ public class SeadasAuxdataImplTest {
         assertEquals(2012, timeSpan.getStartYear());
         assertEquals(220, timeSpan.getEndDay());
         assertEquals(2012, timeSpan.getEndYear());
+    }
+
+    @Test
+    public void testGetTOMSOMIProductPath() {
+        assertEquals("auxdata//2008//005//N200800500_O3_TOMSOMI_24h.hdf", SeadasAuxdataImpl.getTomsomiProductPath("auxdata", 2008, "005"));
+        assertEquals("seadas//2010//116//N201011600_O3_TOMSOMI_24h.hdf", SeadasAuxdataImpl.getTomsomiProductPath("seadas", 2010, "116"));
+    }
+
+    @Test
+    public void testGetNCEPProductPath() {
+        assertEquals("auxdata//2008//005//N200800523_MET_NCEPN_6h.hdf", SeadasAuxdataImpl.getNCEPProductPath("auxdata", 2008, "005", "23"));
+        assertEquals("seadas//2010//116//N201011604_MET_NCEPN_6h.hdf", SeadasAuxdataImpl.getNCEPProductPath("seadas", 2010, "116", "04"));
     }
 }

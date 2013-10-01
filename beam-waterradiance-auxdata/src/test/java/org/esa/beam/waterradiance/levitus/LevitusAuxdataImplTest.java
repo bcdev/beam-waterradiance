@@ -2,8 +2,8 @@ package org.esa.beam.waterradiance.levitus;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
+import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
 import org.junit.Test;
 
 import java.io.IOException;
