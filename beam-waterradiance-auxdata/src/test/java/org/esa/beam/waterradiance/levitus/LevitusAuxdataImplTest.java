@@ -2,7 +2,6 @@ package org.esa.beam.waterradiance.levitus;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.waterradiance.AuxdataProviderFactory;
 import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
 import org.junit.Test;
 
@@ -26,7 +25,7 @@ public class LevitusAuxdataImplTest {
 
     @Test
     public void testGetSalinity() throws Exception {
-        final SalinityTemperatureAuxdata dataProvider = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
+        final SalinityTemperatureAuxdata dataProvider = LevitusAuxdataImpl.create();
         final Calendar calendar = createUTCCalendar();
         final double lat = 53.5;
         final double lon = 8.5;
@@ -49,7 +48,7 @@ public class LevitusAuxdataImplTest {
 
     @Test
     public void testGetSalinity_outsideProduct() throws Exception {
-        final SalinityTemperatureAuxdata dataProvider = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
+        final SalinityTemperatureAuxdata dataProvider = LevitusAuxdataImpl.create();
         final Calendar calendar = createUTCCalendar();
         final double lat = 18.5;
         final double lon = -181.5;
@@ -61,7 +60,7 @@ public class LevitusAuxdataImplTest {
 
     @Test
     public void testGetTemperature() throws Exception {
-        SalinityTemperatureAuxdata dataProvider = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
+        SalinityTemperatureAuxdata dataProvider = LevitusAuxdataImpl.create();
         Calendar calendar = createUTCCalendar();
         double lat = 53.5;
         double lon = 8.5;
@@ -84,7 +83,7 @@ public class LevitusAuxdataImplTest {
 
     @Test
     public void testGetTemperature_outsideProduct() throws Exception {
-        SalinityTemperatureAuxdata dataProvider = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
+        SalinityTemperatureAuxdata dataProvider = LevitusAuxdataImpl.create();
         Calendar calendar = createUTCCalendar();
         double lat = 92.8;
         double lon = 8.5;
