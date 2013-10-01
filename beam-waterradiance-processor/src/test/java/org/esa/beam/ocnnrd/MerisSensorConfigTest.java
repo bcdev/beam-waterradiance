@@ -119,11 +119,31 @@ public class MerisSensorConfigTest {
     @Test
     public void testGetSurfacePressure() {
         assertEquals(0, merisSensorConfig.getSurfacePressure(), 1e-8);
+
+        final double[] inputs = new double[8];
+        final TestSample[] sourceSamples = new TestSample[8];
+        for (int i = 0; i < 8; i++) {
+            sourceSamples[i] = new TestSample();
+            sourceSamples[i].set((double) i);
+        }
+        merisSensorConfig.copyTiePointData(inputs, sourceSamples);
+
+        assertEquals(sourceSamples[Constants.SRC_PRESS].getDouble(), merisSensorConfig.getSurfacePressure(), 1e-8);
     }
 
     @Test
     public void testGetOzone() {
         assertEquals(0, merisSensorConfig.getOzone(), 1e-8);
+
+        final double[] inputs = new double[8];
+        final TestSample[] sourceSamples = new TestSample[8];
+        for (int i = 0; i < 8; i++) {
+            sourceSamples[i] = new TestSample();
+            sourceSamples[i].set((double) i);
+        }
+        merisSensorConfig.copyTiePointData(inputs, sourceSamples);
+
+        assertEquals(sourceSamples[Constants.SRC_OZ].getDouble(), merisSensorConfig.getOzone(), 1e-8);
     }
 
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {
