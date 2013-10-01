@@ -334,5 +334,4 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
             this.endInterval = endInterval;
         }
     }
-
 }

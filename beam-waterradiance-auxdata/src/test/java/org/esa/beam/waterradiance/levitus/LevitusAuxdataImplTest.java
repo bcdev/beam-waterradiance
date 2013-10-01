@@ -48,6 +48,18 @@ public class LevitusAuxdataImplTest {
     }
 
     @Test
+    public void testGetSalinity_outsideProduct() throws Exception {
+        final SalinityTemperatureAuxdata dataProvider = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
+        final Calendar calendar = createUTCCalendar();
+        final double lat = 18.5;
+        final double lon = -181.5;
+
+        calendar.set(2011, Calendar.JANUARY, 16);
+        double salinity = dataProvider.getSalinity(calendar.getTime(), lat, lon);
+        assertEquals(Double.NaN, salinity, 1.0E-8);
+    }
+
+    @Test
     public void testGetTemperature() throws Exception {
         SalinityTemperatureAuxdata dataProvider = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
         Calendar calendar = createUTCCalendar();
@@ -71,6 +83,18 @@ public class LevitusAuxdataImplTest {
     }
 
     @Test
+    public void testGetTemperature_outsideProduct() throws Exception {
+        SalinityTemperatureAuxdata dataProvider = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
+        Calendar calendar = createUTCCalendar();
+        double lat = 92.8;
+        double lon = 8.5;
+
+        calendar.set(2011, Calendar.JANUARY, 16);
+        double temperature0 = dataProvider.getTemperature(calendar.getTime(), lat, lon);
+        assertEquals(Double.NaN, temperature0, 1.0E-8);
+    }
+
+    @Test
     public void testInterpolate() throws Exception {
         assertEquals(0.0, LevitusAuxdataImpl.interpolate(0.0, 10.0, 0.0), 1.0E-6);
         assertEquals(10.0, LevitusAuxdataImpl.interpolate(0.0, 10.0, 1.0), 1.0E-6);
@@ -81,16 +105,16 @@ public class LevitusAuxdataImplTest {
     @Test
     public void testCalculateLinearFraction() throws Exception {
         Calendar calendar = createUTCCalendar();
-        calendar.set(2011, 2, 16);
+        calendar.set(2011, Calendar.MARCH, 16);
         assertEquals(0.00, LevitusAuxdataImpl.calculateLinearFraction(
                 ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar()), 1.E-2);
-        calendar.set(2011, 2, 31);
+        calendar.set(2011, Calendar.MARCH, 31);
         assertEquals(0.48, LevitusAuxdataImpl.calculateLinearFraction(
                 ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar()), 1.E-2);
-        calendar.set(2011, 3, 1);
+        calendar.set(2011, Calendar.APRIL, 1);
         assertEquals(0.53, LevitusAuxdataImpl.calculateLinearFraction(
                 ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar()), 1.E-2);
-        calendar.set(2011, 3, 15);
+        calendar.set(2011, Calendar.APRIL, 15);
         assertEquals(1.00, LevitusAuxdataImpl.calculateLinearFraction(
                 ProductData.UTC.create(calendar.getTime(), 0).getAsCalendar()), 1.E-2);
     }

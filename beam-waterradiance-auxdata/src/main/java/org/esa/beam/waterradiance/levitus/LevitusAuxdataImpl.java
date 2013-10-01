@@ -14,9 +14,6 @@ import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 
-/**
- * @author Marco Peters
- */
 public class LevitusAuxdataImpl implements SalinityTemperatureAuxdata {
 
     private static File AUXDATA_DIR;
@@ -30,7 +27,7 @@ public class LevitusAuxdataImpl implements SalinityTemperatureAuxdata {
     private GeoCoding salinityGeoCoding;
     private GeoCoding temperatureGeoCoding;
     private final Product salinityProduct;
-    private Product temperatureProduct;
+    private final Product temperatureProduct;
 
 
     public static LevitusAuxdataImpl create() throws IOException {
@@ -44,40 +41,37 @@ public class LevitusAuxdataImpl implements SalinityTemperatureAuxdata {
     }
 
     public double getSalinity(Date date, double lat, double lon) throws Exception {
-        DateDependentValues dateDependentValues = new DateDependentValues(date);
+        final DateDependentValues dateDependentValues = new DateDependentValues(date);
 
-        PixelPos pixelPos = salinityGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
-        int x = MathUtils.floorInt(pixelPos.x);
-        int y = MathUtils.floorInt(pixelPos.y);
+        final PixelPos pixelPos = salinityGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
+        final int x = MathUtils.floorInt(pixelPos.x);
+        final int y = MathUtils.floorInt(pixelPos.y);
         if (!productContainsPixel(salinityProduct, x, y)) {
             return Double.NaN;
         }
-        Band lowerBand = salinityProduct.getBandAt(dateDependentValues.lowerMonth);
-        Band upperBand = salinityProduct.getBandAt(dateDependentValues.upperMonth);
-        double[] lowPixel = new double[1];
-        double[] upperPixel = new double[1];
-        lowerBand.readPixels(x, y, 1, 1, lowPixel);
-        upperBand.readPixels(x, y, 1, 1, upperPixel);
-        return interpolate(lowPixel[0], upperPixel[0], dateDependentValues.linearFraction);
+
+        final Band lowerBand = salinityProduct.getBandAt(dateDependentValues.lowerMonth);
+        final Band upperBand = salinityProduct.getBandAt(dateDependentValues.upperMonth);
+        final double lowPixel = lowerBand.getSampleFloat(x, y);
+        final double upperPixel = upperBand.getSampleFloat(x, y);
+        return interpolate(lowPixel, upperPixel, dateDependentValues.linearFraction);
     }
 
     public double getTemperature(Date date, double lat, double lon) throws Exception {
-        DateDependentValues dateDependentValues = new DateDependentValues(date);
+        final DateDependentValues dateDependentValues = new DateDependentValues(date);
 
-        PixelPos pixelPos = temperatureGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
-        int x = MathUtils.floorInt(pixelPos.x);
-        int y = MathUtils.floorInt(pixelPos.y);
+        final PixelPos pixelPos = temperatureGeoCoding.getPixelPos(new GeoPos((float) lat, (float) lon), null);
+        final int x = MathUtils.floorInt(pixelPos.x);
+        final int y = MathUtils.floorInt(pixelPos.y);
         if (!productContainsPixel(temperatureProduct, x, y)) {
             return Double.NaN;
         }
 
-        Band lowerBand = temperatureProduct.getBandAt(dateDependentValues.lowerMonth);
-        Band upperBand = temperatureProduct.getBandAt(dateDependentValues.upperMonth);
-        double[] lowPixel = new double[1];
-        double[] upperPixel = new double[1];
-        lowerBand.readPixels(x, y, 1, 1, lowPixel);
-        upperBand.readPixels(x, y, 1, 1, upperPixel);
-        return interpolate(lowPixel[0], upperPixel[0], dateDependentValues.linearFraction);
+        final Band lowerBand = temperatureProduct.getBandAt(dateDependentValues.lowerMonth);
+        final Band upperBand = temperatureProduct.getBandAt(dateDependentValues.upperMonth);
+        final double lowPixel = lowerBand.getSampleFloat(x, y);
+        final double upperPixel = upperBand.getSampleFloat(x, y);
+        return interpolate(lowPixel, upperPixel, dateDependentValues.linearFraction);
     }
 
     @Override
