@@ -171,7 +171,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     private Product getTOMSOMIProduct(int day, int year) throws IOException {
         final String dayInFittingLength = getDayString(day);
-        String productID = "" + year + dayInFittingLength;
+        final String productID = getProductId(year, dayInFittingLength);
         final Product product;
         if (tomsomiProductMap.containsKey(productID)) {
             product = tomsomiProductMap.get(productID);
@@ -189,13 +189,13 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     private Product getNCEPProduct(int day, int year, int hour) throws IOException {
         final String dayInFittingLength = getDayString(day);
-        String hourInFittingLength = NCEP_HOURS[hour];
-        String productID = "" + year + dayInFittingLength + hourInFittingLength;
+        final String hourInFittingLength = NCEP_HOURS[hour];
+        final String productID = getProductId(year, dayInFittingLength, hourInFittingLength);
         final Product product;
         if (ncepProductMap.containsKey(productID)) {
             product = ncepProductMap.get(productID);
         } else {
-            String productPath = getNCEPProductPath(auxDataDirectory.getPath(), year, dayInFittingLength, hourInFittingLength);
+            final String productPath = getNCEPProductPath(auxDataDirectory.getPath(), year, dayInFittingLength, hourInFittingLength);
             try {
                 product = ProductIO.readProduct(new File(productPath));
             } catch (IOException e) {
@@ -295,6 +295,22 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return timeSpan;
     }
 
+    // package access for testing only tb 2013-10-01
+    static String getProductId(int year, String dayString) {
+        final StringBuilder stringBuilder = new StringBuilder(16);
+        stringBuilder.append(year);
+        stringBuilder.append(dayString);
+        return stringBuilder.toString();
+    }
+
+    // package access for testing only tb 2013-10-01
+    static String getProductId(int year, String dayString, String hourString) {
+        final StringBuilder stringBuilder = new StringBuilder(16);
+        stringBuilder.append(year);
+        stringBuilder.append(dayString);
+        stringBuilder.append(hourString);
+        return stringBuilder.toString();
+    }
 
     private SeadasAuxdataImpl(File auxDataDirectory) {
         this.auxDataDirectory = auxDataDirectory;

@@ -392,4 +392,16 @@ public class SeadasAuxdataImplTest {
         assertEquals("auxdata//2008//005//N200800523_MET_NCEPN_6h.hdf", SeadasAuxdataImpl.getNCEPProductPath("auxdata", 2008, "005", "23"));
         assertEquals("seadas//2010//116//N201011604_MET_NCEPN_6h.hdf", SeadasAuxdataImpl.getNCEPProductPath("seadas", 2010, "116", "04"));
     }
+
+    @Test
+    public void testGetProductId() {
+         assertEquals("2012005", SeadasAuxdataImpl.getProductId(2012, "005"));
+         assertEquals("2003178", SeadasAuxdataImpl.getProductId(2003, "178"));
+    }
+
+    @Test
+    public void testGetProductId_withHour() {
+        assertEquals("201200505", SeadasAuxdataImpl.getProductId(2012, "005", "05"));
+        assertEquals("200317818", SeadasAuxdataImpl.getProductId(2003, "178", "18"));
+    }
 }
