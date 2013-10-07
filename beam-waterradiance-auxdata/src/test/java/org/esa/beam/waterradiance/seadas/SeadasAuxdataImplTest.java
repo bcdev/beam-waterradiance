@@ -407,7 +407,7 @@ public class SeadasAuxdataImplTest {
     @Test
     public void testGetNCEPProductPath() {
         assertEquals("auxdata//2008//005//N200800523_MET_NCEPN_6h.hdf", SeadasAuxdataImpl.getNCEPProductPath("auxdata", 2008, "005", "23"));
-        assertEquals("seadas//2010//116//N201011604_MET_NCEPN_6h.hdf", SeadasAuxdataImpl.getNCEPProductPath("seadas", 2010, "116", "04"));
+        assertEquals("seadas//2010//116//S201011604_NCEP.MET", SeadasAuxdataImpl.getNCEPProductPath("seadas", 2010, "116", "04"));
     }
 
     @Test

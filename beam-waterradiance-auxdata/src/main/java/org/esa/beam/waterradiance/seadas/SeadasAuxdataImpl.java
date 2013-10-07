@@ -134,15 +134,30 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     // package access for testing only tb 2013-10-01
     static String getTomsomiProductPath(String auxdataPath, int year, String dayString) {
         final StringBuilder stringBuilder = createPreFilledStringBuilder(auxdataPath, year, dayString);
+        stringBuilder.append("//N");
+        stringBuilder.append(year);
+        stringBuilder.append(dayString);
         stringBuilder.append("00_O3_TOMSOMI_24h.hdf");
         return stringBuilder.toString();
     }
 
     // package access for testing only tb 2013-10-01
     static String getNCEPProductPath(String auxdataPath, int year, String dayString, String hourString) {
-        final StringBuilder stringBuilder = createPreFilledStringBuilder(auxdataPath, year, dayString);
-        stringBuilder.append(hourString);
-        stringBuilder.append("_MET_NCEPN_6h.hdf");
+        final StringBuilder stringBuilder;
+        stringBuilder = createPreFilledStringBuilder(auxdataPath, year, dayString);
+        if (year > 2008) {
+            stringBuilder.append("//S");
+            stringBuilder.append(year);
+            stringBuilder.append(dayString);
+            stringBuilder.append(hourString);
+            stringBuilder.append("_NCEP.MET");
+        } else {
+            stringBuilder.append("//N");
+            stringBuilder.append(year);
+            stringBuilder.append(dayString);
+            stringBuilder.append(hourString);
+            stringBuilder.append("_MET_NCEPN_6h.hdf");
+        }
         return stringBuilder.toString();
     }
 
@@ -152,9 +167,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         stringBuilder.append("//");
         stringBuilder.append(year);
         stringBuilder.append("//");
-        stringBuilder.append(dayString);
-        stringBuilder.append("//N");
-        stringBuilder.append(year);
         stringBuilder.append(dayString);
         return stringBuilder;
     }
