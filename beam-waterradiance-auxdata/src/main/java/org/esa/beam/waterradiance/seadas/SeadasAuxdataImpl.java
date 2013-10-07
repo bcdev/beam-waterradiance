@@ -31,6 +31,10 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     private final File auxDataDirectory;
     private final Map<String, Product> tomsomiProductMap;
     private final Map<String, Product> ncepProductMap;
+    private final Map<String, Double> surfacePressureMap;
+    private final Map<String, Double> ozoneMap;
+    private Date date_of_last_TOMS_product = new GregorianCalendar(2005, 12, 31).getTime();
+    private Date date_of_first_OMI_product = new GregorianCalendar(2006, 1, 1).getTime();
 
     public static SeadasAuxdataImpl create(String auxPath) throws IOException {
         final File auxDataDirectory = new File(auxPath);
@@ -42,6 +46,23 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     @Override
     public double getOzone(Date date, double lat, double lon) throws IOException {
+
+        String id = null;
+        if (date.before(date_of_last_TOMS_product)) {
+            final int xPos = MathUtils.floorInt(lat);
+            final int yPos = MathUtils.floorInt(lon * 0.8);
+            id = date.toString() + xPos + yPos;
+            if (ozoneMap.containsKey(id)) {
+                return ozoneMap.get(id);
+            }
+        } else if (date.after(date_of_first_OMI_product)) {
+            final int xPos = MathUtils.floorInt(lat);
+            final int yPos = MathUtils.floorInt(lon);
+            id = date.toString() + xPos + yPos;
+            if (ozoneMap.containsKey(id)) {
+                return ozoneMap.get(id);
+            }
+        }
 
         setCalendar(date);
         final double dateFraction = getDateFraction(utcCalendar, 0.5);
@@ -59,11 +80,22 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
         final double ozone = (1.0 - dateFraction) * startOzone + dateFraction * endOzone;
 
+        if (id != null) {
+            ozoneMap.put(id, ozone);
+        }
+
         return ozone;
     }
 
     @Override
     public double getSurfacePressure(Date date, double lat, double lon) throws Exception {
+
+        final int xPos = MathUtils.floorInt(lon);
+        final int yPos = MathUtils.floorInt(lat);
+        String id = date.toString() + xPos + yPos;
+        if (surfacePressureMap.containsKey(id)) {
+            return surfacePressureMap.get(id);
+        }
 
         setCalendar(date);
         double fraction = getDateFractionForSurfacePressure(utcCalendar);
@@ -82,6 +114,10 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
         final double surfacePressure = (1.0 - fraction) * startSurfacePressure + fraction * endSurfacePressure;
 
+        if (!surfacePressureMap.containsKey(id)) {
+            surfacePressureMap.put(id, surfacePressure);
+        }
+
         return surfacePressure;
     }
 
@@ -95,6 +131,8 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         }
         tomsomiProductMap.clear();
         ncepProductMap.clear();
+        ozoneMap.clear();
+        surfacePressureMap.clear();
     }
 
     static int getDayOffset(int hourOfDay) {
@@ -345,6 +383,8 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         tomsomiProductMap = new HashMap<String, Product>();
         ncepProductMap = new HashMap<String, Product>();
         utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        surfacePressureMap = new HashMap<String, Double>();
+        ozoneMap = new HashMap<String, Double>();
     }
 
     public static class TimeSpan {
