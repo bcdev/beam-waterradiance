@@ -1,7 +1,6 @@
 package org.esa.beam.waterradiance.seadas;
 
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.math.MathUtils;
@@ -9,7 +8,13 @@ import org.esa.beam.waterradiance.AtmosphericAuxdata;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TimeZone;
 
 public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
@@ -37,6 +42,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     @Override
     public double getOzone(Date date, double lat, double lon) throws IOException {
+
         setCalendar(date);
         final double dateFraction = getDateFraction(utcCalendar, 0.5);
 
@@ -48,14 +54,17 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         final Product startProduct = getTOMSOMIProduct(timeSpan.getStartDay(), timeSpan.getStartYear());
         final Product endProduct = getTOMSOMIProduct(timeSpan.getEndDay(), timeSpan.getEndYear());
 
-        final double startOzone = getOzone((float) lat, lon, startProduct);
-        final double endOzone = getOzone((float) lat, lon, endProduct);
+        final double startOzone = getOzone((float) lat, (float) lon, startProduct);
+        final double endOzone = getOzone((float) lat, (float) lon, endProduct);
 
-        return (1.0 - dateFraction) * startOzone + dateFraction * endOzone;
+        final double ozone = (1.0 - dateFraction) * startOzone + dateFraction * endOzone;
+
+        return ozone;
     }
 
     @Override
     public double getSurfacePressure(Date date, double lat, double lon) throws Exception {
+
         setCalendar(date);
         double fraction = getDateFractionForSurfacePressure(utcCalendar);
 
@@ -68,10 +77,12 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         final Product startProduct = getNCEPProduct(timeSpan.getStartDay(), timeSpan.getStartYear(), timeSpan.getStartInterval());
         final Product endProduct = getNCEPProduct(timeSpan.getEndDay(), timeSpan.getEndYear(), timeSpan.getEndInterval());
 
-        final double startSurfacePressure = getSurfacePressure((float) lat, lon, startProduct);
-        final double endSurfacePressure = getSurfacePressure((float) lat, lon, endProduct);
+        final double startSurfacePressure = getSurfacePressure((float) lat, (float) lon, startProduct);
+        final double endSurfacePressure = getSurfacePressure((float) lat, (float) lon, endProduct);
 
-        return (1.0 - fraction) * startSurfacePressure + fraction * endSurfacePressure;
+        final double surfacePressure = (1.0 - fraction) * startSurfacePressure + fraction * endSurfacePressure;
+
+        return surfacePressure;
     }
 
     @Override
@@ -148,16 +159,14 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return stringBuilder;
     }
 
-    private double getOzone(float lat, double lon, Product product) throws IOException {
+    private double getOzone(float lat, float lon, Product product) throws IOException {
         final int xPos = MathUtils.floorInt(lat);
-        int yPos;
+        final int yPos = MathUtils.floorInt(lon);
+        final PixelPos pixelPos = getAuxPixelPos(xPos, yPos);
         if (product.getSceneRasterWidth() == 288) {
-            yPos = MathUtils.floorInt(lon * 0.8);
-        } else {
-            yPos = MathUtils.floorInt(lon);
+            pixelPos.setLocation(pixelPos.getX(), pixelPos.getY() * 0.8);
         }
-        final Band ozoneBand = product.getBand(OZONE_BAND_NAME);
-        return ozoneBand.getSampleInt(xPos, yPos);
+        return Double.parseDouble(product.getBand(OZONE_BAND_NAME).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
     }
 
     private int getHourOfDay() {
@@ -223,11 +232,10 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         return fraction;
     }
 
-    private double getSurfacePressure(float lat, double lon, Product product) throws IOException {
-        PixelPos pixelPos = new PixelPos(lat, (float) lon);
-        if (product.getSceneRasterWidth() == 288) {
-            pixelPos = new PixelPos(lat, (float) (lon * 0.8));
-        }
+    private double getSurfacePressure(float lat, float lon, Product product) throws IOException {
+        final int xPos = MathUtils.floorInt(lon);
+        int yPos = MathUtils.floorInt(lat);
+        final PixelPos pixelPos = getAuxPixelPos(yPos, xPos);
         return Double.parseDouble(product.getBand(SURFACE_PRESSURE_BAND_NAME).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
     }
 
@@ -310,6 +318,14 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         stringBuilder.append(dayString);
         stringBuilder.append(hourString);
         return stringBuilder.toString();
+    }
+
+    static PixelPos getAuxPixelPos(int lat, int lon) {
+        PixelPos pixelPos = new PixelPos();
+        float pixelY = 180 - (lat + 90);
+        float pixelX = lon + 180;
+        pixelPos.setLocation(pixelX, pixelY);
+        return pixelPos;
     }
 
     private SeadasAuxdataImpl(File auxDataDirectory) {

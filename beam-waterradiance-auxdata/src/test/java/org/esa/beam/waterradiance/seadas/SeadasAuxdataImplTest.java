@@ -1,6 +1,8 @@
 package org.esa.beam.waterradiance.seadas;
 
 
+import junit.framework.Assert;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,7 +72,7 @@ public class SeadasAuxdataImplTest {
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
 
         try {
-            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 83, 65);
+            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 25, -97);
             assertEquals(297.0, ozone, 1e-8);
         } catch (Exception unexpected) {
             fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
@@ -87,7 +89,7 @@ public class SeadasAuxdataImplTest {
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
 
         try {
-            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 83, 65);
+            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 25, -97);
             assertEquals(309.0, ozone, 1e-8);
         } catch (Exception unexpected) {
             fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
@@ -120,23 +122,23 @@ public class SeadasAuxdataImplTest {
 
         try {
             calendar.set(2005, Calendar.JUNE, 16, 6, 0, 0);
-            double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 182, 51);
+            double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 39, 2);
             assertEquals(1021.36, surfacePressure, 1e-8);
 
             calendar.set(2005, Calendar.JUNE, 16, 1, 30, 0);
-            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 146, 98);
+            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -8, -34);
             assertEquals(1015.49, surfacePressure, 1e-8);
 
             calendar.set(2005, Calendar.JUNE, 15, 22, 30, 0);
-            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 146, 98);
+            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -8, -34);
             assertEquals(1014.49, surfacePressure, 1e-8);
 
             calendar.set(2005, Calendar.JUNE, 16, 10, 30, 0);
-            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 159, 92);
+            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -2, -21);
             assertEquals(1014.2, surfacePressure, 1e-8);
 
             calendar.set(2005, Calendar.JUNE, 16, 19, 30, 0);
-            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 178, 86);
+            surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 4, -2);
             assertEquals(1013.28, surfacePressure, 1e-8);
 
         } catch (Exception unexpected) {
@@ -418,5 +420,24 @@ public class SeadasAuxdataImplTest {
     public void testGetProductId_withHour() {
         assertEquals("201200505", SeadasAuxdataImpl.getProductId(2012, "005", "05"));
         assertEquals("200317818", SeadasAuxdataImpl.getProductId(2003, "178", "18"));
+    }
+
+    @Test
+    public void testGetAuxPixelPos() {
+        PixelPos auxPixelPos = SeadasAuxdataImpl.getAuxPixelPos(88, -177);
+        Assert.assertEquals(2.0, auxPixelPos.getY());
+        Assert.assertEquals(3.0, auxPixelPos.getX());
+
+        auxPixelPos = SeadasAuxdataImpl.getAuxPixelPos(87, 178);
+        Assert.assertEquals(3.0, auxPixelPos.getY());
+        Assert.assertEquals(358.0, auxPixelPos.getX());
+
+        auxPixelPos = SeadasAuxdataImpl.getAuxPixelPos(-88, -178);
+        Assert.assertEquals(178.0, auxPixelPos.getY());
+        Assert.assertEquals(2.0, auxPixelPos.getX());
+
+        auxPixelPos = SeadasAuxdataImpl.getAuxPixelPos(-87, 177);
+        Assert.assertEquals(177.0, auxPixelPos.getY());
+        Assert.assertEquals(357.0, auxPixelPos.getX());
     }
 }
