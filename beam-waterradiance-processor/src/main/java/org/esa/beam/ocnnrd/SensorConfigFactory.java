@@ -15,6 +15,8 @@ public class SensorConfigFactory {
                 || productTypeName.equalsIgnoreCase("MYD021KM")
                 || productTypeName.equalsIgnoreCase("MODIS Level 1B")) {
             return new ModisSensorConfig();
+        } else if (productTypeName.equalsIgnoreCase("Generic Level 1B")) {
+            return new SeaWiFSSensorConfig();
         }
         throw new IllegalArgumentException("Invalid Product Type: " + productTypeName);
     }
