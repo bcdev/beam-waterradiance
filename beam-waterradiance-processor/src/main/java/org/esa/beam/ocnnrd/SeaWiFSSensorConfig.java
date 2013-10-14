@@ -88,4 +88,14 @@ public class SeaWiFSSensorConfig implements SensorConfig {
     public double getOzone() {
         return ozoneDefaultValue;
     }
+
+    @Override
+    public double getEarthSunDistance() {
+        return 1;
+    }
+
+    @Override
+    public void init(Product sourceProduct) {
+        // do nothing
+    }
 }

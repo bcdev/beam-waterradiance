@@ -12,7 +12,8 @@ public class SensorConfigFactory {
                 || productTypeName.equalsIgnoreCase(EnvisatConstants.MERIS_FRG_L1B_PRODUCT_TYPE_NAME)) {
             return new MerisSensorConfig();
         } else if (productTypeName.equalsIgnoreCase("MOD021KM")
-                || productTypeName.equalsIgnoreCase("MYD021KM")) {
+                || productTypeName.equalsIgnoreCase("MYD021KM")
+                || productTypeName.equalsIgnoreCase("MODIS Level 1B")) {
             return new ModisSensorConfig();
         }
         throw new IllegalArgumentException("Invalid Product Type: " + productTypeName);

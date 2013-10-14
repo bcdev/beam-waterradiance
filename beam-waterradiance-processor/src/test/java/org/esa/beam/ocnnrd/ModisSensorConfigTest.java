@@ -98,8 +98,11 @@ public class ModisSensorConfigTest {
     @Test
     public void testGetSolarFluxes() {
         final Product product = createProductWithSolarFluxMetadata();
+        modisSensorConfig.init(product);
         final double[] solarFluxes = modisSensorConfig.getSolarFluxes(product);
         assertEquals(9, solarFluxes.length);
+//        double[] expectedResults = new double[]{184.5 * Math.PI, 194.5 * Math.PI, 204.5 * Math.PI, 214.5 * Math.PI,
+//                224.5 * Math.PI, 234.5 * Math.PI, 254.5 * Math.PI, 274.5 * Math.PI, 284.5 * Math.PI};
         double[] expectedResults = new double[]{184.5, 194.5, 204.5, 214.5, 224.5, 234.5, 254.5, 274.5, 284.5};
         for(int i = 0; i < solarFluxes.length; i++) {
             assertEquals(expectedResults[i], solarFluxes[i], 1e-8);

@@ -22,4 +22,8 @@ public interface SensorConfig {
     double getSurfacePressure();
 
     double getOzone();
+
+    double getEarthSunDistance();
+
+    void init(Product sourceProduct);
 }
