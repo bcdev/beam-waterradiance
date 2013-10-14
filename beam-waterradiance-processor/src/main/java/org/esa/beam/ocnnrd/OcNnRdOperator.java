@@ -35,11 +35,14 @@ import java.util.Date;
                   description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
-    private static final int NUM_OUTPUTS = 69;
-    private static final int NUM_TARGET_BANDS = NUM_OUTPUTS + 2;
-
     private static final int[] SPECTRAL_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
     private static final int[] SPECTRAL_WAVELENGTHS = new int[]{412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865};
+
+    private static final int[] MODIS_SPECTRAL_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    private static final int[] MODIS_SPECTRAL_WAVELENGTHS = new int[]{413, 443, 488, 531, 551, 667, 678, 748, 870};
+
+    private static int NUM_OUTPUTS;
+//    private static final int NUM_TARGET_BANDS = NUM_OUTPUTS + 4;
 
     private final ThreadLocal<double[]> input = new ThreadLocal<double[]>() {
         @Override
@@ -88,7 +91,7 @@ public class OcNnRdOperator extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 //        if(lastY != y) {
-        //System.out.println("Computing pixel " + x + "," + y);
+//        System.out.println("Computing pixel " + x + "," + y);
 //            lastY = y;
 //        }
         final Sensor sensorType = sensorConfig.getSensor();
@@ -108,13 +111,16 @@ public class OcNnRdOperator extends PixelOperator {
             levMarNN_local.levmar_nn(detectorIndex, input_local, output_local);
 
             // @todo 2 tb/tb extract method and test tb 2013-05-13
-            for (int i = 0; i < output_local.length; i++) {
+//            for (int i = 0; i < output_local.length; i++) {
+            for (int i = 0; i < targetSamples.length; i++) {
                 targetSamples[i].set(output_local[i]);
             }
-            targetSamples[output_local.length].set(input_local[8]);
-            targetSamples[output_local.length + 1].set(input_local[9]);
+            targetSamples[targetSamples.length - 4].set(input_local[8]);
+            targetSamples[targetSamples.length - 3].set(input_local[9]);
+            targetSamples[targetSamples.length - 2].set(input_local[4]);
+            targetSamples[targetSamples.length - 1].set(input_local[5]);
         } else {
-            setToInvalid(targetSamples, NUM_TARGET_BANDS);
+            setToInvalid(targetSamples, NUM_OUTPUTS);
         }
     }
 
@@ -128,7 +134,7 @@ public class OcNnRdOperator extends PixelOperator {
         Product targetProduct = getTargetProduct();
         String[] bandNames = targetProduct.getBandNames();
         final double[] output_local = output.get();
-        for (int i = 0; i < output_local.length + 2; i++) {
+        for (int i = 0; i < output_local.length; i++) {
             final String bandName = bandNames[i];
             sampleConfigurer.defineSample(i, bandName);
         }
@@ -170,6 +176,9 @@ public class OcNnRdOperator extends PixelOperator {
         addBand(productConfigurer, "temperature", ProductData.TYPE_INT32, "", "Temperature");
         addBand(productConfigurer, "salinity", ProductData.TYPE_INT32, "", "Salinity");
 
+        addBand(productConfigurer, "atm_press_2", ProductData.TYPE_FLOAT32, "", "Surface Pressure");
+        addBand(productConfigurer, "ozone_2", ProductData.TYPE_FLOAT32, "", "Ozone");
+
         // @todo 1 tb/** what to do in the general case? This is ENVSAT specific ... tb 2013-09-25
         productConfigurer.copyBands(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
         productConfigurer.copyBands(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
@@ -201,10 +210,18 @@ public class OcNnRdOperator extends PixelOperator {
     //@todo 4 tb/** make static and add test
     private void addSpectralBands(ProductConfigurer productConfigurer,
                                   String bandNameFormat, String unit, String descriptionFormat) {
-        for (int i = 0; i < SPECTRAL_INDEXES.length; i++) {
-            int bandIndex = SPECTRAL_INDEXES[i];
+        for (int i = 0; i < sensorConfig.getNumSpectralBands(); i++) {
+            int bandIndex;
+            int wavelength;
+            if(sensorConfig.getSensor() == Sensor.MERIS) {
+                bandIndex = SPECTRAL_INDEXES[i];
+                wavelength = SPECTRAL_WAVELENGTHS[i];
+            } else {
+                //MODIS case
+                bandIndex = MODIS_SPECTRAL_INDEXES[i];
+                wavelength = MODIS_SPECTRAL_WAVELENGTHS[i];
+            }
             Band band = productConfigurer.addBand(String.format(bandNameFormat, bandIndex), ProductData.TYPE_FLOAT32);
-            int wavelength = SPECTRAL_WAVELENGTHS[i];
             band.setSpectralBandIndex(i);
             band.setSpectralWavelength(wavelength);
             band.setDescription(String.format(descriptionFormat, wavelength));
@@ -217,6 +234,8 @@ public class OcNnRdOperator extends PixelOperator {
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
         sensorConfig = SensorConfigFactory.fromTypeString(sourceProduct.getProductType());
+        sensorConfig.init(sourceProduct);
+        NUM_OUTPUTS = 13 + 5 * sensorConfig.getNumSpectralBands();
         if (sensorConfig.getSensor() == Sensor.MERIS) {
             if (isCsvMode(sourceProduct)) {
                 csvMode = true;
