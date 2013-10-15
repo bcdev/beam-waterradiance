@@ -1,9 +1,6 @@
 package org.esa.beam.ocnnrd;
 
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.*;
 
 import static junit.framework.Assert.assertEquals;
@@ -20,13 +17,34 @@ public class SeaWiFSSensorConfigTest {
     }
 
     @Test
-    public void testGetNumSpectralBands() {
-        assertEquals(8, seaWiFSSensorConfig.getNumSpectralBands());
+    public void testGetNumSpectralInputBands() {
+        assertEquals(8, seaWiFSSensorConfig.getNumSpectralInputBands());
     }
 
     @Test
-    public void testGetSpectralBandNames() {
-        final String[] spectralBandNames = seaWiFSSensorConfig.getSpectralBandNames();
+    public void testGetNumSpectralOutputBands() {
+        assertEquals(8, seaWiFSSensorConfig.getNumSpectralOutputBands());
+    }
+
+    @Test
+    public void testGetSpectralOutputBandIndices() {
+        final int[] expectedIndices = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
+        final int[] indices = seaWiFSSensorConfig.getSpectralOutputBandIndices();
+
+        assertArrayEquals(expectedIndices, indices);
+    }
+
+    @Test
+    public void testGetSpectralOutputWavelengths() {
+        final float[] expectedWavelengths = new float[]{412.f, 443.f, 490.f, 510.f, 555.f, 670.f, 765.f, 865.f};
+
+        final float[] wavelengths = seaWiFSSensorConfig.getSpectralOutputWavelengths();
+        assertArrayEquals(expectedWavelengths, wavelengths, 1e-8f);
+    }
+
+    @Test
+    public void testGetSpectralInputBandNames() {
+        final String[] spectralBandNames = seaWiFSSensorConfig.getSpectralInputBandNames();
         assertNotNull(spectralBandNames);
         assertEquals(8, spectralBandNames.length);
 

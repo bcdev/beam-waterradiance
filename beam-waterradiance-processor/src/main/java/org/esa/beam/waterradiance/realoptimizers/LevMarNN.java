@@ -246,7 +246,7 @@ public class LevMarNN {
             }
         }
 
-        int countOfSpectralBands = sensorConfig.getNumSpectralBands();
+        int countOfSpectralBands = sensorConfig.getNumSpectralInputBands();
         for (int i = 0; i < countOfSpectralBands; i++) {
             L_toa[i] = input[i + 10];
             solar_flux[i] = input[i + 25];

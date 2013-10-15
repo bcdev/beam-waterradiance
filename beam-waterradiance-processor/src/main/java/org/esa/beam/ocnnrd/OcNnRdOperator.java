@@ -1,22 +1,14 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.util.StringUtils;
 import org.esa.beam.waterradiance.AtmosphericAuxdata;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
 import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
@@ -31,15 +23,9 @@ import java.util.Date;
  * @author Tom Block
  */
 @OperatorMetadata(alias = "Meris.OCNNRD", version = "1.0",
-                  authors = "Tom Block, Tonio Fincke, Roland Doerffer",
-                  description = "An operator computing water IOPs starting from radiances.")
+        authors = "Tom Block, Tonio Fincke, Roland Doerffer",
+        description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
-
-    private static final int[] SPECTRAL_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
-    private static final int[] SPECTRAL_WAVELENGTHS = new int[]{412, 442, 449, 510, 560, 620, 665, 681, 708, 753, 778, 865};
-
-    private static final int[] MODIS_SPECTRAL_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
-    private static final int[] MODIS_SPECTRAL_WAVELENGTHS = new int[]{413, 443, 488, 531, 551, 667, 678, 748, 870};
 
     private static int NUM_OUTPUTS;
 //    private static final int NUM_TARGET_BANDS = NUM_OUTPUTS + 4;
@@ -86,14 +72,14 @@ public class OcNnRdOperator extends PixelOperator {
     @Parameter(defaultValue = "35.0", description = "Use this value, if the climatology is disabled")
     private double salinity;
 
+    @Parameter(description = "Path to the atmospheric auxiliary data directory")
+    private String atmosphericAuxDataPath;
+
     private SensorConfig sensorConfig;
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-//        if(lastY != y) {
-//        System.out.println("Computing pixel " + x + "," + y);
-//            lastY = y;
-//        }
+
         final Sensor sensorType = sensorConfig.getSensor();
         if (sensorType == Sensor.MODIS || isValid(sourceSamples)) {
             final double[] input_local = input.get();
@@ -120,7 +106,7 @@ public class OcNnRdOperator extends PixelOperator {
             targetSamples[targetSamples.length - 2].set(input_local[4]);
             targetSamples[targetSamples.length - 1].set(input_local[5]);
         } else {
-            setToInvalid(targetSamples, NUM_OUTPUTS);
+            setToInvalid(targetSamples);
         }
     }
 
@@ -133,8 +119,7 @@ public class OcNnRdOperator extends PixelOperator {
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         Product targetProduct = getTargetProduct();
         String[] bandNames = targetProduct.getBandNames();
-        final double[] output_local = output.get();
-        for (int i = 0; i < output_local.length; i++) {
+        for (int i = 0; i < bandNames.length; i++) {
             final String bandName = bandNames[i];
             sampleConfigurer.defineSample(i, bandName);
         }
@@ -180,8 +165,8 @@ public class OcNnRdOperator extends PixelOperator {
         addBand(productConfigurer, "ozone_2", ProductData.TYPE_FLOAT32, "", "Ozone");
 
         // @todo 1 tb/** what to do in the general case? This is ENVSAT specific ... tb 2013-09-25
-        productConfigurer.copyBands(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
-        productConfigurer.copyBands(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
+       // productConfigurer.copyBands(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
+       // productConfigurer.copyBands(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
 
         if (csvMode) {
             //copy row_index and lat/lon from input
@@ -195,7 +180,7 @@ public class OcNnRdOperator extends PixelOperator {
         targetProduct.setAutoGrouping(autoGrouping);
         if (csvMode) {
             targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
-                                               targetProduct.getSceneRasterHeight());
+                    targetProduct.getSceneRasterHeight());
         }
     }
 
@@ -208,23 +193,14 @@ public class OcNnRdOperator extends PixelOperator {
     }
 
     //@todo 4 tb/** make static and add test
-    private void addSpectralBands(ProductConfigurer productConfigurer,
-                                  String bandNameFormat, String unit, String descriptionFormat) {
-        for (int i = 0; i < sensorConfig.getNumSpectralBands(); i++) {
-            int bandIndex;
-            int wavelength;
-            if(sensorConfig.getSensor() == Sensor.MERIS) {
-                bandIndex = SPECTRAL_INDEXES[i];
-                wavelength = SPECTRAL_WAVELENGTHS[i];
-            } else {
-                //MODIS case
-                bandIndex = MODIS_SPECTRAL_INDEXES[i];
-                wavelength = MODIS_SPECTRAL_WAVELENGTHS[i];
-            }
-            Band band = productConfigurer.addBand(String.format(bandNameFormat, bandIndex), ProductData.TYPE_FLOAT32);
+    private void addSpectralBands(ProductConfigurer productConfigurer, String bandNameFormat, String unit, String descriptionFormat) {
+        final int[] indices = sensorConfig.getSpectralOutputBandIndices();
+        final float[] wavelengths = sensorConfig.getSpectralOutputWavelengths();
+        for (int i = 0; i < sensorConfig.getNumSpectralOutputBands(); i++) {
+            final Band band = productConfigurer.addBand(String.format(bandNameFormat, indices[i]), ProductData.TYPE_FLOAT32);
             band.setSpectralBandIndex(i);
-            band.setSpectralWavelength(wavelength);
-            band.setDescription(String.format(descriptionFormat, wavelength));
+            band.setSpectralWavelength(wavelengths[i]);
+            band.setDescription(String.format(descriptionFormat, (int)wavelengths[i]));
             band.setUnit(unit);
             band.setNoDataValue(Float.NaN);
         }
@@ -235,7 +211,7 @@ public class OcNnRdOperator extends PixelOperator {
         super.prepareInputs();
         sensorConfig = SensorConfigFactory.fromTypeString(sourceProduct.getProductType());
         sensorConfig.init(sourceProduct);
-        NUM_OUTPUTS = 13 + 5 * sensorConfig.getNumSpectralBands();
+        NUM_OUTPUTS = 13 + 5 * sensorConfig.getNumSpectralInputBands();
         if (sensorConfig.getSensor() == Sensor.MERIS) {
             if (isCsvMode(sourceProduct)) {
                 csvMode = true;
@@ -285,15 +261,15 @@ public class OcNnRdOperator extends PixelOperator {
     }
 
     // package access for testing only tb 2013-05-13
-    static void setToInvalid(WritableSample[] targetSamples, int numTargetBands) {
-        for (int i = 0; i < numTargetBands; i++) {
-            targetSamples[i].set(Double.NaN);
+    static void setToInvalid(WritableSample[] targetSamples) {
+        for (WritableSample targetSample : targetSamples) {
+            targetSample.set(Double.NaN);
         }
     }
 
     // package access for testing only tb 2013-05-13
     static void copyRadiances(double[] inputs, Sample[] sourceSamples, SensorConfig sensorConfig) {
-        for (int i = 0; i < sensorConfig.getNumSpectralBands(); i++) {
+        for (int i = 0; i < sensorConfig.getNumSpectralInputBands(); i++) {
             inputs[10 + i] = sourceSamples[Constants.SRC_RAD_OFFSET + i].getDouble();
         }
     }
@@ -319,13 +295,18 @@ public class OcNnRdOperator extends PixelOperator {
         try {
             salinityTemperatureAuxdata = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
         } catch (IOException e) {
-            throw new OperatorException("Unable to create provider for salinity and temperature auxiliary data.", e);
+            getLogger().severe("Unable to create provider for salinity and temperature auxiliary data.");
+            getLogger().severe(e.getMessage());
+            salinityTemperatureAuxdata = null;
         }
         try {
-            final String auxPath = "C:\\Users\\tonio\\Desktop\\Produkte\\OC-CCI\\anc";
-            atmosphericAuxdata = AuxdataProviderFactory.createAtmosphericDataProvider(auxPath);
+            if (StringUtils.isNotNullAndNotEmpty(atmosphericAuxDataPath)) {
+                atmosphericAuxdata = AuxdataProviderFactory.createAtmosphericDataProvider(atmosphericAuxDataPath);
+            }
         } catch (IOException e) {
-            throw new OperatorException("Unable to create provider for atmospheric auxiliary data.", e);
+            getLogger().severe("Unable to create provider for atmospheric auxiliary data.");
+            getLogger().severe(e.getMessage());
+            atmosphericAuxdata = null;
         }
     }
 
@@ -335,7 +316,7 @@ public class OcNnRdOperator extends PixelOperator {
         if (salinityTemperatureAuxdata != null) {
             try {
                 final GeoCoding geoCoding = sourceProduct.getGeoCoding();
-                GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
+                final GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
                 synchronized (this) {
                     input_local[8] = salinityTemperatureAuxdata.getTemperature(date, geoPos.getLat(), geoPos.getLon());
                     input_local[9] = salinityTemperatureAuxdata.getSalinity(date, geoPos.getLat(), geoPos.getLon());

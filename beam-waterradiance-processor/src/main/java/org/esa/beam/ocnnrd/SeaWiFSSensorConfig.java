@@ -6,14 +6,17 @@ import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
 public class SeaWiFSSensorConfig implements SensorConfig {
 
-    private static String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "L_412";
-    private static String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "L_443";
-    private static String SEAWIFS_L1B_RADIANCE_3_BAND_NAME = "L_490";
-    private static String SEAWIFS_L1B_RADIANCE_4_BAND_NAME = "L_510";
-    private static String SEAWIFS_L1B_RADIANCE_5_BAND_NAME = "L_555";
-    private static String SEAWIFS_L1B_RADIANCE_6_BAND_NAME = "L_670";
-    private static String SEAWIFS_L1B_RADIANCE_7_BAND_NAME = "L_765";
-    private static String SEAWIFS_L1B_RADIANCE_8_BAND_NAME = "L_865";
+    private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
+    private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 443.f, 490.f, 510.f, 555.f, 670.f, 765.f, 865.f};
+
+    private static final String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "L_412";
+    private static final String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "L_443";
+    private static final String SEAWIFS_L1B_RADIANCE_3_BAND_NAME = "L_490";
+    private static final String SEAWIFS_L1B_RADIANCE_4_BAND_NAME = "L_510";
+    private static final String SEAWIFS_L1B_RADIANCE_5_BAND_NAME = "L_555";
+    private static final String SEAWIFS_L1B_RADIANCE_6_BAND_NAME = "L_670";
+    private static final String SEAWIFS_L1B_RADIANCE_7_BAND_NAME = "L_765";
+    private static final String SEAWIFS_L1B_RADIANCE_8_BAND_NAME = "L_865";
 
     private static String[] SEAWIFS_L1B_SPECTRAL_BAND_NAMES = {
             SEAWIFS_L1B_RADIANCE_1_BAND_NAME,
@@ -32,13 +35,28 @@ public class SeaWiFSSensorConfig implements SensorConfig {
     private static double ozoneDefaultValue = 330.0;
 
     @Override
-    public int getNumSpectralBands() {
+    public int getNumSpectralInputBands() {
         return SEAWIFS_L1B_NUM_SPECTRAL_BANDS;
     }
 
     @Override
-    public String[] getSpectralBandNames() {
+    public String[] getSpectralInputBandNames() {
         return SEAWIFS_L1B_SPECTRAL_BAND_NAMES;
+    }
+
+    @Override
+    public int getNumSpectralOutputBands() {
+        return SEAWIFS_L1B_NUM_SPECTRAL_BANDS;
+    }
+
+    @Override
+    public int[] getSpectralOutputBandIndices() {
+        return SPECTRAL_OUTPUT_INDEXES;
+    }
+
+    @Override
+    public float[] getSpectralOutputWavelengths() {
+        return SPECTRAL_OUTPUT_WAVELENGTHS;
     }
 
     @Override

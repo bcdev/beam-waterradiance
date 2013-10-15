@@ -9,6 +9,9 @@ import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
 class ModisSensorConfig implements SensorConfig {
 
+    private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{413.f, 443.f, 488.f, 531.f, 551.f, 667.f, 678.f, 748.f, 870.f};
+
     private final static String MODIS_L1B_RADIANCE_1_BAND_NAME = "EV_1KM_RefSB.8";
     private final static String MODIS_L1B_RADIANCE_2_BAND_NAME = "EV_1KM_RefSB.9";
     private final static String MODIS_L1B_RADIANCE_3_BAND_NAME = "EV_1KM_RefSB.10";
@@ -36,22 +39,38 @@ class ModisSensorConfig implements SensorConfig {
     private final static double[] defaultSolarFluxes = {556.3234802246094, 606.7602844238281, 629.3416137695312,
             600.0957214355469, 602.5105712890625, 492.57408142089844, 479.41172790527344, 412.11121520996096,
             309.7836883544922};
+    private static final String globalMetadataName = "GLOBAL_METADATA";
+
     private double[] solarFluxes;
     private double earthSunDistance;
-    private final String globalMetadataName = "GLOBAL_METADATA";
     private final String alternativeGlobalMetadataName = "Global_Attributes";
     private final String solarFluxesName = "Solar_Irradiance_on_RSB_Detectors_over_pi";
     private final static String[] earthSunDistanceNames = {"Earth-Sun_Distance", "Earth-Sun Distance"};
     private MetadataAttribute solarFluxesAttribute;
 
     @Override
-    public int getNumSpectralBands() {
+    public int getNumSpectralInputBands() {
         return MODIS_L1B_NUM_SPECTRAL_BANDS;
     }
 
     @Override
-    public String[] getSpectralBandNames() {
+    public String[] getSpectralInputBandNames() {
         return MODIS_L1B_SPECTRAL_BAND_NAMES;
+    }
+
+    @Override
+    public int getNumSpectralOutputBands() {
+        return MODIS_L1B_NUM_SPECTRAL_BANDS;
+    }
+
+    @Override
+    public int[] getSpectralOutputBandIndices() {
+        return SPECTRAL_OUTPUT_INDEXES;
+    }
+
+    @Override
+    public float[] getSpectralOutputWavelengths() {
+        return SPECTRAL_OUTPUT_WAVELENGTHS;
     }
 
     @Override

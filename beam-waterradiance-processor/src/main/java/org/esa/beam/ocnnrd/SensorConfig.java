@@ -5,11 +5,18 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
 public interface SensorConfig {
-    int getNumSpectralBands();
-
-    String[] getSpectralBandNames();
 
     Sensor getSensor();
+
+    int getNumSpectralInputBands();
+
+    String[] getSpectralInputBandNames();
+
+    int getNumSpectralOutputBands();
+
+    int[] getSpectralOutputBandIndices();
+
+    float[] getSpectralOutputWavelengths();
 
     void configureSourceSamples(SampleConfigurer sampleConfigurer, boolean csvMode);
 

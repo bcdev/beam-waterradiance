@@ -1,6 +1,5 @@
 package org.esa.beam.ocnnrd;
 
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
@@ -8,9 +7,8 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -25,13 +23,34 @@ public class ModisSensorConfigTest {
     }
 
     @Test
-    public void testGetNumSpectralBands() {
-        assertEquals(9, modisSensorConfig.getNumSpectralBands());
+    public void testGetNumSpectralInputBands() {
+        assertEquals(9, modisSensorConfig.getNumSpectralInputBands());
     }
 
     @Test
-    public void testGetSpectralBandNames() {
-        final String[] spectralBandNames = modisSensorConfig.getSpectralBandNames();
+    public void testGetNumSpectralOutputBands() {
+        assertEquals(9, modisSensorConfig.getNumSpectralOutputBands());
+    }
+
+    @Test
+    public void testGetSpectralOutputBandIndices() {
+        final int[] expectedIndices = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
+        final int[] indices = modisSensorConfig.getSpectralOutputBandIndices();
+
+        assertArrayEquals(expectedIndices, indices);
+    }
+
+    @Test
+    public void testGetSpectralOutputWavelengths() {
+        final float[] expectedWavelengths = new float[]{413.f, 443.f, 488.f, 531.f, 551.f, 667.f, 678.f, 748.f, 870.f};
+
+        final float[] wavelengths = modisSensorConfig.getSpectralOutputWavelengths();
+        assertArrayEquals(expectedWavelengths, wavelengths, 1e-8f);
+    }
+
+    @Test
+    public void testGetSpectralInputBandNames() {
+        final String[] spectralBandNames = modisSensorConfig.getSpectralInputBandNames();
         assertNotNull(spectralBandNames);
         assertEquals(9, spectralBandNames.length);
 

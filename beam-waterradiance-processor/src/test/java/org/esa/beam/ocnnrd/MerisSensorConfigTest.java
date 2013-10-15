@@ -7,8 +7,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class MerisSensorConfigTest {
 
@@ -20,8 +19,29 @@ public class MerisSensorConfigTest {
     }
 
     @Test
-    public void testGetNumSpectralBands() {
-        assertEquals(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length, merisSensorConfig.getNumSpectralBands());
+    public void testGetNumSpectralInputBands() {
+        assertEquals(EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length, merisSensorConfig.getNumSpectralInputBands());
+    }
+
+    @Test
+    public void testGetNumSpectralOutputBands() {
+        assertEquals(12, merisSensorConfig.getNumSpectralOutputBands());
+    }
+
+    @Test
+    public void testGetSpectralOutputBandIndices() {
+        final int[] expectedIndices = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
+
+        final int[] indices = merisSensorConfig.getSpectralOutputBandIndices();
+        assertArrayEquals(expectedIndices, indices);
+    }
+
+    @Test
+    public void testGetSpectralOutputWavelengths() {
+        final float[] expectedWavelengths = new float[]{412.f, 442.f, 449.f, 510.f, 560.f, 620.f, 665.f, 681.f, 708.f, 753.f, 778.f, 865.f};
+
+        final float[] wavelengths = merisSensorConfig.getSpectralOutputWavelengths();
+        assertArrayEquals(expectedWavelengths, wavelengths, 1e-8f);
     }
 
     @Test
@@ -55,8 +75,8 @@ public class MerisSensorConfigTest {
     }
 
     @Test
-    public void testGetSpectralBandNames() {
-        final String[] spectralBandNames = merisSensorConfig.getSpectralBandNames();
+    public void testGetSpectralInputBandNames() {
+        final String[] spectralBandNames = merisSensorConfig.getSpectralInputBandNames();
         assertNotNull(spectralBandNames);
         assertEquals(15, spectralBandNames.length);
 
@@ -84,12 +104,11 @@ public class MerisSensorConfigTest {
     @Test
     public void testGetSolarFluxes() {
         final Product product = new Product("test", "type", 5, 5);
-        assertEquals(15, merisSensorConfig.getNumSpectralBands());
-        float[] testFluxes = new float[]{23.6f, 34.7f, 102.3f, 14.7f, 71.5f, 63.4f, 102.87f, 94.5f, 61f, 12.3f, 14.1f,
-            29.7f, 1023f, 60.1f, 51.9f};
-        for(int i = 0; i < merisSensorConfig.getNumSpectralBands(); i++) {
-            product.addBand(createBandWithSolarFlux(merisSensorConfig.getSpectralBandNames()[i], testFluxes[i]));
+        final float[] testFluxes = new float[]{23.6f, 34.7f, 102.3f, 14.7f, 71.5f, 63.4f, 102.87f, 94.5f, 61f, 12.3f, 14.1f, 29.7f, 1023f, 60.1f, 51.9f};
+        for (int i = 0; i < merisSensorConfig.getNumSpectralInputBands(); i++) {
+            product.addBand(createBandWithSolarFlux(merisSensorConfig.getSpectralInputBandNames()[i], testFluxes[i]));
         }
+
         final Band schnick = createBandWithSolarFlux("schnick", 23.6f);
         final Band schnack = createBandWithSolarFlux("schnack", 34.7f);
         product.addBand(schnick);
@@ -97,7 +116,7 @@ public class MerisSensorConfigTest {
 
         final double[] solarFluxes = merisSensorConfig.getSolarFluxes(product);
         assertEquals(15, solarFluxes.length);
-        for(int i = 0; i < merisSensorConfig.getNumSpectralBands(); i++) {
+        for (int i = 0; i < merisSensorConfig.getNumSpectralInputBands(); i++) {
             assertEquals(testFluxes[i], solarFluxes[i], 1e-8);
         }
     }

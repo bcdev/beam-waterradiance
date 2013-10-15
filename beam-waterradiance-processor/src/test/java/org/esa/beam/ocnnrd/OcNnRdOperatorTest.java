@@ -29,13 +29,7 @@ public class OcNnRdOperatorTest {
         samples[1] = new TestSample();
         samples[2] = new TestSample();
 
-        OcNnRdOperator.setToInvalid(samples, 2);
-
-        assertEquals(Double.NaN, samples[0].getDouble(), 1e-8);
-        assertEquals(Double.NaN, samples[1].getDouble(), 1e-8);
-        assertEquals(0.0, samples[2].getDouble(), 1e-8);
-
-        OcNnRdOperator.setToInvalid(samples, 3);
+        OcNnRdOperator.setToInvalid(samples);
 
         assertEquals(Double.NaN, samples[0].getDouble(), 1e-8);
         assertEquals(Double.NaN, samples[1].getDouble(), 1e-8);

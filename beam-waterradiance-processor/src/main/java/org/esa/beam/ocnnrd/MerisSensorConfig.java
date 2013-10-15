@@ -1,23 +1,42 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
 class MerisSensorConfig implements SensorConfig {
 
+    private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
+    private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 442.f, 449.f, 510.f, 560.f, 620.f, 665.f, 681.f, 708.f, 753.f, 778.f, 865.f};
+
     private double surfacePressure;
     private double ozone;
 
     @Override
-    public int getNumSpectralBands() {
+    public int getNumSpectralInputBands() {
         return EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS;
     }
 
     @Override
-    public String[] getSpectralBandNames() {
+    public String[] getSpectralInputBandNames() {
         return EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES;
+    }
+
+    @Override
+    public int getNumSpectralOutputBands() {
+        return SPECTRAL_OUTPUT_INDEXES.length;
+    }
+
+    @Override
+    public int[] getSpectralOutputBandIndices() {
+        return SPECTRAL_OUTPUT_INDEXES;
+    }
+
+    @Override
+    public float[] getSpectralOutputWavelengths() {
+        return SPECTRAL_OUTPUT_WAVELENGTHS;
     }
 
     @Override
@@ -68,9 +87,13 @@ class MerisSensorConfig implements SensorConfig {
 
     @Override
     public double[] getSolarFluxes(Product sourceProduct) {
-        double[] solarFluxes = new double[getNumSpectralBands()];
-        for (int i = 0; i < getNumSpectralBands(); i++) {
-            solarFluxes[i] = sourceProduct.getBand(getSpectralBandNames()[i]).getSolarFlux();
+        final int numBands = getNumSpectralInputBands();
+        final double[] solarFluxes = new double[numBands];
+        final String[] spectralBandNames = getSpectralInputBandNames();
+
+        for (int i = 0; i < numBands; i++) {
+            final Band band = sourceProduct.getBand(spectralBandNames[i]);
+            solarFluxes[i] = band.getSolarFlux();
         }
         return solarFluxes;
     }
