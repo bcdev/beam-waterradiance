@@ -93,7 +93,7 @@ public class OcNnRdOperator extends PixelOperator {
         if (sensorType == Sensor.MODIS || sensorType == Sensor.SEAWIFS || isValid(sourceSamples)) {
             final double[] input_local = input.get();
             sensorConfig.copyTiePointData(input_local, sourceSamples);
-            copyAuxData(x, y);
+            copyAuxData(input_local, x, y);
             copyRadiances(input_local, sourceSamples, sensorConfig);
             copySolarFluxes(sourceSamples);
 
@@ -312,8 +312,7 @@ public class OcNnRdOperator extends PixelOperator {
     }
 
     @SuppressWarnings("MismatchedReadAndWriteOfArray")
-    private void copyAuxData(int x, int y) {
-        final double[] input_local = input.get();
+    private void copyAuxData(double[] input_local, int x, int y) {
         if (salinityTemperatureAuxdata != null) {
             try {
                 final GeoCoding geoCoding = sourceProduct.getGeoCoding();
