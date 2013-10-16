@@ -36,6 +36,7 @@ public class LevMarNN {
 
     private static final double[] MERBAND_12 = {412.3, 442.3, 489.7, 509.6, 559.5, 619.4, 664.3, 680.6, 708.1, 753.1, 778.2, 864.6};
     private static final double[] MODBAND_9 = {412.5, 443, 488, 531, 551, 667, 678, 748, 869.5};
+    private static final double[] SWFSBAND_8 = {412, 443, 490, 510, 555, 670, 765, 865};
     private static final int[] MERBAND_12_INDEX = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12};
     private static final int[] MERIS_11_OUTOF_12_IX = new int[]{0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11};
 
@@ -179,6 +180,8 @@ public class LevMarNN {
             x11 = new double[11];
         } else if (sensorConfig.getSensor() == Sensor.MODIS) {
             x11 = new double[9];
+        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+            x11 = new double[8];
         }
 
         nnResources = new NnResources();
@@ -312,6 +315,14 @@ public class LevMarNN {
                 trans_ozonu[i] = Math.exp(-0.01 * ozone / 1000.0 * (1.0 / cos_teta_view));
                 trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
             }
+        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+            nlam = 8;
+            for (int i = 0; i < nlam; i++) {
+                //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
+                trans_ozond[i] = Math.exp(-0.01 * ozone / 1000.0 * (1.0 / cos_teta_sun));
+                trans_ozonu[i] = Math.exp(-0.01 * ozone / 1000.0 * (1.0 / cos_teta_view));
+                trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
+            }
         }
 
 //        for (int i = 0; i < 12; ++i) {
@@ -407,6 +418,14 @@ public class LevMarNN {
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
                 x[ilam] = rho_tosa_corr[ilam];
             }
+        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+            for (ilam = 0; ilam < nlam; ilam++) {
+                L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
+                L_tosa[ilam] *= Math.pow(sensorConfig.getEarthSunDistance(), 2);
+                Ed_tosa[ilam] = Ed_toa[ilam];
+                rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
+                x[ilam] = rho_tosa_corr[ilam];
+            }
         }
 
         /* extra trans for rho_water: ozon, rayl_smile, rayl_press */
@@ -456,6 +475,8 @@ public class LevMarNN {
             }
         } else if (sensorConfig.getSensor() == Sensor.MODIS) {
             System.arraycopy(x, 0, x11, 0, 9);
+        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+            System.arraycopy(x, 0, x11, 0, 8);
         }
         /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
         //  opts[0]=LM_INIT_MU; opts[1]=1E-15; opts[2]=1E-15; opts[3]=1E-20;

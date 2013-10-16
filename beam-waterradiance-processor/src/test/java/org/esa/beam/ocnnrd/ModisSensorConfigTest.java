@@ -159,6 +159,11 @@ public class ModisSensorConfigTest {
         assertEquals(-1, modisSensorConfig.getDetectorIndex(new Sample[0]));
     }
 
+    @Test
+    public void testGetTargetSamplesOffset() {
+        assertEquals(0, modisSensorConfig.getTargetSampleOffset());
+    }
+
     private Product createProductWithSolarFluxMetadata() {
         final Product product = new Product("test", "type", 5, 5);
         double[] solarFluxes = new double[330];

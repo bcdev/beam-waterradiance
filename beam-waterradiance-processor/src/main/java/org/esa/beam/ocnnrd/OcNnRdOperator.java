@@ -1,13 +1,22 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.waterradiance.AtmosphericAuxdata;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
@@ -23,8 +32,8 @@ import java.util.Date;
  * @author Tom Block
  */
 @OperatorMetadata(alias = "Meris.OCNNRD", version = "1.0",
-        authors = "Tom Block, Tonio Fincke, Roland Doerffer",
-        description = "An operator computing water IOPs starting from radiances.")
+                  authors = "Tom Block, Tonio Fincke, Roland Doerffer",
+                  description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
     private static int NUM_OUTPUTS;
@@ -95,8 +104,8 @@ public class OcNnRdOperator extends PixelOperator {
 
             // @todo 2 tb/tb extract method and test tb 2013-05-13
 //            for (int i = 0; i < output_local.length; i++) {
-            for (int i = 0; i < targetSamples.length; i++) {
-                targetSamples[i].set(output_local[i]);
+            for (int i = sensorConfig.getTargetSampleOffset(); i < targetSamples.length; i++) {
+                targetSamples[i].set(output_local[i - sensorConfig.getTargetSampleOffset()]);
             }
             targetSamples[targetSamples.length - 4].set(input_local[8]);
             targetSamples[targetSamples.length - 3].set(input_local[9]);
@@ -116,8 +125,9 @@ public class OcNnRdOperator extends PixelOperator {
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         Product targetProduct = getTargetProduct();
         String[] bandNames = targetProduct.getBandNames();
-        for (int i = 0; i < bandNames.length; i++) {
+        for (int i = sensorConfig.getTargetSampleOffset(); i < bandNames.length; i++) {
             final String bandName = bandNames[i];
+            sampleConfigurer.defineSample(i, bandName);
         }
     }
 
@@ -161,8 +171,8 @@ public class OcNnRdOperator extends PixelOperator {
         addBand(productConfigurer, "ozone_2", ProductData.TYPE_FLOAT32, "", "Ozone");
 
         // @todo 1 tb/** what to do in the general case? This is ENVSAT specific ... tb 2013-09-25
-       // productConfigurer.copyBands(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
-       // productConfigurer.copyBands(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
+        // productConfigurer.copyBands(EnvisatConstants.MERIS_DETECTOR_INDEX_DS_NAME);
+        // productConfigurer.copyBands(EnvisatConstants.MERIS_L1B_FLAGS_DS_NAME);
 
         if (csvMode) {
             //copy row_index and lat/lon from input
@@ -176,7 +186,7 @@ public class OcNnRdOperator extends PixelOperator {
         targetProduct.setAutoGrouping(autoGrouping);
         if (csvMode) {
             targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
-                    targetProduct.getSceneRasterHeight());
+                                               targetProduct.getSceneRasterHeight());
         }
     }
 
@@ -196,7 +206,7 @@ public class OcNnRdOperator extends PixelOperator {
             final Band band = productConfigurer.addBand(String.format(bandNameFormat, indices[i]), ProductData.TYPE_FLOAT32);
             band.setSpectralBandIndex(i);
             band.setSpectralWavelength(wavelengths[i]);
-            band.setDescription(String.format(descriptionFormat, (int)wavelengths[i]));
+            band.setDescription(String.format(descriptionFormat, (int) wavelengths[i]));
             band.setUnit(unit);
             band.setNoDataValue(Float.NaN);
         }
@@ -216,7 +226,7 @@ public class OcNnRdOperator extends PixelOperator {
                 solarFluxes = sensorConfig.getSolarFluxes(sourceProduct);
             }
             sourceProduct.addBand("_mask_", maskExpression);
-        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
+        } else if (sensorConfig.getSensor() == Sensor.MODIS || sensorConfig.getSensor() == Sensor.SEAWIFS) {
             solarFluxes = sensorConfig.getSolarFluxes(sourceProduct);
         }
 

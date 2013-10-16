@@ -35,4 +35,6 @@ public interface SensorConfig {
     void init(Product sourceProduct);
 
     int getDetectorIndex(Sample[] samples);
+
+    int getTargetSampleOffset();
 }

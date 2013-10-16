@@ -165,4 +165,9 @@ class ModisSensorConfig implements SensorConfig {
     public int getDetectorIndex(Sample[] samples) {
         return -1;
     }
+
+    @Override
+    public int getTargetSampleOffset() {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

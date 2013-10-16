@@ -129,4 +129,9 @@ class MerisSensorConfig implements SensorConfig {
     public int getDetectorIndex(Sample[] samples) {
         return samples[Constants.SRC_DETECTOR].getInt();
     }
+
+    @Override
+    public int getTargetSampleOffset() {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

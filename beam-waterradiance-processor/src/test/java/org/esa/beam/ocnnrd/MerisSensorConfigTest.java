@@ -175,6 +175,11 @@ public class MerisSensorConfigTest {
         assertEquals(776, detectorIndex);
     }
 
+    @Test
+    public void testGetTargetSamplesOffset() {
+        assertEquals(0, merisSensorConfig.getTargetSampleOffset());
+    }
+
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {
         assertEquals(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME, testSampleConfigurer.get(0));
         assertEquals(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME, testSampleConfigurer.get(1));
