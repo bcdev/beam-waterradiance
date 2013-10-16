@@ -37,4 +37,6 @@ public interface SensorConfig {
     int getDetectorIndex(Sample[] samples);
 
     int getTargetSampleOffset();
+
+    double correctAzimuth(double azimuth);
 }

@@ -1,6 +1,5 @@
 package org.esa.beam.ocnnrd;
 
-import junit.framework.Assert;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
@@ -10,9 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertNull;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class ModisSensorConfigTest {
 
@@ -104,7 +101,7 @@ public class ModisSensorConfigTest {
         final TestSample[] sourceSamples = new TestSample[4];
         for (int i = 0; i < sourceSamples.length; i++) {
             sourceSamples[i] = new TestSample();
-            sourceSamples[i].set((double)i);
+            sourceSamples[i].set((double) i);
         }
 
         modisSensorConfig.copyTiePointData(inputs, sourceSamples);
@@ -125,7 +122,7 @@ public class ModisSensorConfigTest {
 //        double[] expectedResults = new double[]{184.5 * Math.PI, 194.5 * Math.PI, 204.5 * Math.PI, 214.5 * Math.PI,
 //                224.5 * Math.PI, 234.5 * Math.PI, 254.5 * Math.PI, 274.5 * Math.PI, 284.5 * Math.PI};
         double[] expectedResults = new double[]{184.5, 194.5, 204.5, 214.5, 224.5, 234.5, 254.5, 274.5, 284.5};
-        for(int i = 0; i < solarFluxes.length; i++) {
+        for (int i = 0; i < solarFluxes.length; i++) {
             assertEquals(expectedResults[i], solarFluxes[i], 1e-8);
         }
     }
@@ -164,23 +161,28 @@ public class ModisSensorConfigTest {
         assertEquals(0, modisSensorConfig.getTargetSampleOffset());
     }
 
+    @Test
+    public void testCorrectAzimuth() {
+        org.junit.Assert.assertEquals(33.8, modisSensorConfig.correctAzimuth(33.8), 1e-8);
+        org.junit.Assert.assertEquals(-25.88 + 360.0, modisSensorConfig.correctAzimuth(-25.88), 1e-8);
+    }
+
     private Product createProductWithSolarFluxMetadata() {
         final Product product = new Product("test", "type", 5, 5);
         double[] solarFluxes = new double[330];
         int[] startPositionInProductData = new int[]{180, 190, 200, 210, 220, 230, 250, 270, 280};
-        for(int i = 0; i < startPositionInProductData.length; i++) {
-            for(int j = 0; j < 10; j++) {
-                solarFluxes[startPositionInProductData[i] + j] = startPositionInProductData[i] + j;
+        for (int aStartPositionInProductData : startPositionInProductData) {
+            for (int j = 0; j < 10; j++) {
+                solarFluxes[aStartPositionInProductData + j] = aStartPositionInProductData + j;
             }
         }
         final ProductData productData = ProductData.createInstance(solarFluxes);
         final MetadataAttribute attribute = new MetadataAttribute("Solar_Irradiance_on_RSB_Detectors_over_pi",
-                                                                  productData, true);
+                productData, true);
         final MetadataElement globalMetadataElement = new MetadataElement("GLOBAL_METADATA");
         globalMetadataElement.addAttribute(attribute);
 
         product.getMetadataRoot().addElement(globalMetadataElement);
         return product;
     }
-
 }

@@ -134,4 +134,9 @@ class MerisSensorConfig implements SensorConfig {
     public int getTargetSampleOffset() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    @Override
+    public double correctAzimuth(double azimuth) {
+        return azimuth;  //nothing to correct here tb 2013-10-16
+    }
 }

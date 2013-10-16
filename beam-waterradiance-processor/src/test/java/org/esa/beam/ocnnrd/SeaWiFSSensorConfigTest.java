@@ -153,4 +153,9 @@ public class SeaWiFSSensorConfigTest {
         assertEquals(2, seaWiFSSensorConfig.getTargetSampleOffset());
     }
 
+    @Test
+    public void testCorrectAzimuth() {
+        Assert.assertEquals(13.8, seaWiFSSensorConfig.correctAzimuth(13.8), 1e-8);
+        Assert.assertEquals(-35.88 + 360.0, seaWiFSSensorConfig.correctAzimuth(-35.88), 1e-8);
+    }
 } 

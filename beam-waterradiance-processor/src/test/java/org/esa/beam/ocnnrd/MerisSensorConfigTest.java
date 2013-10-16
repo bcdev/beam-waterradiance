@@ -180,6 +180,12 @@ public class MerisSensorConfigTest {
         assertEquals(0, merisSensorConfig.getTargetSampleOffset());
     }
 
+    @Test
+    public void testCorrectAzimuth() {
+         assertEquals(23.8, merisSensorConfig.correctAzimuth(23.8), 1e-8);
+         assertEquals(-45.88, merisSensorConfig.correctAzimuth(-45.88), 1e-8);
+    }
+
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {
         assertEquals(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME, testSampleConfigurer.get(0));
         assertEquals(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME, testSampleConfigurer.get(1));

@@ -127,4 +127,12 @@ public class SeaWiFSSensorConfig implements SensorConfig {
     public int getTargetSampleOffset() {
         return 2;
     }
+
+    @Override
+    public double correctAzimuth(double azimuth) {
+        if (azimuth < 0.0) {
+            return azimuth + 360.0;
+        }
+        return azimuth;
+    }
 }

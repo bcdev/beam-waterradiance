@@ -170,4 +170,12 @@ class ModisSensorConfig implements SensorConfig {
     public int getTargetSampleOffset() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    @Override
+    public double correctAzimuth(double azimuth) {
+        if (azimuth < 0.0) {
+            return azimuth + 360.0;
+        }
+        return azimuth;
+    }
 }

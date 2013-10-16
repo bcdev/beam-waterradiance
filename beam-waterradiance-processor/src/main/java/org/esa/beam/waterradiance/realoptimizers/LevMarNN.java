@@ -9,11 +9,7 @@ import org.esa.beam.siocs.abstractprocessor.ForwardModel;
 import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 public class LevMarNN {
 
@@ -207,9 +203,6 @@ public class LevMarNN {
 //    }
 
     public int levmar_nn(int detector, double[] input, double[] output) {
-        // @todo 1 tb/** these two are never written, only read from ... tb 2013-05-14
-        double[] rw1 = new double[NLAM];
-        double[] rw2 = new double[NLAM];
         double sun_thet, view_zeni, azi_diff_hl, temperature, salinity, ozone;
 
         // @todo 2 tb/** can this be a field - check when all tests run green tb 2013-05-14
@@ -240,14 +233,8 @@ public class LevMarNN {
 
         final double cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
 
-        if (sensorConfig.getSensor() == Sensor.MODIS || sensorConfig.getSensor() == Sensor.SEAWIFS) {
-            if (sun_azimuth < 0) {
-                sun_azimuth = 360 + sun_azimuth;
-            }
-            if (view_azimuth < 0) {
-                view_azimuth = 360 + view_azimuth;
-            }
-        }
+        sun_azimuth = sensorConfig.correctAzimuth(sun_azimuth);
+        view_azimuth = sensorConfig.correctAzimuth(view_azimuth);
 
         int countOfSpectralBands = sensorConfig.getNumSpectralInputBands();
         for (int i = 0; i < countOfSpectralBands; i++) {
@@ -516,15 +503,9 @@ public class LevMarNN {
         /* normalize water leaving radiance reflectances */
 
         // requires first to make RLw again
-        for (
-                int i = 0;
-                i < 12; i++)
-
-        {
-            rlw1[i] = rw1[i] / M_PI;
-            rlw2[i] = rw2[i] / M_PI;
-            if (rlw2[i] < 0.0)
-                rlw2[i] = 1.0e-6;
+        for (int i = 0; i < 12; i++) {
+            rlw1[i] = 0.0;
+            rlw2[i] = 0.0;
         }
 
         nn_in[0] = sun_thet;
