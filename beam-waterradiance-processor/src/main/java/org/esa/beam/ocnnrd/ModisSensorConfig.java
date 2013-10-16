@@ -160,4 +160,9 @@ class ModisSensorConfig implements SensorConfig {
             }
         }
     }
+
+    @Override
+    public int getDetectorIndex(Sample[] samples) {
+        return -1;
+    }
 }

@@ -1,6 +1,7 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.pointop.Sample;
 import org.junit.*;
 
 import static junit.framework.Assert.assertEquals;
@@ -135,6 +136,11 @@ public class SeaWiFSSensorConfigTest {
     @Test
     public void testGetOzone() {
         Assert.assertEquals(330.0, seaWiFSSensorConfig.getOzone(), 1e-8);
+    }
+
+    @Test
+    public void testGetDetectorIndex() {
+        assertEquals(-1, seaWiFSSensorConfig.getDetectorIndex(new Sample[0]));
     }
 
 } 

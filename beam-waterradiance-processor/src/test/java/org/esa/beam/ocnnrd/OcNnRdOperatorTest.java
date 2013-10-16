@@ -94,16 +94,6 @@ public class OcNnRdOperatorTest {
         }
     }
 
-    @Test
-    public void testGetDetectorIndex() {
-        final TestSample[] samples = new TestSample[24];
-        samples[23] = new TestSample();
-        samples[23].set(776);
-
-        final int detectorIndex = OcNnRdOperator.getDetectorIndex(samples);
-        assertEquals(776, detectorIndex);
-    }
-
     private TestSample[] createTestSamples(int count) {
         final TestSample[] samples = new TestSample[count];
         for (int i = 0; i < samples.length; i++) {

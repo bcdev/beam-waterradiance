@@ -124,4 +124,9 @@ class MerisSensorConfig implements SensorConfig {
     public void init(Product sourceProduct) {
         // do nothing
     }
+
+    @Override
+    public int getDetectorIndex(Sample[] samples) {
+        return samples[Constants.SRC_DETECTOR].getInt();
+    }
 }

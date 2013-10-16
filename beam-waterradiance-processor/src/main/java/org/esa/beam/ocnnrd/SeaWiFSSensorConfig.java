@@ -116,4 +116,9 @@ public class SeaWiFSSensorConfig implements SensorConfig {
     public void init(Product sourceProduct) {
         // do nothing
     }
+
+    @Override
+    public int getDetectorIndex(Sample[] samples) {
+        return -1;
+    }
 }

@@ -165,6 +165,16 @@ public class MerisSensorConfigTest {
         assertEquals(sourceSamples[Constants.SRC_OZ].getDouble(), merisSensorConfig.getOzone(), 1e-8);
     }
 
+    @Test
+    public void testGetDetectorIndex() {
+        final TestSample[] samples = new TestSample[24];
+        samples[23] = new TestSample();
+        samples[23].set(776);
+
+        final int detectorIndex = merisSensorConfig.getDetectorIndex(samples);
+        assertEquals(776, detectorIndex);
+    }
+
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {
         assertEquals(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME, testSampleConfigurer.get(0));
         assertEquals(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME, testSampleConfigurer.get(1));

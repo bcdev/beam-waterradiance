@@ -1,9 +1,11 @@
 package org.esa.beam.ocnnrd;
 
+import junit.framework.Assert;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.gpf.pointop.Sample;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -150,6 +152,11 @@ public class ModisSensorConfigTest {
     @Test
     public void testGetOzone() {
         assertEquals(330.0, modisSensorConfig.getOzone(), 1e-8);
+    }
+
+    @Test
+    public void testGetDetectorIndex() {
+        assertEquals(-1, modisSensorConfig.getDetectorIndex(new Sample[0]));
     }
 
     private Product createProductWithSolarFluxMetadata() {

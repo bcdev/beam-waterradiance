@@ -33,4 +33,6 @@ public interface SensorConfig {
     double getEarthSunDistance();
 
     void init(Product sourceProduct);
+
+    int getDetectorIndex(Sample[] samples);
 }

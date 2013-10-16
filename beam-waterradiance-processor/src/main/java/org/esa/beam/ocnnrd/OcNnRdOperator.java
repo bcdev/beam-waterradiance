@@ -81,17 +81,14 @@ public class OcNnRdOperator extends PixelOperator {
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
         final Sensor sensorType = sensorConfig.getSensor();
-        if (sensorType == Sensor.MODIS || isValid(sourceSamples)) {
+        if (sensorType == Sensor.MODIS || sensorType == Sensor.SEAWIFS || isValid(sourceSamples)) {
             final double[] input_local = input.get();
             sensorConfig.copyTiePointData(input_local, sourceSamples);
             copyAuxData(x, y);
             copyRadiances(input_local, sourceSamples, sensorConfig);
             copySolarFluxes(sourceSamples);
 
-            int detectorIndex = -1;
-            if (sensorType == Sensor.MERIS) {
-                detectorIndex = getDetectorIndex(sourceSamples);
-            }
+            final int detectorIndex = sensorConfig.getDetectorIndex(sourceSamples);
             final double[] output_local = output.get();
             final LevMarNN levMarNN_local = levMarNN.get();
             levMarNN_local.levmar_nn(detectorIndex, input_local, output_local);
@@ -121,7 +118,6 @@ public class OcNnRdOperator extends PixelOperator {
         String[] bandNames = targetProduct.getBandNames();
         for (int i = 0; i < bandNames.length; i++) {
             final String bandName = bandNames[i];
-            sampleConfigurer.defineSample(i, bandName);
         }
     }
 
@@ -284,11 +280,6 @@ public class OcNnRdOperator extends PixelOperator {
         for (int i = 0; i < EnvisatConstants.MERIS_L1B_SPECTRAL_BAND_NAMES.length; i++) {
             inputs[25 + i] = sourceSamples[Constants.SRC_SOL_FLUX_OFFSET + i].getDouble();
         }
-    }
-
-    // package access for testing only tb 2013-05-13
-    static int getDetectorIndex(Sample[] sourceSamples) {
-        return sourceSamples[Constants.SRC_DETECTOR].getInt();
     }
 
     private void initAuxdataDataProviders() {
