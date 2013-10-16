@@ -115,7 +115,7 @@ public class SeaWiFSSensorConfigTest {
         final double[] expectedSolarFluxes = {1754.1875, 1894.665263, 1970.7535,
                 1863.546111, 1836.141, 1510.442273, 1232.692821, 947.14};
         for (int i = 0; i < expectedSolarFluxes.length; i++) {
-            assertEquals(expectedSolarFluxes[i], solarFluxes[i]);
+            assertEquals(expectedSolarFluxes[i], solarFluxes[i], 1e-8f);
         }
     }
 
