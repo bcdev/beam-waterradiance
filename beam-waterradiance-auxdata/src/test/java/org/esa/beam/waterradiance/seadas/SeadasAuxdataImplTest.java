@@ -149,6 +149,23 @@ public class SeadasAuxdataImplTest {
     }
 
     @Test
+    public void testGetSurfacePressureAfter2008() throws IOException {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(Calendar.MILLISECOND, 0);
+        final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
+
+        try {
+            calendar.set(2012, Calendar.APRIL, 6, 18, 0, 0);
+            double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 57, -33);
+            assertEquals(1023.71218, surfacePressure, 1e-8);
+        } catch (Exception unexpected) {
+            fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
+        }  finally {
+            seadasAuxdata.dispose();
+        }
+    }
+
+    @Test
     public void testGetSurfacePressureDateFraction_varyHour() {
         final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
 
@@ -176,6 +193,8 @@ public class SeadasAuxdataImplTest {
         calendar.set(Calendar.MILLISECOND, 999);
         assertEquals(0.4999999537037037, SeadasAuxdataImpl.getDateFractionForSurfacePressure(calendar), 1e-8);
     }
+
+
 
     @Test
     public void testGetDateFraction_varyHour() {
