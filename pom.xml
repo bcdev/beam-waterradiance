@@ -17,7 +17,7 @@
     </modules>
 
     <properties>
-        <beam.version>4.11</beam.version>
+        <beam.version>4.11.1-SNAPSHOT</beam.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <repositories>
