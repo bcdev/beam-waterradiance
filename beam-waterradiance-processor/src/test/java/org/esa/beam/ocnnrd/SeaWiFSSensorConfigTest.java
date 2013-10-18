@@ -112,8 +112,7 @@ public class SeaWiFSSensorConfigTest {
         final Product product = new Product("test", "type", 5, 5);
         final double[] solarFluxes = seaWiFSSensorConfig.getSolarFluxes(product);
         assertEquals(8, solarFluxes.length);
-        final double[] expectedSolarFluxes = {1754.1875, 1894.665263, 1970.7535,
-                1863.546111, 1836.141, 1510.442273, 1232.692821, 947.14};
+        final double[] expectedSolarFluxes = {171.18, 188.76, 193.38, 192.56, 183.76, 151.22, 123.91, 95.965};
         for (int i = 0; i < expectedSolarFluxes.length; i++) {
             assertEquals(expectedSolarFluxes[i], solarFluxes[i], 1e-8f);
         }
