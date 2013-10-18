@@ -48,6 +48,8 @@ public class LevMarNN {
     private static final int[] lam29_seawifs8_ix = {1, 2, 4, 6, 10, 16, 23, 25};
     //@todo adapt to modis and seawifs
     double[] ozon_meris12 = {0.0002179, 0.002814, 0.02006, 0.04081, 0.104, 0.109, 0.0505, 0.03526, 0.01881, 0.008897, 0.007693, 0.002192}; // L.Bourg 2010
+    double[] ozon_modis9 = {1.987E-03, 3.189E-03, 2.032E-02, 6.838E-02, 8.622E-02, 4.890E-02, 3.787E-02, 1.235E-02, 1.936E-03};
+    double[] ozon_seawifs8 = {4.114E-04, 3.162E-03, 2.346E-02, 4.094E-02, 9.568E-02, 4.649E-02, 8.141E-03, 3.331E-03};
 
     private final NnResources nnResources;
     private final a_nn norm_net;
@@ -298,16 +300,16 @@ public class LevMarNN {
             nlam = 9;
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
-                trans_ozond[i] = Math.exp(-0.01 * ozone / 1000.0 * (1.0 / cos_teta_sun));
-                trans_ozonu[i] = Math.exp(-0.01 * ozone / 1000.0 * (1.0 / cos_teta_view));
+                trans_ozond[i] = Math.exp(-ozon_modis9[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
+                trans_ozonu[i] = Math.exp(-ozon_modis9[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
                 trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
             }
         } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
             nlam = 8;
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
-                trans_ozond[i] = Math.exp(-0.01 * ozone / 1000.0 * (1.0 / cos_teta_sun));
-                trans_ozonu[i] = Math.exp(-0.01 * ozone / 1000.0 * (1.0 / cos_teta_view));
+                trans_ozond[i] = Math.exp(-ozon_seawifs8[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
+                trans_ozonu[i] = Math.exp(-ozon_seawifs8[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
                 trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
             }
         }
