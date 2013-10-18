@@ -11,6 +11,8 @@ class ModisSensorConfig implements SensorConfig {
 
     private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
     private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{413.f, 443.f, 488.f, 531.f, 551.f, 667.f, 678.f, 748.f, 870.f};
+    private static final String[] EARTH_SUN_DISTANCE_NAMES = {"Earth-Sun_Distance", "Earth-Sun Distance"};
+    private static final int[] START_POSITION_IN_PRODUCT_DATA = new int[]{180, 190, 200, 210, 220, 230, 250, 270, 280};
 
     private final static String MODIS_L1B_RADIANCE_1_BAND_NAME = "EV_1KM_RefSB.8";
     private final static String MODIS_L1B_RADIANCE_2_BAND_NAME = "EV_1KM_RefSB.9";
@@ -43,10 +45,7 @@ class ModisSensorConfig implements SensorConfig {
 
     private double[] solarFluxes;
     private double earthSunDistance;
-    private final String alternativeGlobalMetadataName = "Global_Attributes";
-    private final String solarFluxesName = "Solar_Irradiance_on_RSB_Detectors_over_pi";
-    private final static String[] earthSunDistanceNames = {"Earth-Sun_Distance", "Earth-Sun Distance"};
-    private MetadataAttribute solarFluxesAttribute;
+
 
     @Override
     public int getNumSpectralInputBands() {
@@ -131,29 +130,27 @@ class ModisSensorConfig implements SensorConfig {
         earthSunDistance = 1;
         solarFluxes = defaultSolarFluxes;
         MetadataElement globalMetadataElement = sourceProduct.getMetadataRoot().getElement(globalMetadataName);
-        if(globalMetadataElement != null) {
-            solarFluxesAttribute = globalMetadataElement.getAttribute(solarFluxesName);
-            if(solarFluxesAttribute != null) {
+        if (globalMetadataElement != null) {
+            final MetadataAttribute solarFluxesAttribute = globalMetadataElement.getAttribute("Solar_Irradiance_on_RSB_Detectors_over_pi");
+            if (solarFluxesAttribute != null) {
                 final ProductData productData =
                         solarFluxesAttribute.getData();
                 solarFluxes = new double[MODIS_L1B_NUM_SPECTRAL_BANDS];
-                int[] startPositionInProductData = new int[]{180, 190, 200, 210, 220, 230, 250, 270, 280};
                 for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
                     for (int j = 0; j < 10; j++) {
-                        solarFluxes[i] += productData.getElemDoubleAt(startPositionInProductData[i] + j);
+                        solarFluxes[i] += productData.getElemDoubleAt(START_POSITION_IN_PRODUCT_DATA[i] + j);
                     }
                     solarFluxes[i] /= 10;
 //            solarFluxes[i] *= Math.PI;
                 }
             }
         } else {
-            globalMetadataElement = sourceProduct.getMetadataRoot().getElement(alternativeGlobalMetadataName);
+            globalMetadataElement = sourceProduct.getMetadataRoot().getElement("Global_Attributes");
         }
-        if(globalMetadataElement != null) {
-            for(int i = 0; i < earthSunDistanceNames.length; i++) {
-                final MetadataAttribute earthSunDistanceAttribute =
-                        globalMetadataElement.getAttribute(earthSunDistanceNames[i]);
-                if(earthSunDistanceAttribute != null) {
+        if (globalMetadataElement != null) {
+            for (String EARTH_SUN_DISTANCE_NAME : EARTH_SUN_DISTANCE_NAMES) {
+                final MetadataAttribute earthSunDistanceAttribute = globalMetadataElement.getAttribute(EARTH_SUN_DISTANCE_NAME);
+                if (earthSunDistanceAttribute != null) {
                     earthSunDistance = earthSunDistanceAttribute.getData().getElemDouble();
                     break;
                 }
