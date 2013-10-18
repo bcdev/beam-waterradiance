@@ -8,9 +8,11 @@ public class SeaWiFSSensorConfig implements SensorConfig {
 
     private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
     private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 443.f, 490.f, 510.f, 555.f, 670.f, 765.f, 865.f};
-//    private static final float[] SPECTRAL_OUTPUT_BANDWIDTHS = new float[]{20.f, 20.f, 20.f, 20.f, 20.f, 20.f, 40.f, 40.f};
-    private final static double[] defaultSolarFluxes = {1754.1875, 1894.665263, 1970.7535,
-            1863.546111, 1836.141, 1510.442273, 1232.692821, 947.14};
+//    private final static double[] defaultSolarFluxes = {1754.1875 / Math.PI, 1894.665263 / Math.PI, 1970.7535 / Math.PI,
+//            1863.546111 / Math.PI, 1836.141 / Math.PI, 1510.442273 / Math.PI, 1232.692821 / Math.PI, 947.14 / Math.PI};
+    //    private static final float[] SPECTRAL_OUTPUT_BANDWIDTHS = new float[]{20.f, 20.f, 20.f, 20.f, 20.f, 20.f, 40.f, 40.f};
+    private final static double[] defaultSolarFluxes = {1754.1875, 1894.665263, 1970.7535, 1863.546111, 1836.141,
+        1510.442273, 1232.692821, 947.14};
     private static final String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "L_412";
     private static final String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "L_443";
     private static final String SEAWIFS_L1B_RADIANCE_3_BAND_NAME = "L_490";
@@ -33,8 +35,8 @@ public class SeaWiFSSensorConfig implements SensorConfig {
 
     private static int SEAWIFS_L1B_NUM_SPECTRAL_BANDS = SEAWIFS_L1B_SPECTRAL_BAND_NAMES.length;
 
-    private static double surfacePressureDefaultValue = 1019.0;
-    private static double ozoneDefaultValue = 330.0;
+    private static final double surfacePressureDefaultValue = 1019.0;
+    private static final double ozoneDefaultValue = 330.0;
 
     @Override
     public int getNumSpectralInputBands() {
@@ -89,6 +91,7 @@ public class SeaWiFSSensorConfig implements SensorConfig {
 
     @Override
     public double[] getSolarFluxes(Product sourceProduct) {
+        //todo look up real solar irradiance values as soon as governmental shutdown is over
         return defaultSolarFluxes;
     }
 
