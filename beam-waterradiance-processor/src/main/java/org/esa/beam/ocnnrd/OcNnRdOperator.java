@@ -366,10 +366,9 @@ public class OcNnRdOperator extends PixelOperator {
                 throw new OperatorException(e);
             }
         } else {
-            // todo ensure that these are decent default values
-            input_local[40] = 1.0;
-            input_local[41] = 1.0;
-            input_local[42] = 1.0;
+            input_local[40] = 0.0;
+            input_local[41] = 0.0;
+            input_local[42] = 0.0;
         }
     }
 
