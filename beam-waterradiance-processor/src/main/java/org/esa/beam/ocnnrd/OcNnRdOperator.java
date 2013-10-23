@@ -1,5 +1,6 @@
 package org.esa.beam.ocnnrd;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
@@ -17,14 +18,18 @@ import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.util.ResourceInstaller;
 import org.esa.beam.util.StringUtils;
+import org.esa.beam.util.SystemUtils;
 import org.esa.beam.waterradiance.AtmosphericAuxdata;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
 import org.esa.beam.waterradiance.NO2Auxdata;
 import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
 import org.esa.beam.waterradiance.realoptimizers.LevMarNN;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Date;
 
 /**
@@ -217,6 +222,16 @@ public class OcNnRdOperator extends PixelOperator {
     @Override
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
+
+        final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata/for_water_rw29_20120318");
+        URL sourceUrl = ResourceInstaller.getSourceUrl(OcNnRdOperator.class);
+        ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/for_water_rw29_20120318/", AUXDATA_DIR);
+        try {
+            installer.install(".*net", ProgressMonitor.NULL);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to install auxdata of the beam-waterradiance-processor module");
+        }
+
         sensorConfig = SensorConfigFactory.fromTypeString(sourceProduct.getProductType());
         sensorConfig.init(sourceProduct);
         NUM_OUTPUTS = 13 + 5 * sensorConfig.getNumSpectralInputBands();
