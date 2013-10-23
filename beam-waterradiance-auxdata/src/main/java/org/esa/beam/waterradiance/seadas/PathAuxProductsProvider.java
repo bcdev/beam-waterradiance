@@ -88,7 +88,7 @@ class PathAuxProductsProvider implements AuxProductsProvider {
                 final ProductReader productReader = ProductIO.getProductReader("NETCDF-CF");
                 product = productReader.readProductNodes(new File(productPath), null);
             } catch (IOException e) {
-                throw new IOException("Could not retrieve ozone for given day");
+                throw new IOException("Could not retrieve ozone for given day", e);
             }
             tomsomiProductMap.put(productID, product);
         }
@@ -108,7 +108,7 @@ class PathAuxProductsProvider implements AuxProductsProvider {
                 final ProductReader productReader = ProductIO.getProductReader("NETCDF-CF");
                 product = productReader.readProductNodes(new File(productPath), null);
             } catch (IOException e) {
-                throw new IOException("Could not retrieve surface pressure for given day");
+                throw new IOException("Could not retrieve surface pressure for given day", e);
             }
             ncepProductMap.put(productID, product);
         }
