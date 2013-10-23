@@ -11,5 +11,4 @@ public class LatLonToPixelPosConverter {
         pixelPos.setLocation(pixelX, pixelY);
         return pixelPos;
     }
-
 }

@@ -3,6 +3,7 @@ package org.esa.beam.waterradiance.seadas;
 
 import junit.framework.Assert;
 import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.waterradiance.AtmosphericAuxdata;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,29 +24,6 @@ public class SeadasAuxdataImplTest {
     @Before
     public void setUp() {
         auxDirectoryURL = SeadasAuxdataImplTest.class.getResource("../../../../../auxiliary/seadas/anc");
-    }
-
-    @Test
-    public void testCreateWithInvalidAuxPath() {
-        String invalidAuxPath = "invalid";
-        try {
-            SeadasAuxdataImpl.create(invalidAuxPath);
-            fail("Auxdata Impl was created although auxdata path was invalid!");
-        } catch (Exception expected) {
-            //expected
-        }
-    }
-
-    @Test
-    public void testCreateWithValidAuxPath() {
-        assertNotNull(auxDirectoryURL);
-        final String auxDirectoryPath = auxDirectoryURL.getPath();
-        try {
-            SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryPath);
-            assertNotNull(seadasAuxdata);
-        } catch (Exception unexpected) {
-            fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
-        }
     }
 
     @Test
@@ -194,8 +172,6 @@ public class SeadasAuxdataImplTest {
         assertEquals(0.4999999537037037, SeadasAuxdataImpl.getDateFractionForSurfacePressure(calendar), 1e-8);
     }
 
-
-
     @Test
     public void testGetDateFraction_varyHour() {
         final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
@@ -251,212 +227,4 @@ public class SeadasAuxdataImplTest {
         assertEquals(0.02373842592592597, SeadasAuxdataImpl.getDateFraction(calendar, 0.7), 1e-8);
     }
 
-    @Test
-    public void testGetDayString() {
-        assertEquals("000", SeadasAuxdataImpl.getDayString(0));
-        assertEquals("009", SeadasAuxdataImpl.getDayString(9));
-        assertEquals("010", SeadasAuxdataImpl.getDayString(10));
-        assertEquals("099", SeadasAuxdataImpl.getDayString(99));
-        assertEquals("100", SeadasAuxdataImpl.getDayString(100));
-        assertEquals("114", SeadasAuxdataImpl.getDayString(114));
-    }
-
-    @Test
-    public void testGetDayOffset() {
-        assertEquals(-1, SeadasAuxdataImpl.getDayOffset(0));
-        assertEquals(-1, SeadasAuxdataImpl.getDayOffset(11));
-        assertEquals(0, SeadasAuxdataImpl.getDayOffset(12));
-        assertEquals(0, SeadasAuxdataImpl.getDayOffset(23));
-    }
-
-    @Test
-    public void testGetStartDayOffset() {
-        assertEquals(-1, SeadasAuxdataImpl.getStartDayOffset(0));
-        assertEquals(0, SeadasAuxdataImpl.getStartDayOffset(11));
-        assertEquals(0, SeadasAuxdataImpl.getStartDayOffset(12));
-        assertEquals(0, SeadasAuxdataImpl.getStartDayOffset(23));
-    }
-
-    @Test
-    public void testGetEndDayOffset() {
-        assertEquals(0, SeadasAuxdataImpl.getEndDayOffset(0));
-        assertEquals(0, SeadasAuxdataImpl.getEndDayOffset(11));
-        assertEquals(0, SeadasAuxdataImpl.getEndDayOffset(12));
-        assertEquals(1, SeadasAuxdataImpl.getEndDayOffset(23));
-    }
-
-    @Test
-    public void testCreateTimeSpan() {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2007, Calendar.SEPTEMBER, 17, 17, 22, 11);
-
-        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, 0);
-        assertNotNull(timeSpan);
-        assertEquals(2007, timeSpan.getStartYear());
-        assertEquals(260, timeSpan.getStartDay());
-        assertEquals(2007, timeSpan.getEndYear());
-        assertEquals(261, timeSpan.getEndDay());
-    }
-
-    @Test
-    public void testCreateTimeSpan_varyOffset() {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2008, Calendar.OCTOBER, 18, 17, 22, 11);
-
-        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, -1);
-        assertNotNull(timeSpan);
-        assertEquals(2008, timeSpan.getStartYear());
-        assertEquals(291, timeSpan.getStartDay());
-        assertEquals(2008, timeSpan.getEndYear());
-        assertEquals(292, timeSpan.getEndDay());
-    }
-
-    @Test
-    public void testCreateTimeSpanForSurfacePressure() {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2007, Calendar.SEPTEMBER, 17, 17, 22, 11);
-
-        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, 0, 0);
-        assertNotNull(timeSpan);
-        assertEquals(2007, timeSpan.getStartYear());
-        assertEquals(260, timeSpan.getStartDay());
-        assertEquals(2, timeSpan.getStartInterval());
-        assertEquals(2007, timeSpan.getEndYear());
-        assertEquals(260, timeSpan.getEndDay());
-        assertEquals(3, timeSpan.getEndInterval());
-    }
-
-    @Test
-    public void testCreateTimeSpanForSurfacePressureWithDateOverlap_1() {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2007, Calendar.SEPTEMBER, 17, 2, 2, 11);
-
-        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, -1, 0);
-        assertNotNull(timeSpan);
-        assertEquals(2007, timeSpan.getStartYear());
-        assertEquals(259, timeSpan.getStartDay());
-        assertEquals(3, timeSpan.getStartInterval());
-        assertEquals(2007, timeSpan.getEndYear());
-        assertEquals(260, timeSpan.getEndDay());
-        assertEquals(0, timeSpan.getEndInterval());
-    }
-
-    @Test
-    public void testCreateTimeSpanForSurfacePressureWithDateOverlap_2() {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2007, Calendar.SEPTEMBER, 17, 22, 22, 11);
-
-        final SeadasAuxdataImpl.TimeSpan timeSpan = SeadasAuxdataImpl.createTimeSpan(calendar, 0, 1);
-        assertNotNull(timeSpan);
-        assertEquals(2007, timeSpan.getStartYear());
-        assertEquals(260, timeSpan.getStartDay());
-        assertEquals(3, timeSpan.getStartInterval());
-        assertEquals(2007, timeSpan.getEndYear());
-        assertEquals(261, timeSpan.getEndDay());
-        assertEquals(0, timeSpan.getEndInterval());
-    }
-
-    @Test
-    public void testAdjustForOverlappingYears_startYear() {
-        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
-        timeSpan.setStartDay(0);
-        timeSpan.setStartYear(2006);
-
-        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
-        assertEquals(365, timeSpan.getStartDay());
-        assertEquals(2005, timeSpan.getStartYear());
-    }
-
-    @Test
-    public void testAdjustForOverlappingYears_startYear_leapYear() {
-        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
-        timeSpan.setStartDay(0);
-        timeSpan.setStartYear(2005);
-
-        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
-        assertEquals(366, timeSpan.getStartDay());
-        assertEquals(2004, timeSpan.getStartYear());
-    }
-
-    @Test
-    public void testAdjustForOverlappingYears_endYear() {
-        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
-        timeSpan.setStartDay(365);
-        timeSpan.setEndDay(366);
-        timeSpan.setEndYear(2007);
-
-        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
-        assertEquals(1, timeSpan.getEndDay());
-        assertEquals(2008, timeSpan.getEndYear());
-    }
-
-    @Test
-    public void testAdjustForOverlappingYears_endYear_leapYear() {
-        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
-        timeSpan.setStartDay(365);
-        timeSpan.setEndDay(367);
-        timeSpan.setEndYear(2000);
-
-        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
-        assertEquals(1, timeSpan.getEndDay());
-        assertEquals(2001, timeSpan.getEndYear());
-    }
-
-    @Test
-    public void testAdjustForOverlappingYears_noAdjustments() {
-        SeadasAuxdataImpl.TimeSpan timeSpan = new SeadasAuxdataImpl.TimeSpan();
-        timeSpan.setStartDay(219);
-        timeSpan.setStartYear(2012);
-        timeSpan.setEndDay(220);
-        timeSpan.setEndYear(2012);
-
-        timeSpan = SeadasAuxdataImpl.adjustForOverlappingYears(timeSpan);
-        assertEquals(219, timeSpan.getStartDay());
-        assertEquals(2012, timeSpan.getStartYear());
-        assertEquals(220, timeSpan.getEndDay());
-        assertEquals(2012, timeSpan.getEndYear());
-    }
-
-    @Test
-    public void testGetTOMSOMIProductPath() {
-        assertEquals("auxdata//2008//005//N200800500_O3_TOMSOMI_24h.hdf", SeadasAuxdataImpl.getTomsomiProductPath("auxdata", 2008, "005"));
-        assertEquals("seadas//2010//116//N201011600_O3_TOMSOMI_24h.hdf", SeadasAuxdataImpl.getTomsomiProductPath("seadas", 2010, "116"));
-    }
-
-    @Test
-    public void testGetNCEPProductPath() {
-        assertEquals("auxdata//2008//005//N200800523_MET_NCEPN_6h.hdf", SeadasAuxdataImpl.getNCEPProductPath("auxdata", 2008, "005", "23"));
-        assertEquals("seadas//2010//116//S201011604_NCEP.MET", SeadasAuxdataImpl.getNCEPProductPath("seadas", 2010, "116", "04"));
-    }
-
-    @Test
-    public void testGetProductId() {
-        assertEquals("2012005", SeadasAuxdataImpl.getProductId(2012, "005"));
-        assertEquals("2003178", SeadasAuxdataImpl.getProductId(2003, "178"));
-    }
-
-    @Test
-    public void testGetProductId_withHour() {
-        assertEquals("201200505", SeadasAuxdataImpl.getProductId(2012, "005", "05"));
-        assertEquals("200317818", SeadasAuxdataImpl.getProductId(2003, "178", "18"));
-    }
-
-    @Test
-    public void testGetAuxPixelPos() {
-        PixelPos auxPixelPos = SeadasAuxdataImpl.getAuxPixelPos(88, -177);
-        Assert.assertEquals(2.0, auxPixelPos.getY());
-        Assert.assertEquals(3.0, auxPixelPos.getX());
-
-        auxPixelPos = SeadasAuxdataImpl.getAuxPixelPos(87, 178);
-        Assert.assertEquals(3.0, auxPixelPos.getY());
-        Assert.assertEquals(358.0, auxPixelPos.getX());
-
-        auxPixelPos = SeadasAuxdataImpl.getAuxPixelPos(-88, -178);
-        Assert.assertEquals(178.0, auxPixelPos.getY());
-        Assert.assertEquals(2.0, auxPixelPos.getX());
-
-        auxPixelPos = SeadasAuxdataImpl.getAuxPixelPos(-87, 177);
-        Assert.assertEquals(177.0, auxPixelPos.getY());
-        Assert.assertEquals(357.0, auxPixelPos.getX());
-    }
 }

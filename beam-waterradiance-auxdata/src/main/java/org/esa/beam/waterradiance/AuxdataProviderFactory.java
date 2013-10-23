@@ -17,6 +17,13 @@ public class AuxdataProviderFactory {
         return SeadasAuxdataImpl.create(auxPath);
     }
 
+    public static AtmosphericAuxdata createAtmosphericDataProvider(Product tomsomiStartProduct,
+                                                                   Product tomsomiEndProduct,
+                                                                   Product ncepStartProduct,
+                                                                   Product ncepEndProduct) throws IOException {
+        return SeadasAuxdataImpl.create(tomsomiStartProduct, tomsomiEndProduct, ncepStartProduct, ncepEndProduct);
+    }
+
     public static NO2Auxdata createNO2AuxdataProvider(String auxPath) throws IOException {
         return NO2AuxdataImpl.create(auxPath);
     }
