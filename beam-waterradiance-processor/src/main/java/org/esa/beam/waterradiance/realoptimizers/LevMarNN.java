@@ -9,7 +9,11 @@ import org.esa.beam.siocs.abstractprocessor.ForwardModel;
 import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class LevMarNN {
 
@@ -50,6 +54,10 @@ public class LevMarNN {
     double[] ozon_meris12 = {0.0002179, 0.002814, 0.02006, 0.04081, 0.104, 0.109, 0.0505, 0.03526, 0.01881, 0.008897, 0.007693, 0.002192}; // L.Bourg 2010
     double[] ozon_modis9 = {1.987E-03, 3.189E-03, 2.032E-02, 6.838E-02, 8.622E-02, 4.890E-02, 3.787E-02, 1.235E-02, 1.936E-03};
     double[] ozon_seawifs8 = {4.114E-04, 3.162E-03, 2.346E-02, 4.094E-02, 9.568E-02, 4.649E-02, 8.141E-03, 3.331E-03};
+
+    double[] no2_modis9 = {5.814E-19, 4.985E-19, 2.878E-19, 1.525E-19, 1.194E-19, 7.065E-21, 8.304E-21, 2.157E-21,
+            7.872E-23};
+    double[] no2_seawifs8 = {6.004E-19, 4.963E-19, 2.746E-19, 2.081E-19, 9.411E-20, 9.234E-21, 1.078E-21, 1.942E-21};
 
     private final NnResources nnResources;
     private final a_nn norm_net;
@@ -333,6 +341,46 @@ public class LevMarNN {
             L_toa[8] /= trans708;
         }
 
+        double[] trans_no2 = new double[nlam];
+        if (sensorConfig.getSensor() == Sensor.MODIS) {
+            double[] trans_no2_u = new double[nlam];
+            double[] trans_no2_d = new double[nlam];
+            double no2_tropo = input[40];
+            double no2_strato = input[41];
+            double no2_frac = input[42];
+            double no2_tropo_200 = 0;
+            if (no2_tropo > 0) {
+                no2_tropo_200 = no2_frac * no2_tropo;
+            }
+            for (int i = 0; i < nlam; i++) {
+                double a285 = no2_modis9[i] * (1.0 - 0.003 * (285.0 - 294.0));
+                double a225 = no2_modis9[i] * (1.0 - 0.003 * (225.0 - 294.0));
+                double tau_to_200 = a285 * no2_tropo_200 + a225 * no2_strato;
+                trans_no2_d[i] = Math.exp( tau_to_200 / 1000 * (cos_teta_sun));
+                trans_no2_u[i] = Math.exp(- tau_to_200 / 1000 * (cos_teta_view));
+                trans_no2[i] = trans_no2_d[i] * trans_no2_u[i];
+            }
+        }
+        if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+            double[] trans_no2_u = new double[nlam];
+            double[] trans_no2_d = new double[nlam];
+            double no2_tropo = input[40];
+            double no2_strato = input[41];
+            double no2_frac = input[42];
+            double no2_tropo_200 = 0;
+            if (no2_tropo > 0) {
+                no2_tropo_200 = no2_frac * no2_tropo;
+            }
+            for (int i = 0; i < nlam; i++) {
+                double a285 = no2_seawifs8[i] * (1.0 - 0.003 * (285.0 - 294.0));
+                double a225 = no2_seawifs8[i] * (1.0 - 0.003 * (225.0 - 294.0));
+                double tau_to_200 = a285 * no2_tropo_200 + a225 * no2_strato;
+                trans_no2_d[i] = Math.exp( tau_to_200 * (1.0 / cos_teta_sun));
+                trans_no2_u[i] = Math.exp(- tau_to_200 * (1.0 / cos_teta_view));
+                trans_no2[i] = trans_no2_d[i] * trans_no2_u[i];
+            }
+        }
+
         if (sensorConfig.getSensor() == Sensor.MERIS) {
 
         /*+++ smile and pressure correction +++*/
@@ -402,6 +450,7 @@ public class LevMarNN {
         } else if (sensorConfig.getSensor() == Sensor.MODIS) {
             for (ilam = 0; ilam < nlam; ilam++) {
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
+                L_tosa[ilam] = L_toa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] *= Math.pow(sensorConfig.getEarthSunDistance(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
@@ -410,6 +459,7 @@ public class LevMarNN {
         } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
             for (ilam = 0; ilam < nlam; ilam++) {
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
+                L_tosa[ilam] = L_toa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] *= Math.pow(sensorConfig.getEarthSunDistance(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];

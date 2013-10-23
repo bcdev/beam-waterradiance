@@ -1,6 +1,8 @@
 package org.esa.beam.waterradiance;
 
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.waterradiance.levitus.LevitusAuxdataImpl;
+import org.esa.beam.waterradiance.no2.NO2AuxdataImpl;
 import org.esa.beam.waterradiance.seadas.SeadasAuxdataImpl;
 
 import java.io.IOException;
@@ -13,5 +15,9 @@ public class AuxdataProviderFactory {
 
     public static AtmosphericAuxdata createAtmosphericDataProvider(String auxPath) throws IOException {
         return SeadasAuxdataImpl.create(auxPath);
+    }
+
+    public static NO2Auxdata createNO2AuxdataProvider(String auxPath) throws IOException {
+        return NO2AuxdataImpl.create(auxPath);
     }
 }

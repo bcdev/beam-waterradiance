@@ -20,6 +20,7 @@ import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.waterradiance.AtmosphericAuxdata;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
+import org.esa.beam.waterradiance.NO2Auxdata;
 import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
 import org.esa.beam.waterradiance.realoptimizers.LevMarNN;
 
@@ -42,7 +43,7 @@ public class OcNnRdOperator extends PixelOperator {
     private final ThreadLocal<double[]> input = new ThreadLocal<double[]>() {
         @Override
         protected double[] initialValue() {
-            return new double[40];
+            return new double[43];
         }
     };
     private final ThreadLocal<double[]> output = new ThreadLocal<double[]>() {
@@ -85,10 +86,11 @@ public class OcNnRdOperator extends PixelOperator {
     private String atmosphericAuxDataPath;
 
     private SensorConfig sensorConfig;
+    private NO2Auxdata no2Auxdata;
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-
+        System.out.println("Computing pixel " + x + ", " + y);
         final Sensor sensorType = sensorConfig.getSensor();
         if (sensorType == Sensor.MODIS || sensorType == Sensor.SEAWIFS || isValid(sourceSamples)) {
             final double[] input_local = input.get();
@@ -300,15 +302,23 @@ public class OcNnRdOperator extends PixelOperator {
             getLogger().severe(e.getMessage());
             salinityTemperatureAuxdata = null;
         }
-        try {
-            if (StringUtils.isNotNullAndNotEmpty(atmosphericAuxDataPath)) {
+        if (StringUtils.isNotNullAndNotEmpty(atmosphericAuxDataPath)) {
+            try {
                 atmosphericAuxdata = AuxdataProviderFactory.createAtmosphericDataProvider(atmosphericAuxDataPath);
+            } catch (IOException e) {
+                getLogger().severe("Unable to create provider for atmospheric auxiliary data.");
+                getLogger().severe(e.getMessage());
+                atmosphericAuxdata = null;
             }
-        } catch (IOException e) {
-            getLogger().severe("Unable to create provider for atmospheric auxiliary data.");
-            getLogger().severe(e.getMessage());
-            atmosphericAuxdata = null;
+            try {
+                no2Auxdata = AuxdataProviderFactory.createNO2AuxdataProvider(atmosphericAuxDataPath + "//no2");
+            } catch (IOException e) {
+                getLogger().severe("Unable to create provider for no2 auxiliary data.");
+                getLogger().severe(e.getMessage());
+                no2Auxdata = null;
+            }
         }
+
     }
 
     @SuppressWarnings("MismatchedReadAndWriteOfArray")
@@ -342,6 +352,24 @@ public class OcNnRdOperator extends PixelOperator {
         } else {
             input_local[4] = sensorConfig.getSurfacePressure();
             input_local[5] = sensorConfig.getOzone();
+        }
+        if (no2Auxdata != null) {
+            try {
+                final GeoCoding geoCoding = sourceProduct.getGeoCoding();
+                GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(x + 0.5f, y + 0.5f), null);
+                synchronized (this) {
+                    input_local[40] = no2Auxdata.getNO2Tropo(date, geoPos.getLat(), geoPos.getLon());
+                    input_local[41] = no2Auxdata.getNO2Strato(date, geoPos.getLat(), geoPos.getLon());
+                    input_local[42] = no2Auxdata.getNO2Frac(geoPos.getLat(), geoPos.getLon());
+                }
+            } catch (Exception e) {
+                throw new OperatorException(e);
+            }
+        } else {
+            // todo ensure that these are decent default values
+            input_local[40] = 1.0;
+            input_local[41] = 1.0;
+            input_local[42] = 1.0;
         }
     }
 
