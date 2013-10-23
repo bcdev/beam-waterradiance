@@ -356,8 +356,8 @@ public class LevMarNN {
                 double a285 = no2_modis9[i] * (1.0 - 0.003 * (285.0 - 294.0));
                 double a225 = no2_modis9[i] * (1.0 - 0.003 * (225.0 - 294.0));
                 double tau_to_200 = a285 * no2_tropo_200 + a225 * no2_strato;
-                trans_no2_d[i] = Math.exp( tau_to_200 / 1000 * (cos_teta_sun));
-                trans_no2_u[i] = Math.exp(- tau_to_200 / 1000 * (cos_teta_view));
+                trans_no2_d[i] = Math.exp(-tau_to_200 * (1.0 / (1000.0 * (1.0 / cos_teta_sun))));
+                trans_no2_u[i] = Math.exp(-tau_to_200 * 1.0 / ((1000.0 * (1.0 / cos_teta_view))));
                 trans_no2[i] = trans_no2_d[i] * trans_no2_u[i];
             }
         }
@@ -375,8 +375,8 @@ public class LevMarNN {
                 double a285 = no2_seawifs8[i] * (1.0 - 0.003 * (285.0 - 294.0));
                 double a225 = no2_seawifs8[i] * (1.0 - 0.003 * (225.0 - 294.0));
                 double tau_to_200 = a285 * no2_tropo_200 + a225 * no2_strato;
-                trans_no2_d[i] = Math.exp( tau_to_200 * (1.0 / cos_teta_sun));
-                trans_no2_u[i] = Math.exp(- tau_to_200 * (1.0 / cos_teta_view));
+                trans_no2_d[i] = Math.exp(-tau_to_200 * (1.0 / (1000.0 * (1.0 / cos_teta_sun))));
+                trans_no2_u[i] = Math.exp(-tau_to_200 * 1.0 / ((1000.0 * (1.0 / cos_teta_view))));
                 trans_no2[i] = trans_no2_d[i] * trans_no2_u[i];
             }
         }
