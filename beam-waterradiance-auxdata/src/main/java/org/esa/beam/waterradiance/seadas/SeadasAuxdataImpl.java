@@ -1,6 +1,7 @@
 package org.esa.beam.waterradiance.seadas;
 
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.math.MathUtils;
@@ -18,8 +19,8 @@ import java.util.TimeZone;
 
 public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
-    private static final String OZONE_BAND_NAME = "Geophysical Data/ozone";
-    private static final String SURFACE_PRESSURE_BAND_NAME = "Geophysical Data/press";
+    private static final String OZONE_BAND_NAME = "Geophysical_Data/ozone";
+    private static final String SURFACE_PRESSURE_BAND_NAME = "Geophysical_Data/press";
 
     private static final long MILLI_SECONDS_PER_DAY = 24 * 60 * 60 * 1000;
     private static final long HALF_MILLI_SECONDS_PER_DAY = MILLI_SECONDS_PER_DAY / 2;
@@ -237,7 +238,8 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         } else {
             final String productPath = getTomsomiProductPath(auxDataDirectory.getPath(), year, dayInFittingLength);
             try {
-                product = ProductIO.readProduct(new File(productPath));
+                final ProductReader productReader = ProductIO.getProductReader("NETCDF-CF");
+                product = productReader.readProductNodes(new File(productPath), null);
             } catch (IOException e) {
                 throw new IOException("Could not retrieve ozone for given day");
             }
@@ -256,7 +258,8 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         } else {
             final String productPath = getNCEPProductPath(auxDataDirectory.getPath(), year, dayInFittingLength, hourInFittingLength);
             try {
-                product = ProductIO.readProduct(new File(productPath));
+                final ProductReader productReader = ProductIO.getProductReader("NETCDF-CF");
+                product = productReader.readProductNodes(new File(productPath), null);
             } catch (IOException e) {
                 throw new IOException("Could not retrieve surface pressure for given day");
             }

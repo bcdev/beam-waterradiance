@@ -16,7 +16,13 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <dependency>
+        <artifactId>beam-core</artifactId>
+    </dependency>
+    <dependency>
         <module>beam-netcdf</module>
+    </dependency>
+    <dependency>
+        <artifactId>netcdf</artifactId>
     </dependency>
 
 </module>
