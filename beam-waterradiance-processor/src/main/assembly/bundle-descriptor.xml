@@ -1,0 +1,21 @@
+<bundleDescriptor>
+    <bundleName>ocnnrd</bundleName>
+    <bundleVersion>1.0</bundleVersion>
+
+    <processorDescriptors>
+        <processorDescriptor>
+            <executableName>Meris.OCNNRD</executableName>
+            <processorName>OcNnRd processor using neural networks</processorName>
+            <processorVersion>1.0</processorVersion>
+            <defaultParameters></defaultParameters>
+            <outputFormats>BEAM-DIMAP</outputFormats>
+            <descriptionHtml>
+                <![CDATA[<p>OcNnRd processor using neural networks.</p>]]>
+            </descriptionHtml>
+            <inputProductTypes>MERIS_L1B,MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
+            <outputProductType>OCNNRD_L2</outputProductType>
+            <validMaskExpression>true</validMaskExpression>
+
+        </processorDescriptor>
+    </processorDescriptors>
+</bundleDescriptor>
