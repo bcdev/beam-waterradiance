@@ -61,6 +61,7 @@ public class NO2AuxdataImpl implements NO2Auxdata {
 
     @Override
     public double getNO2Strato(Date date, double lat, double lon) throws Exception {
+        //todo ensure: Is this correct?
         final PixelPos pixelPos = getAuxPixelPosForClimatologyProduct(lat, lon);
         String month = getMonthFromDate(date);
         String tropoBandName = tropoBandNameStem + month;
