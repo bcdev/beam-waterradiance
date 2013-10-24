@@ -1,7 +1,7 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
 
-import java.util.Map;
+import org.esa.beam.util.SystemUtils;
 
 public class NnResources {
 
@@ -42,17 +42,9 @@ public class NnResources {
     }
 
     private String getResourcePath(String name) {
-        String homepath;
-        final Map<String, String> getenv = System.getenv();
-        final String os = getenv.get("OS");
-        if (os != null && os.contains("Windows")) {
-            homepath = getenv.get("HOMEPATH");
-        } else {
-            homepath = getenv.get("HOME");
-        }
         String auxpath = "/.beam/beam-waterradiance-processor/";
         StringBuilder builder = new StringBuilder();
-        builder.append(homepath);
+        builder.append(SystemUtils.getUserHomeDir());
         builder.append(auxpath);
         builder.append(name);
         return builder.toString();
