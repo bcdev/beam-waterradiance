@@ -53,15 +53,15 @@ public class ModisSensorConfigTest {
         assertNotNull(spectralBandNames);
         assertEquals(9, spectralBandNames.length);
 
-        assertEquals("EV_1KM_RefSB.8", spectralBandNames[0]);
-        assertEquals("EV_1KM_RefSB.9", spectralBandNames[1]);
-        assertEquals("EV_1KM_RefSB.10", spectralBandNames[2]);
-        assertEquals("EV_1KM_RefSB.11", spectralBandNames[3]);
-        assertEquals("EV_1KM_RefSB.12", spectralBandNames[4]);
-        assertEquals("EV_1KM_RefSB.13lo", spectralBandNames[5]);
-        assertEquals("EV_1KM_RefSB.14lo", spectralBandNames[6]);
-        assertEquals("EV_1KM_RefSB.15", spectralBandNames[7]);
-        assertEquals("EV_1KM_RefSB.16", spectralBandNames[8]);
+        assertEquals("EV_1KM_RefSB_8", spectralBandNames[0]);
+        assertEquals("EV_1KM_RefSB_9", spectralBandNames[1]);
+        assertEquals("EV_1KM_RefSB_10", spectralBandNames[2]);
+        assertEquals("EV_1KM_RefSB_11", spectralBandNames[3]);
+        assertEquals("EV_1KM_RefSB_12", spectralBandNames[4]);
+        assertEquals("EV_1KM_RefSB_13lo", spectralBandNames[5]);
+        assertEquals("EV_1KM_RefSB_14lo", spectralBandNames[6]);
+        assertEquals("EV_1KM_RefSB_15", spectralBandNames[7]);
+        assertEquals("EV_1KM_RefSB_16", spectralBandNames[8]);
     }
 
     @Test
@@ -84,15 +84,15 @@ public class ModisSensorConfigTest {
             assertNull(testSampleConfigurer.get(i));
         }
 
-        assertEquals("EV_1KM_RefSB.8", testSampleConfigurer.get(8));
-        assertEquals("EV_1KM_RefSB.9", testSampleConfigurer.get(9));
-        assertEquals("EV_1KM_RefSB.10", testSampleConfigurer.get(10));
-        assertEquals("EV_1KM_RefSB.11", testSampleConfigurer.get(11));
-        assertEquals("EV_1KM_RefSB.12", testSampleConfigurer.get(12));
-        assertEquals("EV_1KM_RefSB.13lo", testSampleConfigurer.get(13));
-        assertEquals("EV_1KM_RefSB.14lo", testSampleConfigurer.get(14));
-        assertEquals("EV_1KM_RefSB.15", testSampleConfigurer.get(15));
-        assertEquals("EV_1KM_RefSB.16", testSampleConfigurer.get(16));
+        assertEquals("EV_1KM_RefSB_8", testSampleConfigurer.get(8));
+        assertEquals("EV_1KM_RefSB_9", testSampleConfigurer.get(9));
+        assertEquals("EV_1KM_RefSB_10", testSampleConfigurer.get(10));
+        assertEquals("EV_1KM_RefSB_11", testSampleConfigurer.get(11));
+        assertEquals("EV_1KM_RefSB_12", testSampleConfigurer.get(12));
+        assertEquals("EV_1KM_RefSB_13lo", testSampleConfigurer.get(13));
+        assertEquals("EV_1KM_RefSB_14lo", testSampleConfigurer.get(14));
+        assertEquals("EV_1KM_RefSB_15", testSampleConfigurer.get(15));
+        assertEquals("EV_1KM_RefSB_16", testSampleConfigurer.get(16));
     }
 
     @Test
