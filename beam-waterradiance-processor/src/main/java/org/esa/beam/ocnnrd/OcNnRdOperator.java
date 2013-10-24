@@ -87,15 +87,31 @@ public class OcNnRdOperator extends PixelOperator {
     @Parameter(defaultValue = "35.0", description = "Use this value, if the climatology is disabled")
     private double salinity;
 
-    @Parameter(description = "Path to the atmospheric auxiliary data directory")
+    @Parameter(description = "Path to the atmospheric auxiliary data directory.Use either this or tomsomiStartProduct, " +
+            "tomsomiEndProduct, ncepStartProduct, and ncepEndProduct to use ozone auxiliary data.")
     private String atmosphericAuxDataPath;
+
+    @Parameter(description = "A product which is used for derivation of ozone values. Use either this and tomsomiEndProduct," +
+            "ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.")
+    private Product tomsomiStartProduct;
+
+    @Parameter(description = "A product which is used for derivation of ozone values. Use either this and " +
+            "tomsomiStartProduct, ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.")
+    private Product tomsomiEndProduct;
+
+    @Parameter(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
+            "tomsomiEndProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.")
+    private Product ncepStartProduct;
+
+    @Parameter(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
+            "tomsomiEndProduct, and ncepStartProduct or atmosphericAuxdataPath to use ozone auxiliary data.")
+    private Product ncepEndProduct;
 
     private SensorConfig sensorConfig;
     private NO2Auxdata no2Auxdata;
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        System.out.println("Computing pixel " + x + ", " + y);
         final Sensor sensorType = sensorConfig.getSensor();
         if (sensorType == Sensor.MODIS || sensorType == Sensor.SEAWIFS || isValid(sourceSamples)) {
             final double[] input_local = input.get();
@@ -331,6 +347,17 @@ public class OcNnRdOperator extends PixelOperator {
                 getLogger().severe("Unable to create provider for no2 auxiliary data.");
                 getLogger().severe(e.getMessage());
                 no2Auxdata = null;
+            }
+        } else {
+            try {
+                atmosphericAuxdata = AuxdataProviderFactory.createAtmosphericDataProvider(tomsomiStartProduct,
+                                                                                          tomsomiEndProduct,
+                                                                                          ncepStartProduct,
+                                                                                          ncepEndProduct);
+            } catch (IOException e) {
+                getLogger().severe("Unable to create provider for atmospheric auxiliary data.");
+                getLogger().severe(e.getMessage());
+                atmosphericAuxdata = null;
             }
         }
 
