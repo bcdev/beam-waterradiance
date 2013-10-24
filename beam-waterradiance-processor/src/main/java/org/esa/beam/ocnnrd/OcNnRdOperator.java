@@ -223,11 +223,11 @@ public class OcNnRdOperator extends PixelOperator {
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
 
-        final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata/for_water_rw29_20120318");
+        final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
         URL sourceUrl = ResourceInstaller.getSourceUrl(OcNnRdOperator.class);
-        ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/for_water_rw29_20120318/", AUXDATA_DIR);
+        ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
         try {
-            installer.install(".*net", ProgressMonitor.NULL);
+            installer.install(".*", ProgressMonitor.NULL);
         } catch (IOException e) {
             throw new RuntimeException("Unable to install auxdata of the beam-waterradiance-processor module");
         }
