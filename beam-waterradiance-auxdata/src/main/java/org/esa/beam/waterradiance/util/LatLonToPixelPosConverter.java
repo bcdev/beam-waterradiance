@@ -11,4 +11,14 @@ public class LatLonToPixelPosConverter {
         pixelPos.setLocation(pixelX, pixelY);
         return pixelPos;
     }
+
+    public static PixelPos getAuxPixelPos(double lat, double lon, double factor) {
+        PixelPos pixelPos = new PixelPos();
+        float pixelY = 180 - ((float)lat + 90);
+        float pixelX = (float)lon + 180;
+        pixelPos.setLocation(pixelX * factor, pixelY * factor);
+        return pixelPos;
+    }
+
+
 }

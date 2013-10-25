@@ -42,7 +42,7 @@ public class NO2AuxdataImpl implements NO2Auxdata {
 
     @Override
     public double getNO2Tropo(Date date, double lat, double lon) throws Exception {
-        final PixelPos pixelPos = getAuxPixelPosForClimatologyProduct(lat, lon);
+        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(lat, lon, 4);
         String month = getMonthFromDate(date);
         String tropoBandName = tropoBandNameStem + month;
         return Double.parseDouble(climatologyProduct.getBand(tropoBandName).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
@@ -62,7 +62,7 @@ public class NO2AuxdataImpl implements NO2Auxdata {
     @Override
     public double getNO2Strato(Date date, double lat, double lon) throws Exception {
         //todo ensure: Is this correct?
-        final PixelPos pixelPos = getAuxPixelPosForClimatologyProduct(lat, lon);
+        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(lat, lon, 4);
         String month = getMonthFromDate(date);
         String tropoBandName = tropoBandNameStem + month;
         String totBandName = totBandNameStem + month;
@@ -86,7 +86,6 @@ public class NO2AuxdataImpl implements NO2Auxdata {
         try {
             final ProductReader productReader = ProductIO.getProductReader("NETCDF-CF");
             fracProduct = productReader.readProductNodes(new File(fracProductPath), null);
-//            fracProduct = ProductIO.readProduct(new File(fracProductPath));
         } catch (IOException e) {
             throw new IOException("Could not find no2 frac product");
         }
@@ -97,18 +96,9 @@ public class NO2AuxdataImpl implements NO2Auxdata {
         try {
             final ProductReader productReader = ProductIO.getProductReader("NETCDF-CF");
             climatologyProduct = productReader.readProductNodes(new File(climatologyProductPath), null);
-//            climatologyProduct = ProductIO.readProduct(new File(climatologyProductPath));
         } catch (IOException e) {
             throw new IOException("Could not find no2 climatology product");
         }
-    }
-
-    public static PixelPos getAuxPixelPosForClimatologyProduct(double lat, double lon) {
-        PixelPos pixelPos = new PixelPos();
-        float pixelY = 180 - ((float)lat + 90);
-        float pixelX = (float)lon + 180;
-        pixelPos.setLocation(pixelX * 4, pixelY * 4);
-        return pixelPos;
     }
 
     @Override

@@ -11,26 +11,41 @@ import static org.junit.Assert.*;
 
 public class LatLonToPixelPosConverterTest {
 
-    @Before
-    public void setUp() throws Exception {
-    }
-
     @Test
     public void testGetAuxPixelPos() {
         PixelPos auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(88, -177);
-        junit.framework.Assert.assertEquals(2.0, auxPixelPos.getY());
-        junit.framework.Assert.assertEquals(3.0, auxPixelPos.getX());
+        assertEquals(2.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(3.0, auxPixelPos.getX(), 1e-8);
 
         auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(87, 178);
-        junit.framework.Assert.assertEquals(3.0, auxPixelPos.getY());
-        junit.framework.Assert.assertEquals(358.0, auxPixelPos.getX());
+        assertEquals(3.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(358.0, auxPixelPos.getX(), 1e-8);
 
         auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(-88, -178);
-        junit.framework.Assert.assertEquals(178.0, auxPixelPos.getY());
-        junit.framework.Assert.assertEquals(2.0, auxPixelPos.getX());
+        assertEquals(178.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(2.0, auxPixelPos.getX(), 1e-8);
 
         auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(-87, 177);
-        junit.framework.Assert.assertEquals(177.0, auxPixelPos.getY());
-        junit.framework.Assert.assertEquals(357.0, auxPixelPos.getX());
+        assertEquals(177.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(357.0, auxPixelPos.getX(), 1e-8);
+    }
+
+    @Test
+    public void testGetAuxPixelPosWithFactor() {
+        PixelPos auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(88, -177, 1);
+        assertEquals(2.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(3.0, auxPixelPos.getX(), 1e-8);
+
+        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(88, -177, 2);
+        assertEquals(4.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(6.0, auxPixelPos.getX(), 1e-8);
+
+        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(88, -177, 4);
+        assertEquals(8.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(12.0, auxPixelPos.getX(), 1e-8);
+
+        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(88, -177, 0.5);
+        assertEquals(1.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(1.5, auxPixelPos.getX(), 1e-8);
     }
 } 
