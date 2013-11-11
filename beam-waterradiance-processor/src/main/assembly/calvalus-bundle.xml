@@ -11,6 +11,9 @@
         <file>
             <source>src/main/assembly/bundle-descriptor.xml</source>
         </file>
+        <file>
+            <source>src/main/assembly/ocnnrd-ncep-graph.xml</source>
+        </file>
     </files>
 
     <dependencySets>

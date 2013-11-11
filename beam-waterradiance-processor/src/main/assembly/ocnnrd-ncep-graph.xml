@@ -1,0 +1,27 @@
+<graph id="g">
+    <version>1.0</version>
+
+    <header>
+      <target refid="ocnnrd" />
+      <source name="input" description="Meris, MODIS, SeaWIFS">${inputPath}</source>
+
+      <source name="toms1">/calvalus/auxiliary/seadas/anc/2002/365/N200236500_O3_TOMSOMI_24h.hdf</source>
+      <source name="toms2">/calvalus/auxiliary/seadas/anc/2003/001/N200300100_O3_TOMSOMI_24h.hdf</source>
+
+      <source name="ncep1">/calvalus/auxiliary/seadas/anc/2003/001/N200300100_MET_NCEPN_6h.hdf</source>
+      <source name="ncep2">/calvalus/auxiliary/seadas/anc/2003/001/N200300106_MET_NCEPN_6h.hdf</source>
+    </header>
+
+    <node id="ocnnrd">
+        <operator>OCNNRD</operator>
+        <sources>
+            <sourceProduct>input</sourceProduct>
+
+            <tomsomiStartProduct>toms1</tomsomiStartProduct>
+            <tomsomiEndProduct>toms2</tomsomiEndProduct>
+
+            <ncepStartProduct>ncep1</ncepStartProduct>
+            <ncepEndProduct>ncep2</ncepEndProduct>
+        </sources>
+    </node>
+</graph>

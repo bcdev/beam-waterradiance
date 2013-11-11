@@ -37,7 +37,7 @@ import java.util.Date;
  *
  * @author Tom Block
  */
-@OperatorMetadata(alias = "Meris.OCNNRD", version = "1.0",
+@OperatorMetadata(alias = "OCNNRD", version = "1.0",
                   authors = "Tom Block, Tonio Fincke, Roland Doerffer",
                   description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
@@ -88,23 +88,27 @@ public class OcNnRdOperator extends PixelOperator {
     private double salinity;
 
     @Parameter(description = "Path to the atmospheric auxiliary data directory.Use either this or tomsomiStartProduct, " +
-            "tomsomiEndProduct, ncepStartProduct, and ncepEndProduct to use ozone auxiliary data.")
+                             "tomsomiEndProduct, ncepStartProduct, and ncepEndProduct to use ozone auxiliary data.")
     private String atmosphericAuxDataPath;
 
-    @Parameter(description = "A product which is used for derivation of ozone values. Use either this and tomsomiEndProduct," +
-            "ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.")
+    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiEndProduct," +
+                                 "ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
     private Product tomsomiStartProduct;
 
-    @Parameter(description = "A product which is used for derivation of ozone values. Use either this and " +
-            "tomsomiStartProduct, ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.")
+    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and " +
+                                 "tomsomiStartProduct, ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
     private Product tomsomiEndProduct;
 
-    @Parameter(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
-            "tomsomiEndProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.")
+    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
+                                 "tomsomiEndProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
     private Product ncepStartProduct;
 
-    @Parameter(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
-            "tomsomiEndProduct, and ncepStartProduct or atmosphericAuxdataPath to use ozone auxiliary data.")
+    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
+                                 "tomsomiEndProduct, and ncepStartProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
     private Product ncepEndProduct;
 
     private SensorConfig sensorConfig;
