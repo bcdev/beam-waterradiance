@@ -241,7 +241,6 @@ public class OcNnRdOperator extends PixelOperator {
 
     @Override
     protected void prepareInputs() throws OperatorException {
-        super.prepareInputs();
 
         final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
         URL sourceUrl = ResourceInstaller.getSourceUrl(OcNnRdOperator.class);
