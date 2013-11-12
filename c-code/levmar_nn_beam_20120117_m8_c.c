@@ -155,13 +155,13 @@ void nn_water(double *conc_all, double *rlw_nn, int m, int n, void *nn_data){
 	double aot, ang, wind;
 	static int prepare;
 	double innet[10], outnet[35];
-	//char *wat_net_name_for={"23x7x28_77.3.net"};
-	//char *wat_net_name_for={"27x17x41_43.8.net"};
-	//char *wat_net_name_for={"./water_for_b33_20111220/17_1070.2.net"};
-	//char *wat_net_name_for={"./water_for_b33_20111220/27_697.2.net"};
-	//char *wat_net_name_for={"./water_for_b33_rlw_20120118/17x27x17_120.2.net"};
-	//char *wat_net_name_for={"./for_b33_20120114_nokd_27x17/27x17_153.7.net"};
-	//char *wat_net_name_for={"./for_water_rw29_20120318/37x17_754.1.net"};
+	//char *wat_net_name_for={"./neural_nets/23x7x28_77.3.net"};
+	//char *wat_net_name_for={"./neural_nets/27x17x41_43.8.net"};
+	//char *wat_net_name_for={"./neural_nets/water_for_b33_20111220/17_1070.2.net"};
+	//char *wat_net_name_for={"./neural_nets/water_for_b33_20111220/27_697.2.net"};
+	//char *wat_net_name_for={"./neural_nets/water_for_b33_rlw_20120118/17x27x17_120.2.net"};
+	//char *wat_net_name_for={"./neural_nets/for_b33_20120114_nokd_27x17/27x17_153.7.net"};
+	//char *wat_net_name_for={"./neural_nets/for_water_rw29_20120318/37x17_754.1.net"};
 	char *wat_net_name_for={"./for_water_rw29_20120318/37x77x97_86.7.net"};
 	static a_nn *wat_net_for;
 
@@ -236,22 +236,22 @@ void nn_atmo_wat(double *conc_all, double *rtosa_nn, int m, int n, void *nn_data
 	static int prepare;
 	double x, y, z, radius, azimuth, elevation;
 
-	//char *atm_net_name_for={"27x57x47_47.7.net"};
-	//char *atm_net_name_for={"./for_21bands_20110918/27x57x67_59.2.net"};
+	//char *atm_net_name_for={"./neural_nets/27x57x47_47.7.net"};
+	//char *atm_net_name_for={"./neural_nets/for_21bands_20110918/27x57x67_59.2.net"};
 	//char *atm_net_name_for={"./for_21bands_20110918/17_3978.7.net"};
 
-	//char *rhopath_net_name={"./for_21bands_20120112/rhopath/27x17_18.2.net"};
-	//char *tdown_net_name  ={"./for_21bands_20120112/tdown/27x17_202.6.net"};
-	//char *tup_net_name    ={"./for_21bands_20120112/tup/27x17_181.6.net"};
+	//char *rhopath_net_name={"./neural_nets/for_21bands_20120112/rhopath/27x17_18.2.net"};
+	//char *tdown_net_name  ={"./neural_nets/for_21bands_20120112/tdown/27x17_202.6.net"};
+	//char *tup_net_name    ={"./neural_nets/for_21bands_20120112/tup/27x17_181.6.net"};
 
-	//char *rhopath_net_name={"./oc_cci_20120222/ac_forward_all/ac_rhopath_b29/27x27_32.7.net"};
-	//char *tdown_net_name  ={"./oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
-	//char *tup_net_name    ={"./oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
+	//char *rhopath_net_name={"./neural_nets/oc_cci_20120222/ac_forward_all/ac_rhopath_b29/27x27_32.7.net"};
+	//char *tdown_net_name  ={"./neural_nets/oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
+	//char *tup_net_name    ={"./neural_nets/oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
 
 	// new nets, RD 20130308:
-	char *rhopath_net_name={"./oc_cci_20121127/ac_forward_all/ac_rhopath_b29/17x37x31_121.8.net"};
-	char *tdown_net_name  ={"./oc_cci_20121127/ac_forward_all/t_down_b29/17x37x31_89.4.net"};
-	char *tup_net_name    ={"./oc_cci_20121127/ac_forward_all/ac_tup_b29/17x37x31_83.8.net"};
+	char *rhopath_net_name={"./neural_nets/oc_cci_20121127/ac_forward_all/ac_rhopath_b29/17x37x31_121.8.net"};
+	char *tdown_net_name  ={"./neural_nets/oc_cci_20121127/ac_forward_all/t_down_b29/17x37x31_89.4.net"};
+	char *tup_net_name    ={"./neural_nets/oc_cci_20121127/ac_forward_all/ac_tup_b29/17x37x31_83.8.net"};
 
 
 	static a_nn *atm_net_for, *rhopath_net, *tdown_net, *tup_net;
@@ -408,7 +408,7 @@ int levmar_nn(int detector, double *input, int input_length, double *output, int
 	double lb[8]= {0.001, 0.001, 0.001, -13.96, -15.42, -16.38, -15.87, 0.0};
 	double ub[8]= {1.0, 2.2, 10.0, 3.9, 2.294, 1.599, 4.594, 1.1}; 
 	double lub;
-	char *norm_net_name={"27x41x27_23.3.net"};
+	char *norm_net_name={"./neural_nets/27x41x27_23.3.net"};
 	char *nominal_lam_sun_name={"./smile/nominal_lam_sun.txt"};
 
 	static char errmsg[1024];

@@ -4,17 +4,17 @@ import java.io.IOException;
 
 class NnAtmoWat {
 
-    //char *atm_net_name_for={"27x57x47_47.7.net"};
-    //char *atm_net_name_for={"./for_21bands_20110918/27x57x67_59.2.net"};
+    //char *atm_net_name_for={"./neural_nets/27x57x47_47.7.net"};
+    //char *atm_net_name_for={"./neural_nets/for_21bands_20110918/27x57x67_59.2.net"};
     //char *atm_net_name_for={"./for_21bands_20110918/17_3978.7.net"};
 
-    //char *rhopath_net_name={"./for_21bands_20120112/rhopath/27x17_18.2.net"};
-    //char *tdown_net_name  ={"./for_21bands_20120112/tdown/27x17_202.6.net"};
-    //char *tup_net_name    ={"./for_21bands_20120112/tup/27x17_181.6.net"};
+    //char *rhopath_net_name={"./neural_nets/for_21bands_20120112/rhopath/27x17_18.2.net"};
+    //char *tdown_net_name  ={"./neural_nets/for_21bands_20120112/tdown/27x17_202.6.net"};
+    //char *tup_net_name    ={"./neural_nets/for_21bands_20120112/tup/27x17_181.6.net"};
 
-    //char *rhopath_net_name={"./oc_cci_20120222/ac_forward_all/ac_rhopath_b29/27x27_32.7.net"};
-    //char *tdown_net_name  ={"./oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
-    //char *tup_net_name    ={"./oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
+    //char *rhopath_net_name={"./neural_nets/oc_cci_20120222/ac_forward_all/ac_rhopath_b29/27x27_32.7.net"};
+    //char *tdown_net_name  ={"./neural_nets/oc_cci_20120222/ac_forward_all/t_down_b29/27x27_73.7.net"};
+    //char *tup_net_name    ={"./neural_nets/oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
 
     // new nets, RD 20130308:
     private static final String rhopath_net_name = "ac_rhopath_b29/17x37x31_121.8.net";
