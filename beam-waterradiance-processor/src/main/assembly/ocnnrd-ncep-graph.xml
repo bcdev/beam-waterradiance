@@ -1,3 +1,85 @@
+#set( $productName = $inputPath.name )
+#if ( $productName.startsWith("MER_") )
+  #set( $productDate = $GlobalFunctions.parseDate("yyyyMMdd_HHmmss", $productName.substring(14, 29)) )
+#elseif( $productName.startsWith("A") || $productName.startsWith("S") )
+  #set( $productDate = $GlobalFunctions.parseDate("yyyyDDDHHmmss", $productName.substring(1, 14)) )
+#else
+  CALVALUS_SKIP_PROCESSING yes
+  #stop
+#end
+
+#set( $calendar = $GlobalFunctions.getCalendar() )
+$calendar.setTime($productDate)
+
+#set( $timeMeteo0 = $GlobalFunctions.getCalendar() )
+$timeMeteo0.clear()
+$timeMeteo0.set(1, $calendar.get(1))
+$timeMeteo0.set(2, $calendar.get(2))
+$timeMeteo0.set(5, $calendar.get(5))
+#set( $hours = ($calendar.get(11) / 6) * 6 )
+$timeMeteo0.set(11, $hours)
+
+#set( $timeMeteo1 = $GlobalFunctions.getCalendar() )
+$timeMeteo1.setTimeInMillis($timeMeteo0.timeInMillis)
+$timeMeteo1.add(11, 6)
+
+#set( $meteoPathFormatS = "'hdfs://master00:9000/calvalus/auxiliary/seadas/anc/'yyyy'/'DDD'/S'yyyyDDDHH'_NCEP.MET'" )
+#set( $meteoPathS0 = $GlobalFunctions.formatDate($meteoPathFormatS, $timeMeteo0.time) )
+#set( $meteoPathS1 = $GlobalFunctions.formatDate($meteoPathFormatS, $timeMeteo1.time) )
+
+#set( $meteoPathFormatN = "'hdfs://master00:9000/calvalus/auxiliary/seadas/anc/'yyyy'/'DDD'/N'yyyyDDDHH'_MET_NCEPN_6h.hdf'" )
+#set( $meteoPathN0 = $GlobalFunctions.formatDate($meteoPathFormatN, $timeMeteo0.time) )
+#set( $meteoPathN1 = $GlobalFunctions.formatDate($meteoPathFormatN, $timeMeteo1.time) )
+
+#set( $fs = $inputPath.getFileSystem($configuration) )
+
+#if ( $fs.exists($GlobalFunctions.createPath($meteoPathS0)) )
+  #set( $meteoPath0 = $meteoPathS0 )
+#else
+  #if ( $fs.exists($GlobalFunctions.createPath($meteoPathN0)) )
+    #set( $meteoPath0 = $meteoPathN0 )
+  #else
+    meteoPathS0=$meteoPathS0
+    meteoPathN0=$meteoPathN0
+    CALVALUS_SKIP_PROCESSING yes
+    #stop
+  #end
+#end
+
+#if ( $fs.exists($GlobalFunctions.createPath($meteoPathS1)) )
+  #set( $meteoPath1 = $meteoPathS1 )
+#else
+  #if ( $fs.exists($GlobalFunctions.createPath($meteoPathN1)) )
+    #set( $meteoPath1 = $meteoPathN1 )
+  #else
+    meteoPathS1=$meteoPathS1
+    meteoPathN1=$meteoPathN1
+    CALVALUS_SKIP_PROCESSING yes
+    #stop
+  #end
+#end
+
+#set( $timeOzone0 = $GlobalFunctions.getCalendar() )
+$timeOzone0.clear()
+$timeOzone0.set(1, $calendar.get(1))
+$timeOzone0.set(2, $calendar.get(2))
+$timeOzone0.set(5, $calendar.get(5))
+
+#set( $timeOzone1 = $GlobalFunctions.getCalendar() )
+$timeOzone1.setTimeInMillis($timeOzone0.timeInMillis)
+$timeOzone1.add(5, 1)
+
+#set( $ozonePathFormat = "'hdfs://master00:9000/calvalus/auxiliary/seadas/anc/'yyyy'/'DDD'/N'yyyyDDD'00_O3_TOMSOMI_24h.hdf'" )
+#set( $ozonePath0 = $GlobalFunctions.formatDate($ozonePathFormat, $timeOzone0.time) )
+#set( $ozonePath1 = $GlobalFunctions.formatDate($ozonePathFormat, $timeOzone1.time) )
+
+#if ( !($fs.exists($GlobalFunctions.createPath($ozonePath0)) || $fs.exist($GlobalFunctions.createPath($ozonePath1))) )
+  ozonePath0=$ozonePath0
+  ozonePath1=$ozonePath1
+  CALVALUS_SKIP_PROCESSING yes
+  #stop
+#end
+
 <graph id="g">
     <version>1.0</version>
 
@@ -5,11 +87,11 @@
       <target refid="ocnnrd" />
       <source name="input" description="Meris, MODIS, SeaWIFS">${inputPath}</source>
 
-      <source name="toms1">/calvalus/auxiliary/seadas/anc/2002/365/N200236500_O3_TOMSOMI_24h.hdf</source>
-      <source name="toms2">/calvalus/auxiliary/seadas/anc/2003/001/N200300100_O3_TOMSOMI_24h.hdf</source>
+      <source name="toms1">$ozonePath0</source>
+      <source name="toms2">$ozonePath1</source>
 
-      <source name="ncep1">/calvalus/auxiliary/seadas/anc/2003/001/N200300100_MET_NCEPN_6h.hdf</source>
-      <source name="ncep2">/calvalus/auxiliary/seadas/anc/2003/001/N200300106_MET_NCEPN_6h.hdf</source>
+      <source name="ncep1">$meteoPath0</source>
+      <source name="ncep2">$meteoPath1</source>
     </header>
 
     <node id="ocnnrd">
