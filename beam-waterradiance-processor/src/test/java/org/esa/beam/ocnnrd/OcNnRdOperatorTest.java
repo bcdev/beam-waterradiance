@@ -94,6 +94,31 @@ public class OcNnRdOperatorTest {
         }
     }
 
+    @Test
+    public void testSpi() {
+        final OcNnRdOperator.Spi spi = new OcNnRdOperator.Spi();
+        final Class<? extends Operator> operatorClass = spi.getOperatorClass();
+        assertTrue(operatorClass.isAssignableFrom(OcNnRdOperator.class));
+    }
+
+    @Test
+    public void testGetProductType_fromParameter() {
+        final OcNnRdOperator ocNnRdOperator = new OcNnRdOperator();
+        ocNnRdOperator.sensorTypeString = "MODIS_CSV";
+
+        final String sensorTypeString = ocNnRdOperator.getSensorTypeString();
+        assertEquals("MODIS_CSV", sensorTypeString);
+    }
+
+    @Test
+    public void testGetProductType_fromProduct() {
+        final OcNnRdOperator ocNnRdOperator = new OcNnRdOperator();
+        ocNnRdOperator.sourceProduct = new Product("Charly", "MOD021KM", 2, 2);
+
+        final String sensorTypeString = ocNnRdOperator.getSensorTypeString();
+        assertEquals("MOD021KM", sensorTypeString);
+    }
+
     private TestSample[] createTestSamples(int count) {
         final TestSample[] samples = new TestSample[count];
         for (int i = 0; i < samples.length; i++) {
@@ -101,12 +126,5 @@ public class OcNnRdOperatorTest {
             samples[i].set((double) i);
         }
         return samples;
-    }
-
-    @Test
-    public void testSpi() {
-        final OcNnRdOperator.Spi spi = new OcNnRdOperator.Spi();
-        final Class<? extends Operator> operatorClass = spi.getOperatorClass();
-        assertTrue(operatorClass.isAssignableFrom(OcNnRdOperator.class));
     }
 }

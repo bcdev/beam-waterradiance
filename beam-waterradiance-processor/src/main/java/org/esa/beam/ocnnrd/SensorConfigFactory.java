@@ -17,6 +17,8 @@ public class SensorConfigFactory {
             return new ModisSensorConfig();
         } else if (productTypeName.equalsIgnoreCase("Generic Level 1B")) {
             return new SeaWiFSSensorConfig();
+        } else if (productTypeName.equalsIgnoreCase("MODIS_CSV")) {
+            return new ModisCsvConfig();
         }
         throw new IllegalArgumentException("Invalid Product Type: " + productTypeName);
     }

@@ -2,22 +2,13 @@ package org.esa.beam.ocnnrd;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.util.ResourceInstaller;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.SystemUtils;
@@ -38,8 +29,8 @@ import java.util.Date;
  * @author Tom Block
  */
 @OperatorMetadata(alias = "OCNNRD", version = "1.0",
-                  authors = "Tom Block, Tonio Fincke, Roland Doerffer",
-                  description = "An operator computing water IOPs starting from radiances.")
+        authors = "Tom Block, Tonio Fincke, Roland Doerffer",
+        description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
     private int NUM_OUTPUTS;
@@ -73,7 +64,7 @@ public class OcNnRdOperator extends PixelOperator {
     // ----- Configurable Parameters -----
     // -----------------------------------
     @SourceProduct
-    private Product sourceProduct;
+    Product sourceProduct;
 
     @Parameter(defaultValue = "!l1_flags.INVALID && !l1_flags.BRIGHT && !l1_flags.LAND_OCEAN")
     private String maskExpression;
@@ -88,29 +79,31 @@ public class OcNnRdOperator extends PixelOperator {
     private double salinity;
 
     @Parameter(description = "Path to the atmospheric auxiliary data directory.Use either this or tomsomiStartProduct, " +
-                             "tomsomiEndProduct, ncepStartProduct, and ncepEndProduct to use ozone auxiliary data.")
+            "tomsomiEndProduct, ncepStartProduct, and ncepEndProduct to use ozone auxiliary data.")
     private String atmosphericAuxDataPath;
 
     @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiEndProduct," +
-                                 "ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
-                   optional = true)
+            "ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+            optional = true)
     private Product tomsomiStartProduct;
 
     @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and " +
-                                 "tomsomiStartProduct, ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
-                   optional = true)
+            "tomsomiStartProduct, ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+            optional = true)
     private Product tomsomiEndProduct;
 
     @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
-                                 "tomsomiEndProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
-                   optional = true)
+            "tomsomiEndProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+            optional = true)
     private Product ncepStartProduct;
 
     @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
-                                 "tomsomiEndProduct, and ncepStartProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
-                   optional = true)
+            "tomsomiEndProduct, and ncepStartProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+            optional = true)
     private Product ncepEndProduct;
 
+    @Parameter(description = "Defines the sensor type to use. If the parameter is not set, the product type defined by the input file is used.")
+    String sensorTypeString;
 
 
     @Override
@@ -212,7 +205,7 @@ public class OcNnRdOperator extends PixelOperator {
         targetProduct.setAutoGrouping(autoGrouping);
         if (csvMode) {
             targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
-                                               targetProduct.getSceneRasterHeight());
+                    targetProduct.getSceneRasterHeight());
         }
     }
 
@@ -240,17 +233,9 @@ public class OcNnRdOperator extends PixelOperator {
 
     @Override
     protected void prepareInputs() throws OperatorException {
+        installAuxiliaryData();
 
-        final File AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
-        URL sourceUrl = ResourceInstaller.getSourceUrl(OcNnRdOperator.class);
-        ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
-        try {
-            installer.install(".*", ProgressMonitor.NULL);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to install auxdata of the beam-waterradiance-processor module");
-        }
-
-        sensorConfig = SensorConfigFactory.fromTypeString(sourceProduct.getProductType());
+        sensorConfig = SensorConfigFactory.fromTypeString(getSensorTypeString());
         sensorConfig.init(sourceProduct);
         NUM_OUTPUTS = 13 + 5 * sensorConfig.getNumSpectralInputBands();
         if (sensorConfig.getSensor() == Sensor.MERIS) {
@@ -283,6 +268,18 @@ public class OcNnRdOperator extends PixelOperator {
                 return null;
             }
         };
+    }
+
+    private void installAuxiliaryData() {
+        final File auxdataDir = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-processor/auxdata");
+        final URL sourceUrl = ResourceInstaller.getSourceUrl(OcNnRdOperator.class);
+        final ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", auxdataDir);
+
+        try {
+            installer.install(".*", ProgressMonitor.NULL);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to install auxdata of the beam-waterradiance-processor module: " + e.getMessage());
+        }
     }
 
     @Override
@@ -327,6 +324,15 @@ public class OcNnRdOperator extends PixelOperator {
         }
     }
 
+    // package access for testing only tb 2013-11-13
+    String getSensorTypeString() {
+        if (StringUtils.isNotNullAndNotEmpty(sensorTypeString)) {
+            return sensorTypeString;
+        }else {
+            return sourceProduct.getProductType();
+        }
+    }
+
     private void initAuxdataDataProviders() {
         try {
             salinityTemperatureAuxdata = AuxdataProviderFactory.createSalinityTemperatureDataProvider();
@@ -353,9 +359,9 @@ public class OcNnRdOperator extends PixelOperator {
         } else {
             try {
                 atmosphericAuxdata = AuxdataProviderFactory.createAtmosphericDataProvider(tomsomiStartProduct,
-                                                                                          tomsomiEndProduct,
-                                                                                          ncepStartProduct,
-                                                                                          ncepEndProduct);
+                        tomsomiEndProduct,
+                        ncepStartProduct,
+                        ncepEndProduct);
             } catch (IOException e) {
                 getLogger().severe("Unable to create provider for atmospheric auxiliary data.");
                 getLogger().severe(e.getMessage());

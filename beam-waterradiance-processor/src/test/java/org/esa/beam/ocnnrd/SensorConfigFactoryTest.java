@@ -8,15 +8,29 @@ import static org.junit.Assert.*;
 public class SensorConfigFactoryTest {
 
     @Test
-    public void testFromTypeString() {
+    public void testFromTypeString_MERIS() {
         assertTrue(SensorConfigFactory.fromTypeString(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME) instanceof MerisSensorConfig);
         assertTrue(SensorConfigFactory.fromTypeString(EnvisatConstants.MERIS_FR_L1B_PRODUCT_TYPE_NAME) instanceof MerisSensorConfig);
         assertTrue(SensorConfigFactory.fromTypeString(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME) instanceof MerisSensorConfig);
         assertTrue(SensorConfigFactory.fromTypeString(EnvisatConstants.MERIS_FSG_L1B_PRODUCT_TYPE_NAME) instanceof MerisSensorConfig);
         assertTrue(SensorConfigFactory.fromTypeString(EnvisatConstants.MERIS_FRG_L1B_PRODUCT_TYPE_NAME) instanceof MerisSensorConfig);
+    }
 
+    @Test
+    public void testFromTypeString_MODIS() {
         assertTrue(SensorConfigFactory.fromTypeString("MOD021KM") instanceof ModisSensorConfig);
         assertTrue(SensorConfigFactory.fromTypeString("MYD021KM") instanceof ModisSensorConfig);
+        assertTrue(SensorConfigFactory.fromTypeString("MODIS Level 1B") instanceof ModisSensorConfig);
+    }
+
+    @Test
+    public void testFromTypeString_MODIS_CSV() {
+        assertTrue(SensorConfigFactory.fromTypeString("MODIS_CSV") instanceof ModisCsvConfig);
+    }
+
+    @Test
+    public void testFromTypeString_SEAWIFS() {
+        assertTrue(SensorConfigFactory.fromTypeString("Generic Level 1B") instanceof SeaWiFSSensorConfig);
     }
 
     @Test
@@ -28,5 +42,4 @@ public class SensorConfigFactoryTest {
             assertEquals("Invalid Product Type: Tonios private sensor", expected.getMessage());
         }
     }
-
-} 
+}
