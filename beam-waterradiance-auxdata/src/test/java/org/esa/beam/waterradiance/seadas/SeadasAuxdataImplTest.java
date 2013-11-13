@@ -6,7 +6,6 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -18,22 +17,21 @@ import java.util.TimeZone;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.fail;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+@SuppressWarnings("MagicConstant")
 public class SeadasAuxdataImplTest {
 
     private URL auxDirectoryURL;
 
-    @Before
-    public void setUp() {
+    public SeadasAuxdataImplTest() {
         auxDirectoryURL = SeadasAuxdataImplTest.class.getResource("../../../../../auxiliary/seadas/anc");
+        assertNotNull(auxDirectoryURL);
     }
 
     @Test
     public void testGetOzoneWithInvalidValue() throws IOException {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2005, Calendar.JUNE, 15, 6, 0, 0);
+        final Calendar calendar = createCalendar(2005, Calendar.JUNE, 15, 6);
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
 
         try {
@@ -48,9 +46,7 @@ public class SeadasAuxdataImplTest {
 
     @Test
     public void testGetOzoneForProductAfterNoon() throws IOException {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2005, Calendar.JUNE, 15, 18, 0, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
+        final Calendar calendar = createCalendar(2005, Calendar.JUNE, 15, 18);
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
 
         try {
@@ -65,16 +61,12 @@ public class SeadasAuxdataImplTest {
 
     @Test
     public void testGetOzoneForProductBeforeNoon() throws IOException {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2005, Calendar.JUNE, 16, 6, 0, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
+        final Calendar calendar = createCalendar(2005, Calendar.JUNE, 16, 6);
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
 
         try {
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 38, -76);
             assertEquals(309.0, ozone, 1e-8);
-        } catch (Exception unexpected) {
-            fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
         } finally {
             seadasAuxdata.dispose();
         }
@@ -87,29 +79,42 @@ public class SeadasAuxdataImplTest {
         final Product ncepStartProduct = getProduct("/2005/166/N200516618_MET_NCEPN_6h.hdf");
         final Product ncepEndProduct = getProduct("/2012/097/S201209712_NCEP.MET");
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(tomsomiStartProduct, tomsomiEndProduct,
-                                                                         ncepStartProduct, ncepEndProduct);
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-
-        calendar.set(Calendar.MILLISECOND, 0);
-        calendar.set(2005, Calendar.JUNE, 15, 12, 0, 0);
+                ncepStartProduct, ncepEndProduct);
+        Calendar calendar = createCalendar(2005, Calendar.JUNE, 15, 12);
         double ozone = seadasAuxdata.getOzone(calendar.getTime(), 2, 0);
         Assert.assertEquals(261, ozone, 1e-8);
 
-        calendar.set(2008, Calendar.NOVEMBER, 10, 0, 0, 0);
+        calendar = createCalendar(2008, Calendar.NOVEMBER, 10, 0);
         ozone = seadasAuxdata.getOzone(calendar.getTime(), 2, 0);
         Assert.assertEquals(260, ozone, 1e-8);
 
-        calendar.set(2012, Calendar.APRIL, 6, 12, 0, 0);
+        calendar = createCalendar(2012, Calendar.APRIL, 6, 12);
         ozone = seadasAuxdata.getOzone(calendar.getTime(), 2, 0);
         Assert.assertEquals(259, ozone, 1e-8);
     }
 
     @Test
-    public void testGetSurfacePressureWithInvalidValue() throws IOException {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(2005, Calendar.JUNE, 15, 1, 30, 0);
+    public void testGetOzone_invalidLonLat() throws IOException {
+        final Calendar calendar = createCalendar(2005, Calendar.JUNE, 16, 6);
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
 
+        double ozone;
+        try {
+            ozone = seadasAuxdata.getOzone(calendar.getTime(), 91, -76);
+            assertTrue(Double.isNaN(ozone));
+
+            ozone = seadasAuxdata.getOzone(calendar.getTime(), -28, 182);
+            assertTrue(Double.isNaN(ozone));
+        } finally {
+            seadasAuxdata.dispose();
+        }
+    }
+
+    @Test
+    public void testGetSurfacePressure_auxDataFileNotAccessible() throws IOException {
+        final Calendar calendar = createCalendar(2005, Calendar.JUNE, 15, 1);
+
+        final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
         try {
             seadasAuxdata.getSurfacePressure(calendar.getTime(), 83, 52);
             fail("Exception expected");
@@ -121,54 +126,50 @@ public class SeadasAuxdataImplTest {
     }
 
     @Test
-    public void testGetSurfacePressure() throws IOException {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(Calendar.MILLISECOND, 0);
+    public void testGetSurfacePressure() throws Exception {
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
-
         try {
-            calendar.set(2005, Calendar.JUNE, 16, 6, 0, 0);
+            Calendar calendar = createCalendar(2005, Calendar.JUNE, 16, 6);
             double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 39, 2);
             assertEquals(1021.36, surfacePressure, 1e-8);
 
-            calendar.set(2005, Calendar.JUNE, 16, 1, 30, 0);
+            calendar = createCalendar(2005, Calendar.JUNE, 16, 1);
             surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -8, -34);
-            assertEquals(1015.49, surfacePressure, 1e-8);
+            assertEquals(1015.3233333333333, surfacePressure, 1e-8);
 
-            calendar.set(2005, Calendar.JUNE, 15, 22, 30, 0);
+            calendar = createCalendar(2005, Calendar.JUNE, 15, 22);
             surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -8, -34);
-            assertEquals(1014.49, surfacePressure, 1e-8);
+            assertEquals(1014.3233333333333, surfacePressure, 1e-8);
 
-            calendar.set(2005, Calendar.JUNE, 16, 10, 30, 0);
+            calendar = createCalendar(2005, Calendar.JUNE, 16, 10);
             surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -2, -21);
-            assertEquals(1014.2, surfacePressure, 1e-8);
+            assertEquals(1014.1166666666667, surfacePressure, 1e-8);
 
-            calendar.set(2005, Calendar.JUNE, 16, 19, 30, 0);
+            calendar = createCalendar(2005, Calendar.JUNE, 16, 19);
             surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 4, -2);
-            assertEquals(1013.28, surfacePressure, 1e-8);
-
-        } catch (Exception unexpected) {
-            fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
+            assertEquals(1013.4466666666667, surfacePressure, 1e-8);
         } finally {
             seadasAuxdata.dispose();
         }
     }
 
     @Test
-    public void testGetSurfacePressureAfter2008() throws IOException {
-        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        calendar.set(Calendar.MILLISECOND, 0);
+    public void testGetSurfacePressureAfter2008() throws Exception {
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
-
         try {
-            calendar.set(2012, Calendar.APRIL, 6, 18, 0, 0);
+            Calendar calendar = createCalendar(2012, Calendar.APRIL, 6, 18);
             double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 57, -33);
             assertEquals(1023.71218, surfacePressure, 1e-8);
-        } catch (Exception unexpected) {
-            fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
         } finally {
             seadasAuxdata.dispose();
         }
+    }
+
+    private Calendar createCalendar(int year, int month, int dayOfMonth, int hourOfDay) {
+        final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        calendar.set(year, month, dayOfMonth, hourOfDay, 0, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar;
     }
 
     @Test
@@ -178,7 +179,7 @@ public class SeadasAuxdataImplTest {
         final Product ncepStartProduct = getProduct("/2005/166/N200516618_MET_NCEPN_6h.hdf");
         final Product ncepEndProduct = getProduct("/2012/097/S201209712_NCEP.MET");
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(tomsomiStartProduct, tomsomiEndProduct,
-                                                                         ncepStartProduct, ncepEndProduct);
+                ncepStartProduct, ncepEndProduct);
         final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
 
         calendar.set(Calendar.MILLISECOND, 0);

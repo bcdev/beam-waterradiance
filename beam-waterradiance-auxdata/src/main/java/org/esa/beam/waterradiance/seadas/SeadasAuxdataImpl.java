@@ -1,5 +1,6 @@
 package org.esa.beam.waterradiance.seadas;
 
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -8,13 +9,7 @@ import org.esa.beam.waterradiance.AtmosphericAuxdata;
 import org.esa.beam.waterradiance.util.LatLonToPixelPosConverter;
 
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
@@ -63,7 +58,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         setCalendar(date);
         final SeadasAuxDataProducts tomsomiProducts = auxProductsProvider.getTOMSOMIProducts(date);
         final double dateFraction = getDateFraction(utcCalendar, 0.5,
-                                                    tomsomiProducts.getStartProduct(), tomsomiProducts.getEndProduct());
+                tomsomiProducts.getStartProduct(), tomsomiProducts.getEndProduct());
 
         final double startOzone = getOzone((float) lat, (float) lon, tomsomiProducts.getStartProduct());
         final double endOzone = getOzone((float) lat, (float) lon, tomsomiProducts.getEndProduct());
@@ -78,7 +73,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     @Override
     public double getSurfacePressure(Date date, double lat, double lon) throws Exception {
-
         final int xPos = MathUtils.floorInt(lon);
         final int yPos = MathUtils.floorInt(lat);
         String id = date.toString() + xPos + yPos;
@@ -90,7 +84,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
         final SeadasAuxDataProducts ncepProducts = auxProductsProvider.getNCEPProducts(date);
         final double fraction = getDateFraction(utcCalendar, 0.125, ncepProducts.getStartProduct(),
-                                                ncepProducts.getEndProduct());
+                ncepProducts.getEndProduct());
 
         final double startSurfacePressure = getSurfacePressure((float) lat, (float) lon, ncepProducts.getStartProduct());
         final double endSurfacePressure = getSurfacePressure((float) lat, (float) lon, ncepProducts.getEndProduct());
@@ -116,7 +110,11 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         if (product.getSceneRasterWidth() == 288) {
             pixelPos.setLocation(pixelPos.getX() * 0.8, pixelPos.getY());
         }
-        return Double.parseDouble(product.getBand(OZONE_BAND_NAME).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
+        if (product.containsPixel(pixelPos)) {
+            final Band ozoneBand = product.getBand(OZONE_BAND_NAME);
+            return ozoneBand.getSampleFloat((int) pixelPos.getX(), (int) pixelPos.getY());
+        }
+        return Double.NaN;
     }
 
     private void setCalendar(Date date) {
@@ -200,7 +198,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     private SeadasAuxdataImpl(Product tomsomiStartProduct, Product tomsomiEndProduct,
                               Product ncepStartProduct, Product ncepEndProduct) throws IOException {
         auxProductsProvider = new ProductsAuxProductsProvider(tomsomiStartProduct, tomsomiEndProduct,
-                                                              ncepStartProduct, ncepEndProduct);
+                ncepStartProduct, ncepEndProduct);
         utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
         surfacePressureMap = new HashMap<String, Double>();
         ozoneMap = new HashMap<String, Double>();

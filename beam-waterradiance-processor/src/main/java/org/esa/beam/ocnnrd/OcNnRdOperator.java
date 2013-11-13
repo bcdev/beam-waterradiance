@@ -42,8 +42,7 @@ import java.util.Date;
                   description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
-    private static int NUM_OUTPUTS;
-//    private static final int NUM_TARGET_BANDS = NUM_OUTPUTS + 4;
+    private int NUM_OUTPUTS;
 
     private final ThreadLocal<double[]> input = new ThreadLocal<double[]>() {
         @Override
@@ -59,11 +58,12 @@ public class OcNnRdOperator extends PixelOperator {
     };
 
     private double[] solarFluxes;
-
     private SalinityTemperatureAuxdata salinityTemperatureAuxdata = null;
     private AtmosphericAuxdata atmosphericAuxdata = null;
     private Date date = null;
     private ThreadLocal<LevMarNN> levMarNN;
+    private SensorConfig sensorConfig;
+    private NO2Auxdata no2Auxdata;
 
     // solar_flux from bands
     // copy lat, lon, row_index to target
@@ -111,8 +111,7 @@ public class OcNnRdOperator extends PixelOperator {
                    optional = true)
     private Product ncepEndProduct;
 
-    private SensorConfig sensorConfig;
-    private NO2Auxdata no2Auxdata;
+
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
