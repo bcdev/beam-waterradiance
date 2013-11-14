@@ -1,6 +1,6 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
-import org.esa.beam.ocnnrd.SensorConfigFactory;
+import org.esa.beam.ocnnrd.SensorContextFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,7 +58,7 @@ public class LevMarNNAcceptanceTest {
 
     @Before
     public void setUp() throws IOException {
-        levMarNN = new LevMarNN(SensorConfigFactory.fromTypeString("MER_RR__1P"));
+        levMarNN = new LevMarNN(SensorContextFactory.fromTypeString("MER_RR__1P"));
     }
 
     @Test

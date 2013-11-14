@@ -2,18 +2,14 @@ package org.esa.beam.waterradiance.realoptimizers;
 
 import Jama.Matrix;
 import org.esa.beam.ocnnrd.Sensor;
-import org.esa.beam.ocnnrd.SensorConfig;
+import org.esa.beam.ocnnrd.SensorContext;
 import org.esa.beam.siocs.abstractprocessor.BreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.CostFunction;
 import org.esa.beam.siocs.abstractprocessor.ForwardModel;
 import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 public class LevMarNN {
 
@@ -22,7 +18,7 @@ public class LevMarNN {
 
     private static final double DEG_2_RAD = (3.1415927 / 180.0);
     private final CostFunction costFunction;
-    private final SensorConfig sensorConfig;
+    private final SensorContext sensorContext;
 
     private double[][] frlam = new double[FR_TAB][15];
     private double[][] fredtoa = new double[FR_TAB][15];
@@ -35,21 +31,18 @@ public class LevMarNN {
     private static final double[] H_2_O_COR_POLY = new double[]{0.3832989, 1.6527957, -1.5635101, 0.5311913};
 
     private static final double[] MERBAND_12 = {412.3, 442.3, 489.7, 509.6, 559.5, 619.4, 664.3, 680.6, 708.1, 753.1, 778.2, 864.6};
-    private static final double[] MODBAND_9 = {412.5, 443, 488, 531, 551, 667, 678, 748, 869.5};
-    private static final double[] SWFSBAND_8 = {412, 443, 490, 510, 555, 670, 765, 865};
+    //    private static final double[] MODBAND_9 = {412.5, 443, 488, 531, 551, 667, 678, 748, 869.5};
+//    private static final double[] SWFSBAND_8 = {412, 443, 490, 510, 555, 670, 765, 865};
     private static final int[] MERBAND_12_INDEX = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12};
     private static final int[] MERIS_11_OUTOF_12_IX = new int[]{0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11};
 
-    private static final double[] modisReflectanceScales = {1.7005885E-5f, 9.557186E-6f, 6.1540863E-6f, 4.824122E-6f,
-            3.8021312E-6f, 2.2562692E-6f, 2.3084365E-6f, 2.1856329E-6f, 1.9265376E-6f};
-    private static final double[] modisReflectanceOffsets = {316.9722f, 316.9722f, 316.9722f, 316.9722f, 316.9722f,
-            316.9722f, 316.9722f, 316.9722f, 316.9722f};
+//    private static final double[] modisReflectanceScales = {1.7005885E-5f, 9.557186E-6f, 6.1540863E-6f, 4.824122E-6f,
+//            3.8021312E-6f, 2.2562692E-6f, 2.3084365E-6f, 2.1856329E-6f, 1.9265376E-6f};
+//    private static final double[] modisReflectanceOffsets = {316.9722f, 316.9722f, 316.9722f, 316.9722f, 316.9722f,
+//            316.9722f, 316.9722f, 316.9722f, 316.9722f};
 
     double M_PI = 3.1416;
 
-    static int[] lam29_meris12_ix = {1, 2, 4, 6, 11, 12, 15, 19, 20, 22, 24, 25};
-    private static final int[] lam29_modis9_ix = {1, 2, 4, 8, 9, 15, 18, 21, 26};
-    private static final int[] lam29_seawifs8_ix = {1, 2, 4, 6, 10, 16, 23, 25};
     //@todo adapt to modis and seawifs
     double[] ozon_meris12 = {0.0002179, 0.002814, 0.02006, 0.04081, 0.104, 0.109, 0.0505, 0.03526, 0.01881, 0.008897, 0.007693, 0.002192}; // L.Bourg 2010
     double[] ozon_modis9 = {1.987E-03, 3.189E-03, 2.032E-02, 6.838E-02, 8.622E-02, 4.890E-02, 3.787E-02, 1.235E-02, 1.936E-03};
@@ -60,7 +53,7 @@ public class LevMarNN {
     double[] no2_seawifs8 = {6.004E-19, 4.963E-19, 2.746E-19, 2.081E-19, 9.411E-20, 9.234E-21, 1.078E-21, 1.942E-21};
 
     private final NnResources nnResources;
-    private final a_nn norm_net;
+    //private final a_nn norm_net;
     private final double[] trans_ozon;
     private final double[] solar_flux;
     private final double[] rl_toa;
@@ -101,7 +94,7 @@ public class LevMarNN {
     private double[] x11;
 
 
-    public LevMarNN(SensorConfig sensorConfig) throws IOException {
+    public LevMarNN(SensorContext sensorContext) throws IOException {
         x = new double[NLAM];
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
@@ -180,20 +173,20 @@ public class LevMarNN {
         p_init[6] = Math.log(0.01);  // bspm
         p_init[7] = Math.log(0.01);  // bwit
 
-        this.sensorConfig = sensorConfig;
+        this.sensorContext = sensorContext;
 
-        if (sensorConfig.getSensor() == Sensor.MERIS) {
+        if (sensorContext.getSensor() == Sensor.MERIS) {
             x11 = new double[11];
-        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
+        } else if (sensorContext.getSensor() == Sensor.MODIS) {
             x11 = new double[9];
-        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+        } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             x11 = new double[8];
         }
 
         nnResources = new NnResources();
         alphaTab = new AlphaTab();
 
-        norm_net = prepare_a_nn(nnResources.getNormNetPath());
+        //norm_net = prepare_a_nn(nnResources.getNormNetPath());
 
         smile_tab_ini();
         model = new nn_atmo_watForwardModel();
@@ -213,7 +206,7 @@ public class LevMarNN {
 //    }
 
     public int levmar_nn(int detector, double[] input, double[] output) {
-        double sun_thet, view_zeni, azi_diff_hl, temperature, salinity, ozone;
+        double view_zeni, azi_diff_hl, temperature, salinity, ozone;
 
         // @todo 2 tb/** can this be a field - check when all tests run green tb 2013-05-14
         int SMILE;
@@ -244,7 +237,7 @@ public class LevMarNN {
         final double cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
 
 
-        int countOfSpectralBands = sensorConfig.getNumSpectralInputBands();
+        int countOfSpectralBands = sensorContext.getNumSpectralInputBands();
         for (int i = 0; i < countOfSpectralBands; i++) {
             L_toa[i] = input[i + 10];
             solar_flux[i] = input[i + 25];
@@ -256,15 +249,15 @@ public class LevMarNN {
         }
         // end of input data
 
-        sun_azimuth = sensorConfig.correctSunAzimuth(sun_azimuth);
-        view_azimuth = sensorConfig.correctSunAzimuth(view_azimuth);
+        sun_azimuth = sensorContext.correctSunAzimuth(sun_azimuth);
+        view_azimuth = sensorContext.correctViewAzimuth(view_azimuth);
         double delta_azimuth = Math.abs(view_azimuth - sun_azimuth);
         if (delta_azimuth > 180.0) {
             delta_azimuth = 180.0 - delta_azimuth;
         }
 
         // nn_at_data[0]= -1.0; // prepare
-        nn_at_data.sun_thet = sun_thet = sun_zenith;
+        nn_at_data.setSun_thet(sun_zenith);
         nn_at_data.view_zeni = view_zeni = view_zenith;
         nn_at_data.azi_diff_hl = azi_diff_hl = delta_azimuth;
         nn_at_data.temperature = temperature;
@@ -297,14 +290,14 @@ public class LevMarNN {
         //@todo tf/** adapt to Modis and SeaWiFS -> See Ocean Colour Web Site Forum
 
         nlam = 12;
-        if (sensorConfig.getSensor() == Sensor.MERIS) {
+        if (sensorContext.getSensor() == Sensor.MERIS) {
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
                 trans_ozond[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_sun));
                 trans_ozonu[i] = Math.exp(-ozon_meris12[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
                 trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
             }
-        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
+        } else if (sensorContext.getSensor() == Sensor.MODIS) {
             nlam = 9;
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
@@ -312,7 +305,7 @@ public class LevMarNN {
                 trans_ozonu[i] = Math.exp(-ozon_modis9[i] * ozone / 1000.0 * (1.0 / cos_teta_view));
                 trans_ozon[i] = trans_ozond[i] * trans_ozonu[i];
             }
-        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+        } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             nlam = 8;
             for (int i = 0; i < nlam; i++) {
                 //trans_ozon[i]= exp(-ozon_meris12[i]* ozone / 1000.0 *(1.0/cos_teta_sun+1.0/cos_teta_view));
@@ -329,7 +322,7 @@ public class LevMarNN {
 
         //@todo tf/** check which gases need to be considered for SeaWiFS and MODIS -> See Ocean Colour Web Site Forum
         //consider relative humidity in NCEP aux data
-        if (sensorConfig.getSensor() == Sensor.MERIS) {
+        if (sensorContext.getSensor() == Sensor.MERIS) {
 
         /* +++ water vapour correction for band 9 +++++ */
 
@@ -342,7 +335,7 @@ public class LevMarNN {
         }
 
         double[] trans_no2 = new double[nlam];
-        if (sensorConfig.getSensor() == Sensor.MODIS) {
+        if (sensorContext.getSensor() == Sensor.MODIS) {
             double[] trans_no2_u = new double[nlam];
             double[] trans_no2_d = new double[nlam];
             double no2_tropo = input[40];
@@ -362,7 +355,7 @@ public class LevMarNN {
                 trans_no2[i] = trans_no2_d[i] * trans_no2_u[i];
             }
         }
-        if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+        if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             double[] trans_no2_u = new double[nlam];
             double[] trans_no2_d = new double[nlam];
             double no2_tropo = input[40];
@@ -383,7 +376,7 @@ public class LevMarNN {
             }
         }
 
-        if (sensorConfig.getSensor() == Sensor.MERIS) {
+        if (sensorContext.getSensor() == Sensor.MERIS) {
 
         /*+++ smile and pressure correction +++*/
 
@@ -449,20 +442,20 @@ public class LevMarNN {
                 }
             }
 
-        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
+        } else if (sensorContext.getSensor() == Sensor.MODIS) {
             for (ilam = 0; ilam < nlam; ilam++) {
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
-                L_tosa[ilam] *= Math.pow(sensorConfig.getEarthSunDistanceInAE(), 2);
+                L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAE(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
                 x[ilam] = rho_tosa_corr[ilam];
             }
-        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+        } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             for (ilam = 0; ilam < nlam; ilam++) {
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
-                L_tosa[ilam] *= Math.pow(sensorConfig.getEarthSunDistanceInAE(), 2);
+                L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAE(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
                 x[ilam] = rho_tosa_corr[ilam];
@@ -508,15 +501,15 @@ public class LevMarNN {
 
         System.arraycopy(p_init, 0, p, 0, p.length);
 
-        if (sensorConfig.getSensor() == Sensor.MERIS) {
+        if (sensorContext.getSensor() == Sensor.MERIS) {
             // select the 11 bands for iterations
             for (int i = 0; i < 11; i++) {
                 ix = MERIS_11_OUTOF_12_IX[i];
                 x11[i] = x[ix];
             }
-        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
+        } else if (sensorContext.getSensor() == Sensor.MODIS) {
             System.arraycopy(x, 0, x11, 0, 9);
-        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
+        } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             System.arraycopy(x, 0, x11, 0, 8);
         }
         /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
@@ -562,7 +555,7 @@ public class LevMarNN {
             rlw2[i] = 0.0;
         }
 
-        nn_in[0] = sun_thet;
+        nn_in[0] = sun_zenith;
         nn_in[1] = view_zeni;
         nn_in[2] = azi_diff_hl;
         nn_in[3] = temperature;
@@ -590,20 +583,9 @@ public class LevMarNN {
         /*********************************************************/
 
         // put all results into output
-        int[] sensorLambdas;
-        if (sensorConfig.getSensor() == Sensor.MERIS) {
-            sensorLambdas = lam29_meris12_ix;
-            nlam = 12;
-        } else if (sensorConfig.getSensor() == Sensor.MODIS) {
-            sensorLambdas = lam29_modis9_ix;
-            nlam = 9;
-        } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
-            sensorLambdas = lam29_seawifs8_ix;
-            nlam = 8;
-        } else {
-            sensorLambdas = lam29_meris12_ix;
-            nlam = 12;
-        }
+        final int[] sensorLambdas = sensorContext.getNnOutputIndices();
+        nlam = sensorLambdas.length;
+
         for (int i = 0; i < nlam; i++) {
             ix = sensorLambdas[i];
             output[i] = rho_tosa_corr[i] / M_PI;
@@ -614,7 +596,7 @@ public class LevMarNN {
         }
         int offset = 5 * nlam;
 
-        output[offset] = Math.exp(p[0]);    // aot_550
+        output[offset] = Math.exp(p[0]);        // aot_550
         output[offset + 1] = Math.exp(p[1]);    // ang_865_443
         output[offset + 2] = Math.exp(p[3]);    // a_pig
         output[offset + 3] = Math.exp(p[4]);    // a_part

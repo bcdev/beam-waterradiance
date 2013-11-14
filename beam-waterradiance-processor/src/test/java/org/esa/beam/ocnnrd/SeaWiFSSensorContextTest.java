@@ -2,19 +2,22 @@ package org.esa.beam.ocnnrd;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.pointop.Sample;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNotNull;
 
-public class SeaWiFSSensorConfigTest {
+public class SeaWiFSSensorContextTest {
 
-    private SeaWiFSSensorConfig seaWiFSSensorConfig;
+    private SeaWiFSSensorContext seaWiFSSensorConfig;
 
     @Before
     public void setUp() throws Exception {
-        seaWiFSSensorConfig = new SeaWiFSSensorConfig();
+        seaWiFSSensorConfig = new SeaWiFSSensorContext();
     }
 
     @Test
@@ -60,6 +63,13 @@ public class SeaWiFSSensorConfigTest {
     }
 
     @Test
+    public void testGetNnOutputIndices() {
+        final int[] expectedIndices = new int[]{1, 2, 4, 6, 10, 16, 23, 25};
+
+        assertArrayEquals(expectedIndices, seaWiFSSensorConfig.getNnOutputIndices());
+    }
+
+    @Test
     public void testGetSensorType() {
         assertEquals(Sensor.SEAWIFS, seaWiFSSensorConfig.getSensor());
     }
@@ -95,7 +105,7 @@ public class SeaWiFSSensorConfigTest {
         final TestSample[] sourceSamples = new TestSample[4];
         for (int i = 0; i < sourceSamples.length; i++) {
             sourceSamples[i] = new TestSample();
-            sourceSamples[i].set((double)i);
+            sourceSamples[i].set((double) i);
         }
 
         seaWiFSSensorConfig.copyTiePointData(inputs, sourceSamples);

@@ -53,7 +53,7 @@ public class OcNnRdOperator extends PixelOperator {
     private AtmosphericAuxdata atmosphericAuxdata = null;
     private Date date = null;
     private ThreadLocal<LevMarNN> levMarNN;
-    private SensorConfig sensorConfig;
+    private SensorContext sensorContext;
     private NO2Auxdata no2Auxdata;
 
     // solar_flux from bands
@@ -108,23 +108,23 @@ public class OcNnRdOperator extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        final Sensor sensorType = sensorConfig.getSensor();
+        final Sensor sensorType = sensorContext.getSensor();
         if (sensorType == Sensor.MODIS || sensorType == Sensor.SEAWIFS || isValid(sourceSamples)) {
             final double[] input_local = input.get();
-            sensorConfig.copyTiePointData(input_local, sourceSamples);
+            sensorContext.copyTiePointData(input_local, sourceSamples);
             copyAuxData(input_local, x, y);
-            copyRadiances(input_local, sourceSamples, sensorConfig);
+            copyRadiances(input_local, sourceSamples, sensorContext);
             copySolarFluxes(sourceSamples);
 
-            final int detectorIndex = sensorConfig.getDetectorIndex(sourceSamples);
+            final int detectorIndex = sensorContext.getDetectorIndex(sourceSamples);
             final double[] output_local = output.get();
             final LevMarNN levMarNN_local = levMarNN.get();
             levMarNN_local.levmar_nn(detectorIndex, input_local, output_local);
 
             // @todo 2 tb/tb extract method and test tb 2013-05-13
 //            for (int i = 0; i < output_local.length; i++) {
-            for (int i = sensorConfig.getTargetSampleOffset(); i < targetSamples.length; i++) {
-                targetSamples[i].set(output_local[i - sensorConfig.getTargetSampleOffset()]);
+            for (int i = sensorContext.getTargetSampleOffset(); i < targetSamples.length; i++) {
+                targetSamples[i].set(output_local[i - sensorContext.getTargetSampleOffset()]);
             }
             targetSamples[targetSamples.length - 4].set(input_local[8]);
             targetSamples[targetSamples.length - 3].set(input_local[9]);
@@ -137,14 +137,14 @@ public class OcNnRdOperator extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        sensorConfig.configureSourceSamples(sampleConfigurer, csvMode);
+        sensorContext.configureSourceSamples(sampleConfigurer, csvMode);
     }
 
     @Override
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
         Product targetProduct = getTargetProduct();
         String[] bandNames = targetProduct.getBandNames();
-        for (int i = sensorConfig.getTargetSampleOffset(); i < bandNames.length; i++) {
+        for (int i = sensorContext.getTargetSampleOffset(); i < bandNames.length; i++) {
             final String bandName = bandNames[i];
             sampleConfigurer.defineSample(i, bandName);
         }
@@ -219,9 +219,9 @@ public class OcNnRdOperator extends PixelOperator {
 
     //@todo 4 tb/** make static and add test
     private void addSpectralBands(ProductConfigurer productConfigurer, String bandNameFormat, String unit, String descriptionFormat) {
-        final int[] indices = sensorConfig.getSpectralOutputBandIndices();
-        final float[] wavelengths = sensorConfig.getSpectralOutputWavelengths();
-        for (int i = 0; i < sensorConfig.getNumSpectralOutputBands(); i++) {
+        final int[] indices = sensorContext.getSpectralOutputBandIndices();
+        final float[] wavelengths = sensorContext.getSpectralOutputWavelengths();
+        for (int i = 0; i < sensorContext.getNumSpectralOutputBands(); i++) {
             final Band band = productConfigurer.addBand(String.format(bandNameFormat, indices[i]), ProductData.TYPE_FLOAT32);
             band.setSpectralBandIndex(i);
             band.setSpectralWavelength(wavelengths[i]);
@@ -235,19 +235,19 @@ public class OcNnRdOperator extends PixelOperator {
     protected void prepareInputs() throws OperatorException {
         installAuxiliaryData();
 
-        sensorConfig = SensorConfigFactory.fromTypeString(getSensorTypeString());
-        sensorConfig.init(sourceProduct);
-        NUM_OUTPUTS = 13 + 5 * sensorConfig.getNumSpectralInputBands();
-        if (sensorConfig.getSensor() == Sensor.MERIS) {
+        sensorContext = SensorContextFactory.fromTypeString(getSensorTypeString());
+        sensorContext.init(sourceProduct);
+        NUM_OUTPUTS = 13 + 5 * sensorContext.getNumSpectralInputBands();
+        if (sensorContext.getSensor() == Sensor.MERIS) {
             if (isCsvMode(sourceProduct)) {
                 csvMode = true;
                 maskExpression = "true";
             } else {
-                solarFluxes = sensorConfig.getSolarFluxes(sourceProduct);
+                solarFluxes = sensorContext.getSolarFluxes(sourceProduct);
             }
             sourceProduct.addBand("_mask_", maskExpression);
-        } else if (sensorConfig.getSensor() == Sensor.MODIS || sensorConfig.getSensor() == Sensor.SEAWIFS) {
-            solarFluxes = sensorConfig.getSolarFluxes(sourceProduct);
+        } else if (sensorContext.getSensor() == Sensor.MODIS || sensorContext.getSensor() == Sensor.SEAWIFS) {
+            solarFluxes = sensorContext.getSolarFluxes(sourceProduct);
         }
 
         final ProductData.UTC startTime = sourceProduct.getStartTime();
@@ -260,7 +260,7 @@ public class OcNnRdOperator extends PixelOperator {
             @Override
             protected LevMarNN initialValue() {
                 try {
-                    return new LevMarNN(sensorConfig);
+                    return new LevMarNN(sensorContext);
                 } catch (IOException e) {
                     // @todo 3 tb/tb improve error handling here ... tb 2013-05-20
                     e.printStackTrace();
@@ -306,8 +306,8 @@ public class OcNnRdOperator extends PixelOperator {
     }
 
     // package access for testing only tb 2013-05-13
-    static void copyRadiances(double[] inputs, Sample[] sourceSamples, SensorConfig sensorConfig) {
-        for (int i = 0; i < sensorConfig.getNumSpectralInputBands(); i++) {
+    static void copyRadiances(double[] inputs, Sample[] sourceSamples, SensorContext sensorContext) {
+        for (int i = 0; i < sensorContext.getNumSpectralInputBands(); i++) {
             inputs[10 + i] = sourceSamples[Constants.SRC_RAD_OFFSET + i].getDouble();
         }
     }
@@ -400,8 +400,8 @@ public class OcNnRdOperator extends PixelOperator {
                 throw new OperatorException(e);
             }
         } else {
-            input_local[4] = sensorConfig.getSurfacePressure();
-            input_local[5] = sensorConfig.getOzone();
+            input_local[4] = sensorContext.getSurfacePressure();
+            input_local[5] = sensorContext.getOzone();
         }
         if (no2Auxdata != null) {
             try {
@@ -427,7 +427,7 @@ public class OcNnRdOperator extends PixelOperator {
         if (csvMode) {
             copySolarFluxes(input_local, sourceSamples);
         } else {
-            sensorConfig.copySolarFluxes(input_local, solarFluxes);
+            sensorContext.copySolarFluxes(input_local, solarFluxes);
         }
     }
 

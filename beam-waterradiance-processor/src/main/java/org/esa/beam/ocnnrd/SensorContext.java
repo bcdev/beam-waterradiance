@@ -4,7 +4,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
-public interface SensorConfig {
+public interface SensorContext {
 
     Sensor getSensor();
 
@@ -17,6 +17,8 @@ public interface SensorConfig {
     int[] getSpectralOutputBandIndices();
 
     float[] getSpectralOutputWavelengths();
+
+    int[] getNnOutputIndices();
 
     void configureSourceSamples(SampleConfigurer sampleConfigurer, boolean csvMode);
 

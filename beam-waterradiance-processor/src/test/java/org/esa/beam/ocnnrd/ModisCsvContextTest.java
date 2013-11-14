@@ -6,13 +6,13 @@ import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-public class ModisCsvConfigTest {
+public class ModisCsvContextTest {
 
-    private ModisCsvConfig modisCsvConfig;
+    private ModisCsvContext modisCsvConfig;
 
     @Before
     public void setUp() {
-        modisCsvConfig = new ModisCsvConfig();
+        modisCsvConfig = new ModisCsvContext();
     }
 
     @Test
@@ -55,6 +55,13 @@ public class ModisCsvConfigTest {
         final float[] expectedWavelengths = {412.f, 443.f, 488.f, 531.f, 547.f, 645.f, 748.f, 869.f};
 
         assertArrayEquals(expectedWavelengths, modisCsvConfig.getSpectralOutputWavelengths(), 1e-8f);
+    }
+
+    @Test
+    public void testGetNnOutputIndices() {
+        final int[] expectedIndices = {1, 2, 4, 8, 9, 13, 21, 26};
+
+        assertArrayEquals(expectedIndices, modisCsvConfig.getNnOutputIndices());
     }
 
     @Test

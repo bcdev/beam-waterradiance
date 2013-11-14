@@ -6,10 +6,12 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
-class MerisSensorConfig implements SensorConfig {
+class MerisSensorContext implements SensorContext {
 
     private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
-    private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 442.f, 449.f, 510.f, 560.f, 620.f, 665.f, 681.f, 708.f, 753.f, 778.f, 865.f};
+    private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 442.f, 490.f, 510.f, 560.f, 620.f, 665.f, 681.f, 708.f, 753.f, 778.f, 865.f};
+    private static final int[] NN_OUTPUT_INDICES = new int[]{1, 2, 4, 6, 11, 12, 15, 19, 20, 22, 24, 25};
+    // @todo 2 tb/tb ask RD - out indices are not exactly matching input WLs: 2-> 443nm, 4-> 498nm, 20-> 709nm, 22-> 754nm, 24-> 779nm
 
     private double surfacePressure;
     private double ozone;
@@ -37,6 +39,11 @@ class MerisSensorConfig implements SensorConfig {
     @Override
     public float[] getSpectralOutputWavelengths() {
         return SPECTRAL_OUTPUT_WAVELENGTHS;
+    }
+
+    @Override
+    public int[] getNnOutputIndices() {
+        return NN_OUTPUT_INDICES;
     }
 
     @Override

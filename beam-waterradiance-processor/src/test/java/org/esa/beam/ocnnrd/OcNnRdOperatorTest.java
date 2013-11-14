@@ -41,7 +41,7 @@ public class OcNnRdOperatorTest {
         final TestSample[] samples = createTestSamples(23);
         final double[] inputs = new double[25];
 
-        OcNnRdOperator.copyRadiances(inputs, samples, new MerisSensorConfig());
+        OcNnRdOperator.copyRadiances(inputs, samples, new MerisSensorContext());
 
         for (int i = 0; i < 10; i++) {
             assertEquals(0.0, inputs[i], 1e-8);
@@ -57,7 +57,7 @@ public class OcNnRdOperatorTest {
         final TestSample[] samples = createTestSamples(19);
         final double[] inputs = new double[19];
 
-        OcNnRdOperator.copyRadiances(inputs, samples, new ModisSensorConfig());
+        OcNnRdOperator.copyRadiances(inputs, samples, new ModisSensorContext());
 
         for (int i = 0; i < 10; i++) {
             assertEquals(0.0, inputs[i], 1e-8);

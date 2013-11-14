@@ -4,7 +4,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
-class ModisCsvConfig implements SensorConfig {
+class ModisCsvContext implements SensorContext {
 
     private static final String[] SPECTRAL_INPUT_BANDS_NAMES = {"Radiance_TOA_412",
             "Radiance_TOA_443",
@@ -16,6 +16,8 @@ class ModisCsvConfig implements SensorConfig {
             "Radiance_TOA_869"};
     private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
     private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 443.f, 488.f, 531.f, 547.f, 645.f, 748.f, 869.f};
+    private static final int[] NN_OUTPUT_INDICES = new int[]{1, 2, 4, 8, 9, 13, 21, 26};
+    // @todo 2 tb/tb ask RD - out indices are not exactly matching input WLs: 4-> 489nm, 9 -> 551nm, 13 -> 632nm
 
     @Override
     public Sensor getSensor() {
@@ -66,47 +68,60 @@ class ModisCsvConfig implements SensorConfig {
     }
 
     @Override
+    public int[] getNnOutputIndices() {
+        return NN_OUTPUT_INDICES;
+    }
+
+    @Override
     public void copyTiePointData(double[] inputs, Sample[] sourceSamples) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // @todo 1 tb/tb write test and implement
     }
 
     @Override
     public double[] getSolarFluxes(Product sourceProduct) {
+        // @todo 1 tb/tb write test and implement
         return new double[0];  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
+        // @todo 1 tb/tb write test and implement
         return new double[0];  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public double getSurfacePressure() {
+        // @todo 1 tb/tb write test and implement
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public double getOzone() {
+        // @todo 1 tb/tb write test and implement
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public double getEarthSunDistanceInAE() {
+        // @todo 1 tb/tb write test and implement
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void init(Product sourceProduct) {
+        // @todo 1 tb/tb write test and implement
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public int getDetectorIndex(Sample[] samples) {
+        // @todo 1 tb/tb write test and implement
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public int getTargetSampleOffset() {
+        // @todo 1 tb/tb write test and implement
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 

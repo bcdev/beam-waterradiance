@@ -9,13 +9,13 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class MerisSensorConfigTest {
+public class MerisSensorContextTest {
 
-    private MerisSensorConfig merisSensorConfig;
+    private MerisSensorContext merisSensorConfig;
 
     @Before
     public void setUp() throws Exception {
-        merisSensorConfig = new MerisSensorConfig();
+        merisSensorConfig = new MerisSensorContext();
     }
 
     @Test
@@ -38,10 +38,17 @@ public class MerisSensorConfigTest {
 
     @Test
     public void testGetSpectralOutputWavelengths() {
-        final float[] expectedWavelengths = new float[]{412.f, 442.f, 449.f, 510.f, 560.f, 620.f, 665.f, 681.f, 708.f, 753.f, 778.f, 865.f};
+        final float[] expectedWavelengths = new float[]{412.f, 442.f, 490.f, 510.f, 560.f, 620.f, 665.f, 681.f, 708.f, 753.f, 778.f, 865.f};
 
         final float[] wavelengths = merisSensorConfig.getSpectralOutputWavelengths();
         assertArrayEquals(expectedWavelengths, wavelengths, 1e-8f);
+    }
+
+    @Test
+    public void testGetNnOutputIndices() {
+        final int[] expectedIndices = new int[]{1, 2, 4, 6, 11, 12, 15, 19, 20, 22, 24, 25};
+
+        assertArrayEquals(expectedIndices, merisSensorConfig.getNnOutputIndices());
     }
 
     @Test
@@ -182,8 +189,8 @@ public class MerisSensorConfigTest {
 
     @Test
     public void testCorrectSunAzimuth() {
-         assertEquals(23.8, merisSensorConfig.correctSunAzimuth(23.8), 1e-8);
-         assertEquals(-45.88, merisSensorConfig.correctSunAzimuth(-45.88), 1e-8);
+        assertEquals(23.8, merisSensorConfig.correctSunAzimuth(23.8), 1e-8);
+        assertEquals(-45.88, merisSensorConfig.correctSunAzimuth(-45.88), 1e-8);
     }
 
     @Test
@@ -194,7 +201,7 @@ public class MerisSensorConfigTest {
 
     @Test
     public void testGetEarthSunDistanceInAE() {
-         assertEquals(1.0, merisSensorConfig.getEarthSunDistanceInAE(), 1e-8);
+        assertEquals(1.0, merisSensorConfig.getEarthSunDistanceInAE(), 1e-8);
     }
 
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {

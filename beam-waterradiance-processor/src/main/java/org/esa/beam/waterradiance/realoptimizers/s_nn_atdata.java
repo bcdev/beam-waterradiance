@@ -1,12 +1,6 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
-/**
- * Created with IntelliJ IDEA.
- * User: tonio
- * Date: 08.05.13
- * Time: 13:48
- * To change this template use File | Settings | File Templates.
- */
+
 class s_nn_atdata {
 
     private static int NUM_RW = 33;
@@ -14,14 +8,14 @@ class s_nn_atdata {
 
     int prepare; //    =nn_at_data[0];
 
-    double sun_thet; //   =nn_at_data[1];
+    private double sun_thet;    //   =nn_at_data[1];
     double view_zeni; //  =nn_at_data[2];
     double azi_diff_hl; //=nn_at_data[3];
     double temperature; //=nn_at_data[4];
     double salinity; //   =nn_at_data[5];
 
     double[] tdown_nn = new double[NUM_ATMO]; // =tdown_nn[ilam];
-    double[] tup_nn= new double[NUM_ATMO]; // =tup_nn[ilam];
+    double[] tup_nn = new double[NUM_ATMO]; // =tup_nn[ilam];
     double[] rpath_nn = new double[NUM_ATMO]; // =rpath_nn[ilam];
     double[] rw_nn = new double[NUM_RW]; // =rw_nn[ilam];
 
@@ -53,9 +47,9 @@ class s_nn_atdata {
         return azi_diff_hl;
     }
 
-    public void setAzi_diff_hl(double azi_diff_hl) {
-        this.azi_diff_hl = azi_diff_hl;
-    }
+//    public void setAzi_diff_hl(double azi_diff_hl) {
+//        this.azi_diff_hl = azi_diff_hl;
+//    }
 
     public double getTemperature() {
         return temperature;

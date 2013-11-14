@@ -10,15 +10,16 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
-public class ModisSensorConfigTest {
+public class ModisSensorContextTest {
 
 
-    private ModisSensorConfig modisSensorConfig;
+    private ModisSensorContext modisSensorConfig;
 
     @Before
     public void setUp() throws Exception {
-        modisSensorConfig = new ModisSensorConfig();
+        modisSensorConfig = new ModisSensorContext();
     }
 
     @Test
@@ -45,6 +46,13 @@ public class ModisSensorConfigTest {
 
         final float[] wavelengths = modisSensorConfig.getSpectralOutputWavelengths();
         assertArrayEquals(expectedWavelengths, wavelengths, 1e-8f);
+    }
+
+    @Test
+    public void testGetNnOutputIndices() {
+        final int[] expectedIndices = new int[]{1, 2, 4, 8, 9, 15, 18, 21, 26};
+
+        assertArrayEquals(expectedIndices, modisSensorConfig.getNnOutputIndices());
     }
 
     @Test

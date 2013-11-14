@@ -7,10 +7,13 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
-class ModisSensorConfig implements SensorConfig {
+class ModisSensorContext implements SensorContext {
 
     private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
     private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{413.f, 443.f, 488.f, 531.f, 551.f, 667.f, 678.f, 748.f, 870.f};
+    private static final int[] NN_OUTPUT_INDICES = new int[]{1, 2, 4, 8, 9, 15, 18, 21, 26};
+    // @todo 2 tb/tb ask RD - out indices are not exactly matching input WLs: 1-> 412nm, 4-> 489nm, 15-> 665nm, 26-> 869nm
+
     private static final String[] EARTH_SUN_DISTANCE_NAMES = {"Earth-Sun_Distance", "Earth-Sun Distance"};
     private static final int[] START_POSITION_IN_PRODUCT_DATA = new int[]{180, 190, 200, 210, 220, 230, 250, 270, 280};
 
@@ -71,6 +74,11 @@ class ModisSensorConfig implements SensorConfig {
     @Override
     public float[] getSpectralOutputWavelengths() {
         return SPECTRAL_OUTPUT_WAVELENGTHS;
+    }
+
+    @Override
+    public int[] getNnOutputIndices() {
+        return NN_OUTPUT_INDICES;
     }
 
     @Override
