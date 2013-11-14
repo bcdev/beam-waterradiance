@@ -162,9 +162,15 @@ public class ModisSensorConfigTest {
     }
 
     @Test
-    public void testCorrectAzimuth() {
-        org.junit.Assert.assertEquals(33.8, modisSensorConfig.correctAzimuth(33.8), 1e-8);
-        org.junit.Assert.assertEquals(-25.88 + 360.0, modisSensorConfig.correctAzimuth(-25.88), 1e-8);
+    public void testCorrectSunAzimuth() {
+        assertEquals(33.8, modisSensorConfig.correctSunAzimuth(33.8), 1e-8);
+        assertEquals(-25.88 + 360.0, modisSensorConfig.correctSunAzimuth(-25.88), 1e-8);
+    }
+
+    @Test
+    public void testCorrectViewAzimuth() {
+        assertEquals(43.9, modisSensorConfig.correctViewAzimuth(43.9), 1e-8);
+        assertEquals(-55.13 + 360.0, modisSensorConfig.correctViewAzimuth(-55.13), 1e-8);
     }
 
     private Product createProductWithSolarFluxMetadata() {

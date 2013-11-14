@@ -4,12 +4,12 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
-public class SeaWiFSSensorConfig implements SensorConfig {
+class SeaWiFSSensorConfig implements SensorConfig {
 
     private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
     private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 443.f, 490.f, 510.f, 555.f, 670.f, 765.f, 865.f};
-    private final static double[] defaultThuillierSolarFluxes = {1754.1875, 1894.665263, 1970.7535, 1863.546111, 1836.141,
-        1510.442273, 1232.692821, 947.14};
+//    private final static double[] defaultThuillierSolarFluxes = {1754.1875, 1894.665263, 1970.7535, 1863.546111, 1836.141,
+//        1510.442273, 1232.692821, 947.14};
     private final static double[] defaultNasaSolarFluxes = {171.18, 188.76, 193.38, 192.56, 183.76, 151.22, 123.91, 95.965};
     private static final String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "L_412";
     private static final String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "L_443";
@@ -109,7 +109,7 @@ public class SeaWiFSSensorConfig implements SensorConfig {
     }
 
     @Override
-    public double getEarthSunDistance() {
+    public double getEarthSunDistanceInAE() {
         return 1;
     }
 
@@ -129,7 +129,16 @@ public class SeaWiFSSensorConfig implements SensorConfig {
     }
 
     @Override
-    public double correctAzimuth(double azimuth) {
+    public double correctSunAzimuth(double sunAzimuth) {
+        return correctAzimuthAngle(sunAzimuth);
+    }
+
+    @Override
+    public double correctViewAzimuth(double viewAzimuth) {
+        return correctAzimuthAngle(viewAzimuth);
+    }
+
+    private double correctAzimuthAngle(double azimuth) {
         if (azimuth < 0.0) {
             return azimuth + 360.0;
         }

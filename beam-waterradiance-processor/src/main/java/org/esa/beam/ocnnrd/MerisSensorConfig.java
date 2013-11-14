@@ -101,7 +101,7 @@ class MerisSensorConfig implements SensorConfig {
     @Override
     public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
         System.arraycopy(solarFluxes, 0, input, Constants.SRC_SOL_FLUX_OFFSET,
-                         EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS);
+                EnvisatConstants.MERIS_L1B_NUM_SPECTRAL_BANDS);
         return input;
     }
 
@@ -116,7 +116,7 @@ class MerisSensorConfig implements SensorConfig {
     }
 
     @Override
-    public double getEarthSunDistance() {
+    public double getEarthSunDistanceInAE() {
         return 1;
     }
 
@@ -132,11 +132,16 @@ class MerisSensorConfig implements SensorConfig {
 
     @Override
     public int getTargetSampleOffset() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return 0;
     }
 
     @Override
-    public double correctAzimuth(double azimuth) {
-        return azimuth;  //nothing to correct here tb 2013-10-16
+    public double correctSunAzimuth(double sunAzimuth) {
+        return sunAzimuth;  //nothing to correct here tb 2013-10-16
+    }
+
+    @Override
+    public double correctViewAzimuth(double viewAzimuth) {
+        return viewAzimuth; // nothing to correct here tb 2013-11-14
     }
 }

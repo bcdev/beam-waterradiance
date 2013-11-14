@@ -153,8 +153,14 @@ public class SeaWiFSSensorConfigTest {
     }
 
     @Test
-    public void testCorrectAzimuth() {
-        Assert.assertEquals(13.8, seaWiFSSensorConfig.correctAzimuth(13.8), 1e-8);
-        Assert.assertEquals(-35.88 + 360.0, seaWiFSSensorConfig.correctAzimuth(-35.88), 1e-8);
+    public void testCorrectSunAzimuth() {
+        assertEquals(13.8, seaWiFSSensorConfig.correctSunAzimuth(13.8), 1e-8);
+        assertEquals(-35.88 + 360.0, seaWiFSSensorConfig.correctSunAzimuth(-35.88), 1e-8);
+    }
+
+    @Test
+    public void testCorrectViewAzimuth() {
+        assertEquals(3.7, seaWiFSSensorConfig.correctViewAzimuth(3.7), 1e-8);
+        assertEquals(-45.43 + 360.0, seaWiFSSensorConfig.correctViewAzimuth(-45.43), 1e-8);
     }
 } 

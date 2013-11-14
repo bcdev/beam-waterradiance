@@ -6,7 +6,16 @@ import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
 class ModisCsvConfig implements SensorConfig {
 
-    private static final String[] SPECTRAL_INPUT_BANDS_NAMES = {"Radiance_TOA_412", "Radiance_TOA_443", "Radiance_TOA_488", "Radiance_TOA_531", "Radiance_TOA_547", "Radiance_TOA_645", "Radiance_TOA_748", "Radiance_TOA_869"};
+    private static final String[] SPECTRAL_INPUT_BANDS_NAMES = {"Radiance_TOA_412",
+            "Radiance_TOA_443",
+            "Radiance_TOA_488",
+            "Radiance_TOA_531",
+            "Radiance_TOA_547",
+            "Radiance_TOA_645",
+            "Radiance_TOA_748",
+            "Radiance_TOA_869"};
+    private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
+    private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 443.f, 488.f, 531.f, 547.f, 645.f, 748.f, 869.f};
 
     @Override
     public Sensor getSensor() {
@@ -25,22 +34,35 @@ class ModisCsvConfig implements SensorConfig {
 
     @Override
     public int getNumSpectralOutputBands() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return SPECTRAL_INPUT_BANDS_NAMES.length;
     }
 
     @Override
     public int[] getSpectralOutputBandIndices() {
-        return new int[0];  //To change body of implemented methods use File | Settings | File Templates.
+        return SPECTRAL_OUTPUT_INDEXES;
     }
 
     @Override
     public float[] getSpectralOutputWavelengths() {
-        return new float[0];  //To change body of implemented methods use File | Settings | File Templates.
+        return SPECTRAL_OUTPUT_WAVELENGTHS;
     }
 
     @Override
     public void configureSourceSamples(SampleConfigurer sampleConfigurer, boolean csvMode) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        sampleConfigurer.defineSample(Constants.SRC_SZA, "Solar_Zenith");
+        sampleConfigurer.defineSample(Constants.SRC_SAA, "Relative_Azimuth");
+        sampleConfigurer.defineSample(Constants.SRC_VZA, "Viewing_Zenith");
+        sampleConfigurer.defineSample(Constants.SRC_VAA, "Relative_Azimuth");
+        // the error in the azimuth angles introduced here is corrected in correctViewAzimuth() below tb 2013-11-14
+
+        sampleConfigurer.defineSample(Constants.SRC_PRESS, "Pressure");
+        sampleConfigurer.defineSample(Constants.SRC_OZ, "Ozone");
+        sampleConfigurer.defineSample(Constants.SRC_MWIND, "WindSpeedM");
+        sampleConfigurer.defineSample(Constants.SRC_ZWIND, "WindSpeedZ");
+
+        for (int i = 0; i < SPECTRAL_INPUT_BANDS_NAMES.length; i++) {
+            sampleConfigurer.defineSample(Constants.SRC_RAD_OFFSET + i, SPECTRAL_INPUT_BANDS_NAMES[i]);
+        }
     }
 
     @Override
@@ -69,7 +91,7 @@ class ModisCsvConfig implements SensorConfig {
     }
 
     @Override
-    public double getEarthSunDistance() {
+    public double getEarthSunDistanceInAE() {
         return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -89,7 +111,17 @@ class ModisCsvConfig implements SensorConfig {
     }
 
     @Override
-    public double correctAzimuth(double azimuth) {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    public double correctSunAzimuth(double sunAzimuth) {
+        return sunAzimuth;
+    }
+
+    @Override
+    public double correctViewAzimuth(double viewAzimuth) {
+        // we need to cope with the fact that the csv-file contains only the relative azimuth angle. Which is also the
+        // one we need in the algorithm. To have this value in the end, we count double the raa here.
+        // saa = raa_in
+        // vaa = 2 * raa_in
+        // raa = abs(vaa - saa) = abs(raa_in) ... which is what we want. tb 2013-11-14
+        return 2.0 * viewAzimuth;
     }
 }

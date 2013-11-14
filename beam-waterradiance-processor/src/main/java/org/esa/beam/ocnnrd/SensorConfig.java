@@ -30,7 +30,7 @@ public interface SensorConfig {
 
     double getOzone();
 
-    double getEarthSunDistance();
+    double getEarthSunDistanceInAE();
 
     void init(Product sourceProduct);
 
@@ -38,5 +38,7 @@ public interface SensorConfig {
 
     int getTargetSampleOffset();
 
-    double correctAzimuth(double azimuth);
+    double correctSunAzimuth(double azimuth);
+
+    double correctViewAzimuth(double azimuth);
 }

@@ -243,8 +243,6 @@ public class LevMarNN {
 
         final double cos_sun_zenith = Math.cos(sun_zenith * DEG_2_RAD);
 
-        sun_azimuth = sensorConfig.correctAzimuth(sun_azimuth);
-        view_azimuth = sensorConfig.correctAzimuth(view_azimuth);
 
         int countOfSpectralBands = sensorConfig.getNumSpectralInputBands();
         for (int i = 0; i < countOfSpectralBands; i++) {
@@ -258,6 +256,8 @@ public class LevMarNN {
         }
         // end of input data
 
+        sun_azimuth = sensorConfig.correctSunAzimuth(sun_azimuth);
+        view_azimuth = sensorConfig.correctSunAzimuth(view_azimuth);
         double delta_azimuth = Math.abs(view_azimuth - sun_azimuth);
         if (delta_azimuth > 180.0) {
             delta_azimuth = 180.0 - delta_azimuth;
@@ -353,6 +353,7 @@ public class LevMarNN {
                 no2_tropo_200 = no2_frac * no2_tropo;
             }
             for (int i = 0; i < nlam; i++) {
+                // @todo 1 tb/tf - PLEASe find names for those constants.... what is 285, 294 ??? tb 2013-11-14
                 double a285 = no2_modis9[i] * (1.0 - 0.003 * (285.0 - 294.0));
                 double a225 = no2_modis9[i] * (1.0 - 0.003 * (225.0 - 294.0));
                 double tau_to_200 = a285 * no2_tropo_200 + a225 * no2_strato;
@@ -372,6 +373,7 @@ public class LevMarNN {
                 no2_tropo_200 = no2_frac * no2_tropo;
             }
             for (int i = 0; i < nlam; i++) {
+                // @todo 1 tb/tf - PLEASe find names for those constants.... what is 285, 294 ??? tb 2013-11-14
                 double a285 = no2_seawifs8[i] * (1.0 - 0.003 * (285.0 - 294.0));
                 double a225 = no2_seawifs8[i] * (1.0 - 0.003 * (225.0 - 294.0));
                 double tau_to_200 = a285 * no2_tropo_200 + a225 * no2_strato;
@@ -386,7 +388,7 @@ public class LevMarNN {
         /*+++ smile and pressure correction +++*/
 
         /* calculate relative airmass rayleigh correction for correction layer*/
-            surf_press = surf_pressure;
+            surf_press = surf_pressure; // @todo tb/** why the hell?? tb 2013-11-14
             rayl_rel_mass_toa_tosa = (surf_press - 1013.2) / 1013.2; //?? oder rayl_mass_toa_tosa =surf_press - 1013.2; // RD20120105
 
         /* calculate phase function for rayleigh path radiance*/
@@ -450,8 +452,8 @@ public class LevMarNN {
         } else if (sensorConfig.getSensor() == Sensor.MODIS) {
             for (ilam = 0; ilam < nlam; ilam++) {
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
-                L_tosa[ilam] = L_toa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
-                L_tosa[ilam] *= Math.pow(sensorConfig.getEarthSunDistance(), 2);
+                L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
+                L_tosa[ilam] *= Math.pow(sensorConfig.getEarthSunDistanceInAE(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
                 x[ilam] = rho_tosa_corr[ilam];
@@ -459,8 +461,8 @@ public class LevMarNN {
         } else if (sensorConfig.getSensor() == Sensor.SEAWIFS) {
             for (ilam = 0; ilam < nlam; ilam++) {
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
-                L_tosa[ilam] = L_toa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
-                L_tosa[ilam] *= Math.pow(sensorConfig.getEarthSunDistance(), 2);
+                L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
+                L_tosa[ilam] *= Math.pow(sensorConfig.getEarthSunDistanceInAE(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
                 x[ilam] = rho_tosa_corr[ilam];

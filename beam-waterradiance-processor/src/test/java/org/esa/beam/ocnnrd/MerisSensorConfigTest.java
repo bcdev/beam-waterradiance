@@ -169,7 +169,7 @@ public class MerisSensorConfigTest {
     public void testGetDetectorIndex() {
         final TestSample[] samples = new TestSample[24];
         samples[23] = new TestSample();
-        samples[23].set(776);
+        samples[23].set(776);                                //To change body of implemented methods use File | Settings | File Templates.
 
         final int detectorIndex = merisSensorConfig.getDetectorIndex(samples);
         assertEquals(776, detectorIndex);
@@ -181,9 +181,20 @@ public class MerisSensorConfigTest {
     }
 
     @Test
-    public void testCorrectAzimuth() {
-         assertEquals(23.8, merisSensorConfig.correctAzimuth(23.8), 1e-8);
-         assertEquals(-45.88, merisSensorConfig.correctAzimuth(-45.88), 1e-8);
+    public void testCorrectSunAzimuth() {
+         assertEquals(23.8, merisSensorConfig.correctSunAzimuth(23.8), 1e-8);
+         assertEquals(-45.88, merisSensorConfig.correctSunAzimuth(-45.88), 1e-8);
+    }
+
+    @Test
+    public void testCorrectViewAzimuth() {
+        assertEquals(33.9, merisSensorConfig.correctViewAzimuth(33.9), 1e-8);
+        assertEquals(-35.77, merisSensorConfig.correctViewAzimuth(-35.77), 1e-8);
+    }
+
+    @Test
+    public void testGetEarthSunDistanceInAE() {
+         assertEquals(1.0, merisSensorConfig.getEarthSunDistanceInAE(), 1e-8);
     }
 
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {

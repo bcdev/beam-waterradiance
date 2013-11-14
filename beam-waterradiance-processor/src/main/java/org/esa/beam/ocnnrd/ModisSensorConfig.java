@@ -38,11 +38,10 @@ class ModisSensorConfig implements SensorConfig {
     private final static int MODIS_L1B_NUM_SPECTRAL_BANDS = MODIS_L1B_SPECTRAL_BAND_NAMES.length;
     private final static double surfacePressureDefaultValue = 1019.0;
     private final static double ozoneDefaultValue = 330.0;
-//    private final static double[] defaultSolarFluxes = {556.3234802246094, 606.7602844238281, 629.3416137695312,
+    //    private final static double[] defaultSolarFluxes = {556.3234802246094, 606.7602844238281, 629.3416137695312,
 //            600.0957214355469, 602.5105712890625, 492.57408142089844, 479.41172790527344, 412.11121520996096,
 //            309.7836883544922};
-    private final static double[] defaultSolarFluxes = {171.18, 188.76, 194.18, 185.94, 187.00, 152.44, 148.14, 127.60,
-            94.874};
+    private final static double[] defaultSolarFluxes = {171.18, 188.76, 194.18, 185.94, 187.00, 152.44, 148.14, 127.60, 94.874};
     private static final String globalMetadataName = "GLOBAL_METADATA";
 
     private double[] solarFluxes;
@@ -122,7 +121,7 @@ class ModisSensorConfig implements SensorConfig {
     }
 
     @Override
-    public double getEarthSunDistance() {
+    public double getEarthSunDistanceInAE() {
         return earthSunDistance;
     }
 
@@ -166,11 +165,20 @@ class ModisSensorConfig implements SensorConfig {
 
     @Override
     public int getTargetSampleOffset() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return 0;
     }
 
     @Override
-    public double correctAzimuth(double azimuth) {
+    public double correctSunAzimuth(double sunAzimuth) {
+        return correctAzimuthAngle(sunAzimuth);
+    }
+
+    @Override
+    public double correctViewAzimuth(double viewAzimuth) {
+        return correctAzimuthAngle(viewAzimuth);
+    }
+
+    private double correctAzimuthAngle(double azimuth) {
         if (azimuth < 0.0) {
             return azimuth + 360.0;
         }
