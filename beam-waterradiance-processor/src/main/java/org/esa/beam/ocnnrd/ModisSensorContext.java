@@ -44,7 +44,10 @@ class ModisSensorContext implements SensorContext {
     //    private final static double[] defaultSolarFluxes = {556.3234802246094, 606.7602844238281, 629.3416137695312,
 //            600.0957214355469, 602.5105712890625, 492.57408142089844, 479.41172790527344, 412.11121520996096,
 //            309.7836883544922};
-    private final static double[] defaultSolarFluxes = {171.18, 188.76, 194.18, 185.94, 187.00, 152.44, 148.14, 127.60, 94.874};
+    // @todo 1 tb/tf where do these vaules originate from. I doubt that they are correct - or that they have the correct physical unit
+    //private final static double[] defaultSolarFluxes = {171.18, 188.76, 194.18, 185.94, 187.00, 152.44, 148.14, 127.60, 94.874};
+    // derived from cahalan table from Kerstin tb 2013-11-15
+    private final static double[] defaultSolarFluxes = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737, 1882.428333, 1545.183846, 1507.529167, 1277.037, 945.3382727};
     private static final String globalMetadataName = "GLOBAL_METADATA";
 
     private double[] solarFluxes;
@@ -141,15 +144,14 @@ class ModisSensorContext implements SensorContext {
         if (globalMetadataElement != null) {
             final MetadataAttribute solarFluxesAttribute = globalMetadataElement.getAttribute("Solar_Irradiance_on_RSB_Detectors_over_pi");
             if (solarFluxesAttribute != null) {
-                final ProductData productData =
-                        solarFluxesAttribute.getData();
+                final ProductData productData = solarFluxesAttribute.getData();
                 solarFluxes = new double[MODIS_L1B_NUM_SPECTRAL_BANDS];
                 for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
                     for (int j = 0; j < 10; j++) {
                         solarFluxes[i] += productData.getElemDoubleAt(START_POSITION_IN_PRODUCT_DATA[i] + j);
                     }
                     solarFluxes[i] /= 10;
-//            solarFluxes[i] *= Math.PI;
+                    solarFluxes[i] *= Math.PI;
                 }
             }
         } else {

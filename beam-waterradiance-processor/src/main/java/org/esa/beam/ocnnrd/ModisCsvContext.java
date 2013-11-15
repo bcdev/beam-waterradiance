@@ -16,8 +16,12 @@ class ModisCsvContext implements SensorContext {
             "Radiance_TOA_869"};
     private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
     private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 443.f, 488.f, 531.f, 547.f, 645.f, 748.f, 869.f};
-    private static final int[] NN_OUTPUT_INDICES = new int[]{1, 2, 4, 8, 9, 13, 21, 26};
+
     // @todo 2 tb/tb ask RD - out indices are not exactly matching input WLs: 4-> 489nm, 9 -> 551nm, 13 -> 632nm
+    private static final int[] NN_OUTPUT_INDICES = new int[]{1, 2, 4, 8, 9, 13, 21, 26};
+
+    // retrieved from cahalan table from Kerstin, extended to MODIS
+    private static final double[] MEAN_SOLAR_FLUXES = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737, 1882.428333, 1597.176923, 1277.037, 945.3382727};
 
     @Override
     public Sensor getSensor() {
@@ -74,19 +78,25 @@ class ModisCsvContext implements SensorContext {
 
     @Override
     public void copyTiePointData(double[] inputs, Sample[] sourceSamples) {
-        // @todo 1 tb/tb write test and implement
+        inputs[0] = sourceSamples[Constants.SRC_SZA].getDouble();
+        inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();
+        inputs[2] = sourceSamples[Constants.SRC_VZA].getDouble();
+        inputs[3] = sourceSamples[Constants.SRC_VAA].getDouble();
+        inputs[4] = sourceSamples[Constants.SRC_PRESS].getDouble();
+        inputs[5] = sourceSamples[Constants.SRC_OZ].getDouble();
+        inputs[6] = sourceSamples[Constants.SRC_MWIND].getDouble();
+        inputs[7] = sourceSamples[Constants.SRC_ZWIND].getDouble();
     }
 
     @Override
     public double[] getSolarFluxes(Product sourceProduct) {
-        // @todo 1 tb/tb write test and implement
-        return new double[0];  //To change body of implemented methods use File | Settings | File Templates.
+        return MEAN_SOLAR_FLUXES;
     }
 
     @Override
     public double[] copySolarFluxes(double[] input, double[] solarFluxes) {
-        // @todo 1 tb/tb write test and implement
-        return new double[0];  //To change body of implemented methods use File | Settings | File Templates.
+        System.arraycopy(solarFluxes, 0, input, Constants.SRC_SOL_FLUX_OFFSET, SPECTRAL_INPUT_BANDS_NAMES.length);
+        return input;
     }
 
     @Override

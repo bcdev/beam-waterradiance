@@ -91,6 +91,45 @@ public class ModisCsvContextTest {
     }
 
     @Test
+    public void testCopyTiePointData() {
+        final double[] inputs = new double[8];
+        final TestSample[] sourceSamples = new TestSample[8];
+        for (int i = 0; i < 8; i++) {
+            sourceSamples[i] = new TestSample();
+            sourceSamples[i].set((double) i + 22);
+        }
+
+        modisCsvConfig.copyTiePointData(inputs, sourceSamples);
+
+        for (int i = 0; i < 8; i++) {
+            assertEquals(i + 22, inputs[i], 1e-8);
+        }
+    }
+
+    @Test
+    public void testGetSolarFluxes() {
+        final double[] expectedFluxes = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737, 1882.428333,
+                1597.176923, 1277.037, 945.3382727};
+
+        final double[] solarFluxes = modisCsvConfig.getSolarFluxes(null);
+        assertArrayEquals(expectedFluxes, solarFluxes, 1e-8);
+    }
+
+    @Test
+    public void testCopySolarFluxes() {
+        double[] input = new double[40];
+        final double[] solarFluxes = new double[8];
+        for (int i = 0; i < solarFluxes.length; i++) {
+            solarFluxes[i] = i + 4;
+        }
+
+        input = modisCsvConfig.copySolarFluxes(input, solarFluxes);
+        for (int i = 0; i < solarFluxes.length; i++) {
+            assertEquals(solarFluxes[i], input[i + 25], 1e-8);
+        }
+    }
+
+    @Test
     public void testCorrectSunAzimuth() {
         assertEquals(19.23, modisCsvConfig.correctSunAzimuth(19.23), 1e-8);
         assertEquals(-11.5, modisCsvConfig.correctSunAzimuth(-11.5), 1e-8);

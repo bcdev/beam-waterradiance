@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertArrayEquals;
 
 public class ModisSensorContextTest {
 
@@ -123,16 +122,24 @@ public class ModisSensorContextTest {
 
     @Test
     public void testGetSolarFluxes() {
+        final double[] expectedResults = new double[]{184.5 * Math.PI, 194.5 * Math.PI, 204.5 * Math.PI, 214.5 * Math.PI, 224.5 * Math.PI, 234.5 * Math.PI, 254.5 * Math.PI, 274.5 * Math.PI, 284.5 * Math.PI};
         final Product product = createProductWithSolarFluxMetadata();
+
         modisSensorConfig.init(product);
+
         final double[] solarFluxes = modisSensorConfig.getSolarFluxes(product);
-        assertEquals(9, solarFluxes.length);
-//        double[] expectedResults = new double[]{184.5 * Math.PI, 194.5 * Math.PI, 204.5 * Math.PI, 214.5 * Math.PI,
-//                224.5 * Math.PI, 234.5 * Math.PI, 254.5 * Math.PI, 274.5 * Math.PI, 284.5 * Math.PI};
-        double[] expectedResults = new double[]{184.5, 194.5, 204.5, 214.5, 224.5, 234.5, 254.5, 274.5, 284.5};
-        for (int i = 0; i < solarFluxes.length; i++) {
-            assertEquals(expectedResults[i], solarFluxes[i], 1e-8);
-        }
+        assertArrayEquals(expectedResults, solarFluxes, 1e-8);
+    }
+
+    @Test
+    public void testGetSolarFluxes_noFluxesInMetadata() {
+        final double[] expectedResults = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737, 1882.428333, 1545.183846, 1507.529167, 1277.037, 945.3382727};
+        final Product product = new Product("No", "flux", 2, 2);
+
+        modisSensorConfig.init(product);
+
+        final double[] solarFluxes = modisSensorConfig.getSolarFluxes(product);
+        assertArrayEquals(expectedResults, solarFluxes, 1e-8);
     }
 
     @Test
@@ -191,8 +198,7 @@ public class ModisSensorContextTest {
             }
         }
         final ProductData productData = ProductData.createInstance(solarFluxes);
-        final MetadataAttribute attribute = new MetadataAttribute("Solar_Irradiance_on_RSB_Detectors_over_pi",
-                productData, true);
+        final MetadataAttribute attribute = new MetadataAttribute("Solar_Irradiance_on_RSB_Detectors_over_pi", productData, true);
         final MetadataElement globalMetadataElement = new MetadataElement("GLOBAL_METADATA");
         globalMetadataElement.addAttribute(attribute);
 
