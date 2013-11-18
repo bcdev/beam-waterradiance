@@ -32,7 +32,7 @@ public interface SensorContext {
 
     double getOzone();
 
-    double getEarthSunDistanceInAE();
+    double getEarthSunDistanceInAU();
 
     void init(Product sourceProduct);
 

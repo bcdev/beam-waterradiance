@@ -201,7 +201,7 @@ public class MerisSensorContextTest {
 
     @Test
     public void testGetEarthSunDistanceInAE() {
-        assertEquals(1.0, merisSensorConfig.getEarthSunDistanceInAE(), 1e-8);
+        assertEquals(1.0, merisSensorConfig.getEarthSunDistanceInAU(), 1e-8);
     }
 
     private void assertBasicSamples(TestSampleConfigurer testSampleConfigurer) {

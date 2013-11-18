@@ -23,6 +23,14 @@ class ModisCsvContext implements SensorContext {
     // retrieved from cahalan table from Kerstin, extended to MODIS
     private static final double[] MEAN_SOLAR_FLUXES = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737, 1882.428333, 1597.176923, 1277.037, 945.3382727};
 
+    private double surfacePressure;
+    private double ozone;
+
+    ModisCsvContext() {
+        surfacePressure = Double.NaN;
+        ozone = Double.NaN;
+    }
+
     @Override
     public Sensor getSensor() {
         return Sensor.MODIS;
@@ -78,14 +86,19 @@ class ModisCsvContext implements SensorContext {
 
     @Override
     public void copyTiePointData(double[] inputs, Sample[] sourceSamples) {
-        inputs[0] = sourceSamples[Constants.SRC_SZA].getDouble();
-        inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();
-        inputs[2] = sourceSamples[Constants.SRC_VZA].getDouble();
-        inputs[3] = sourceSamples[Constants.SRC_VAA].getDouble();
-        inputs[4] = sourceSamples[Constants.SRC_PRESS].getDouble();
-        inputs[5] = sourceSamples[Constants.SRC_OZ].getDouble();
-        inputs[6] = sourceSamples[Constants.SRC_MWIND].getDouble();
-        inputs[7] = sourceSamples[Constants.SRC_ZWIND].getDouble();
+        inputs[Constants.SRC_SZA] = sourceSamples[Constants.SRC_SZA].getDouble();
+        inputs[Constants.SRC_SAA] = sourceSamples[Constants.SRC_SAA].getDouble();
+        inputs[Constants.SRC_VZA] = sourceSamples[Constants.SRC_VZA].getDouble();
+        inputs[Constants.SRC_VAA] = sourceSamples[Constants.SRC_VAA].getDouble();
+        inputs[Constants.SRC_PRESS] = sourceSamples[Constants.SRC_PRESS].getDouble();
+        inputs[Constants.SRC_OZ] = sourceSamples[Constants.SRC_OZ].getDouble();
+        inputs[Constants.SRC_MWIND] = sourceSamples[Constants.SRC_MWIND].getDouble();
+        inputs[Constants.SRC_ZWIND] = sourceSamples[Constants.SRC_ZWIND].getDouble();
+
+        // @todo 2 tb/** need to change the code structure - the getSurfacePressure() method should not rely on another
+        // @todo         method being called before - at least not in this unintuitive way
+        surfacePressure = inputs[Constants.SRC_PRESS];
+        ozone = inputs[Constants.SRC_OZ];
     }
 
     @Override
@@ -101,38 +114,32 @@ class ModisCsvContext implements SensorContext {
 
     @Override
     public double getSurfacePressure() {
-        // @todo 1 tb/tb write test and implement
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return surfacePressure;
     }
 
     @Override
     public double getOzone() {
-        // @todo 1 tb/tb write test and implement
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return ozone;
     }
 
     @Override
-    public double getEarthSunDistanceInAE() {
-        // @todo 1 tb/tb write test and implement
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    public double getEarthSunDistanceInAU() {
+        return 1.0;
     }
 
     @Override
     public void init(Product sourceProduct) {
-        // @todo 1 tb/tb write test and implement
-        //To change body of implemented methods use File | Settings | File Templates.
+        // nothing to do here tb 2013-11-18
     }
 
     @Override
     public int getDetectorIndex(Sample[] samples) {
-        // @todo 1 tb/tb write test and implement
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return -1;
     }
 
     @Override
     public int getTargetSampleOffset() {
-        // @todo 1 tb/tb write test and implement
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return 0;
     }
 
     @Override

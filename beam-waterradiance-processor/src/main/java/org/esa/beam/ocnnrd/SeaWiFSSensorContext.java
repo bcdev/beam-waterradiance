@@ -116,7 +116,7 @@ class SeaWiFSSensorContext implements SensorContext {
     }
 
     @Override
-    public double getEarthSunDistanceInAE() {
+    public double getEarthSunDistanceInAU() {
         return 1;
     }
 

@@ -444,18 +444,20 @@ public class LevMarNN {
 
         } else if (sensorContext.getSensor() == Sensor.MODIS) {
             for (ilam = 0; ilam < nlam; ilam++) {
+                // @ todo 1 tb/tb discuss with TF, seemed to be a bug here tb 2013-11-14
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
-                L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAE(), 2);
+                L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAU(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
                 x[ilam] = rho_tosa_corr[ilam];
             }
         } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             for (ilam = 0; ilam < nlam; ilam++) {
+                // @ todo 1 tb/tb discuss with TF, seemed to be a bug here tb 2013-11-14
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
-                L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAE(), 2);
+                L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAU(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
                 rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
                 x[ilam] = rho_tosa_corr[ilam];

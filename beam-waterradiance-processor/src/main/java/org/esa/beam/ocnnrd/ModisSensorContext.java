@@ -132,7 +132,7 @@ class ModisSensorContext implements SensorContext {
     }
 
     @Override
-    public double getEarthSunDistanceInAE() {
+    public double getEarthSunDistanceInAU() {
         return earthSunDistance;
     }
 

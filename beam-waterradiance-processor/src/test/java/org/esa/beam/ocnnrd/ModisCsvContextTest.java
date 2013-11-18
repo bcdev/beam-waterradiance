@@ -1,5 +1,6 @@
 package org.esa.beam.ocnnrd;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -127,6 +128,57 @@ public class ModisCsvContextTest {
         for (int i = 0; i < solarFluxes.length; i++) {
             assertEquals(solarFluxes[i], input[i + 25], 1e-8);
         }
+    }
+
+    @Test
+    public void testGetSurfacePressure() {
+        final TestSample[] sourceSamples = new TestSample[8];
+        for (int i = 0; i < 8; i++) {
+            sourceSamples[i] = new TestSample();
+            sourceSamples[i].set((double) i + 23);
+        }
+
+        modisCsvConfig.copyTiePointData(new double[8], sourceSamples);
+
+        assertEquals(27.0, modisCsvConfig.getSurfacePressure(), 1e-8);
+    }
+
+    @Test
+    public void testGetSurfacePressure_uninitialized() {
+        Assert.assertTrue(Double.isNaN(modisCsvConfig.getSurfacePressure()));
+    }
+
+    @Test
+    public void testGetOzone() {
+        final TestSample[] sourceSamples = new TestSample[8];
+        for (int i = 0; i < 8; i++) {
+            sourceSamples[i] = new TestSample();
+            sourceSamples[i].set((double) i + 24);
+        }
+
+        modisCsvConfig.copyTiePointData(new double[8], sourceSamples);
+
+        assertEquals(29.0, modisCsvConfig.getOzone(), 1e-8);
+    }
+
+    @Test
+    public void testGetOzone_uninitialized() {
+        Assert.assertTrue(Double.isNaN(modisCsvConfig.getOzone()));
+    }
+
+    @Test
+    public void testEarthSunDistanceInAU() {
+        assertEquals(1.0, modisCsvConfig.getEarthSunDistanceInAU(), 1e-8);
+    }
+
+    @Test
+    public void testGetDetectorIndex() {
+        assertEquals(-1, modisCsvConfig.getDetectorIndex(null));
+    }
+
+    @Test
+    public void testGetTargetSampleOffset() {
+         assertEquals(0, modisCsvConfig.getTargetSampleOffset());
     }
 
     @Test
