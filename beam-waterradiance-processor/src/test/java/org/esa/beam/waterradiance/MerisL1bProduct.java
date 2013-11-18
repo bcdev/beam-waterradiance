@@ -14,12 +14,12 @@ import java.text.ParseException;
 /**
  * @author Marco Peters
  */
-public class MerisL1bProduct {
+class MerisL1bProduct {
 
     private MerisL1bProduct() {
     }
 
-    public static Product create() throws ParseException {
+    static Product create() throws ParseException {
         int width = 10;
         int height = 10;
         Product product = new Product("MER_FR__1P", "MER_FR__1P", width, height);
@@ -69,6 +69,4 @@ public class MerisL1bProduct {
 
         return product;
     }
-
-
 }
