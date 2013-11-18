@@ -4,6 +4,25 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 
+/**
+ * Sensor context that handles OC-CCI RoundRobin I CSV input data for MODIS. CSF file must contain
+ *
+ * Radiance_TOA_412 - TOA Radiance at 412 nm in[W·sr−1·m−2·nm−1]
+ * Radiance_TOA_443 - TOA Radiance at 443 nm in[W·sr−1·m−2·nm−1]
+ * Radiance_TOA_488 - TOA Radiance at 488 nm in[W·sr−1·m−2·nm−1]
+ * Radiance_TOA_531 - TOA Radiance at 531 nm in[W·sr−1·m−2·nm−1]
+ * Radiance_TOA_547 - TOA Radiance at 547 nm in[W·sr−1·m−2·nm−1]
+ * Radiance_TOA_645 - TOA Radiance at 645 nm in[W·sr−1·m−2·nm−1]
+ * Radiance_TOA_748 - TOA Radiance at 748 nm in[W·sr−1·m−2·nm−1]
+ * Radiance_TOA_869 - TOA Radiance at 869 nm in[W·sr−1·m−2·nm−1]
+ * Solar_Zenith     - Solar zenith angle in decimal degrees
+ * Viewing_Zenith   - Sensor zenith angle in decimal degrees
+ * Relative_Azimuth - Sensor and Sun azimuth angle difference
+ * Pressure         - Ground air pressure in [hPa]
+ * Ozone            - Total ozone content  in [DU]
+ * WindSpeedM       - Meridional wind speed in [m/s]
+ * WindSpeedZ       - Zonal wind speed in [m/s]
+ */
 class ModisCsvContext implements SensorContext {
 
     private static final String[] SPECTRAL_INPUT_BANDS_NAMES = {"Radiance_TOA_412",
