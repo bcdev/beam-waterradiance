@@ -101,6 +101,19 @@ class ModisSensorContext implements SensorContext {
     }
 
     @Override
+    public void scaleInputSpectralData(double[] inputs) {
+        // @todo 1 tb/tb convert reflectances to radiances, following the equation
+        // rad = ref * solar_irradiance_over_pi / earth-sun-dist^2
+
+
+        final double oneDivEarthSunDistanceSquare = 1.0 / (earthSunDistance * earthSunDistance);
+        for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            final int index = Constants.INPUT_RAD_OFFSET + i;
+            inputs[index] = inputs[index] * solarFluxes[i] * oneDivEarthSunDistanceSquare / Math.PI;
+        }
+    }
+
+    @Override
     public void copyTiePointData(double[] inputs, Sample[] sourceSamples) {
         inputs[0] = sourceSamples[Constants.SRC_SZA].getDouble();
         inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();

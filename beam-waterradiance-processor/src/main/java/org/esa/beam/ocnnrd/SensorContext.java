@@ -22,6 +22,8 @@ public interface SensorContext {
 
     void configureSourceSamples(SampleConfigurer sampleConfigurer, boolean csvMode);
 
+    void scaleInputSpectralData(double[] inputs);
+
     void copyTiePointData(double[] inputs, Sample[] sourceSamples);
 
     double[] getSolarFluxes(Product sourceProduct);

@@ -104,6 +104,11 @@ class ModisCsvContext implements SensorContext {
     }
 
     @Override
+    public void scaleInputSpectralData(double[] inputs) {
+        // @todo 1 tb/tb check if we need to scale something here tb 2013-11-19
+    }
+
+    @Override
     public void copyTiePointData(double[] inputs, Sample[] sourceSamples) {
         inputs[Constants.SRC_SZA] = sourceSamples[Constants.SRC_SZA].getDouble();
         inputs[Constants.SRC_SAA] = sourceSamples[Constants.SRC_SAA].getDouble();

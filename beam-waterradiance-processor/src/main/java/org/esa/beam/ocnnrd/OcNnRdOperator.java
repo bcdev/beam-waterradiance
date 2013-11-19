@@ -116,6 +116,8 @@ public class OcNnRdOperator extends PixelOperator {
             copyRadiances(input_local, sourceSamples, sensorContext);
             copySolarFluxes(sourceSamples);
 
+            sensorContext.scaleInputSpectralData(input_local);
+
             final int detectorIndex = sensorContext.getDetectorIndex(sourceSamples);
             final double[] output_local = output.get();
             final LevMarNN levMarNN_local = levMarNN.get();

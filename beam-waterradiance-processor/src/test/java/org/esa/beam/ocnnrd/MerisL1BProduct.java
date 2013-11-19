@@ -452,5 +452,14 @@ class MerisL1BProduct {
         assertEquals(0.08081348985433578f, band.getSampleFloat(1, 0), 1e-8);
         assertEquals(0.08320828527212143f, band.getSampleFloat(1, 1), 1e-8);
     }
+
+    static void assertCorrect_Rl_Path_04(Product product) {
+        final Band band = product.getBand("rl_path_4");
+        assertNotNull(band);
+        assertEquals(0.06532929092645645f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.06352116167545319f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.06942687928676605f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.07179448008537292f, band.getSampleFloat(1, 1), 1e-8);
+    }
 }
 

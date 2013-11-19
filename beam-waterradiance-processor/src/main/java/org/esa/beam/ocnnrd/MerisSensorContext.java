@@ -79,6 +79,11 @@ class MerisSensorContext implements SensorContext {
     }
 
     @Override
+    public void scaleInputSpectralData(double[] inputs) {
+        // nothing to scale tb 2013-11-19
+    }
+
+    @Override
     public void copyTiePointData(double[] inputs, Sample[] sourceSamples) {
         inputs[0] = sourceSamples[Constants.SRC_SZA].getDouble();
         inputs[1] = sourceSamples[Constants.SRC_SAA].getDouble();

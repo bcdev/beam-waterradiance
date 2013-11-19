@@ -6,6 +6,9 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.TiePointGrid;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 class ModisL1BProduct {
 
     // creates an in memory product of Type "Modis L1B" with four pixels from the atlantic ocean, handpicked and cloud-free
@@ -162,5 +165,23 @@ class ModisL1BProduct {
         tiePointData[2] = -102.08755f;
         tiePointData[3] = -99.980995f;
         modisL1BProduct.addTiePointGrid(new TiePointGrid("SensorAzimuth", 2, 2, 0, 0, 1, 1, tiePointData));
+    }
+
+    static void assertCorrect_Rl_Tosa_01(Product product) {
+        final Band band = product.getBand("rl_tosa_1");
+        assertNotNull(band);
+        assertEquals(0.050456270575523376f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.05268685147166252f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.049439869821071625f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.05097590759396553f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Path_01(Product product) {
+        final Band band = product.getBand("rl_path_1");
+        assertNotNull(band);
+        assertEquals(0.1310219168663025f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.14602580666542053f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.12967641651630402f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.1798158884048462f, band.getSampleFloat(1, 1), 1e-8);
     }
 }
