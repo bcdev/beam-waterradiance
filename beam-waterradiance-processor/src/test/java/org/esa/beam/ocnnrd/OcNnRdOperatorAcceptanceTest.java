@@ -11,7 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 public class OcNnRdOperatorAcceptanceTest {
 
@@ -48,33 +49,58 @@ public class OcNnRdOperatorAcceptanceTest {
     public void testMerisL1B() throws IOException {
         final Product merisL1BProduct = MerisL1BProduct.create();
 
+        Product savedProduct = null;
         final Product target = GPF.createProduct("OCNNRD", GPF.NO_PARAMS, merisL1BProduct);
 
-        final String targetProductPath = testOutDirectory.getAbsolutePath() + File.separator + "OcNnRd_meris.dim";
-        ProductIO.writeProduct(target, targetProductPath, "BEAM-DIMAP");
-
-        final Product product = ProductIO.readProduct(targetProductPath);
-        assertNotNull(product);
         try {
-            MerisL1BProduct.assertCorrect_Rl_Tosa_01(product);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_02(product);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_03(product);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_04(product);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_05(product);
+            final String targetProductPath = testOutDirectory.getAbsolutePath() + File.separator + "OcNnRd_meris.dim";
+            ProductIO.writeProduct(target, targetProductPath, "BEAM-DIMAP");
+
+            savedProduct = ProductIO.readProduct(targetProductPath);
+            assertNotNull(savedProduct);
+
+            MerisL1BProduct.assertCorrect_Rl_Tosa_01(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_02(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_03(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_04(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_05(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_06(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_07(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_08(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_09(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_10(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_12(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Tosa_13(savedProduct);
+
+            MerisL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Path_02(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Path_03(savedProduct);
         } finally {
             target.dispose();
-            product.dispose();
+            if (savedProduct != null) {
+                savedProduct.dispose();
+            }
         }
     }
 
-    // @todo 1 tb/tb continue here tb 2013-11-18
-//    @Test
-//    public void testModisL1B() throws IOException {
-//        final Product modisL1BProduct = ModisL1BProduct.create();
-//
-//        final Product target = GPF.createProduct("OCNNRD", GPF.NO_PARAMS, modisL1BProduct);
-//
-//        final String targetProductPath = testOutDirectory.getAbsolutePath() + File.separator + "OcNnRd_modis.dim";
-//        ProductIO.writeProduct(target, targetProductPath, "BEAM-DIMAP");
-//    }
+    @Test
+    public void testModisL1B() throws IOException {
+        final Product modisL1BProduct = ModisL1BProduct.create();
+
+        Product savedProduct = null;
+        final Product target = GPF.createProduct("OCNNRD", GPF.NO_PARAMS, modisL1BProduct);
+
+        try {
+            final String targetProductPath = testOutDirectory.getAbsolutePath() + File.separator + "OcNnRd_modis.dim";
+            ProductIO.writeProduct(target, targetProductPath, "BEAM-DIMAP");
+
+            savedProduct = ProductIO.readProduct(targetProductPath);
+            assertNotNull(savedProduct);
+        } finally {
+            target.dispose();
+            if (savedProduct != null) {
+                savedProduct.dispose();
+            }
+        }
+    }
 }

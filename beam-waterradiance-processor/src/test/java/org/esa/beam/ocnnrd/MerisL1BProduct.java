@@ -362,96 +362,95 @@ class MerisL1BProduct {
         assertEquals(0.014410327188670635f, band.getSampleFloat(1, 0), 1e-8);
         assertEquals(0.015470479615032673f, band.getSampleFloat(1, 1), 1e-8);
     }
+
+    static void assertCorrect_Rl_Tosa_06(Product product) {
+        final Band band = product.getBand("rl_tosa_6");
+        assertNotNull(band);
+        assertEquals(0.00933693628758192f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.00951949879527092f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.00925732497125864f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.010187982581555843f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Tosa_07(Product product) {
+        final Band band = product.getBand("rl_tosa_7");
+        assertNotNull(band);
+        assertEquals(0.007233708165585995f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.007278947625309229f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.007144390605390072f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0080880057066679f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Tosa_08(Product product) {
+        final Band band = product.getBand("rl_tosa_8");
+        assertNotNull(band);
+        assertEquals(0.006648535840213299f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.006700865924358368f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.006547912023961544f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.007496106904000044f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Tosa_09(Product product) {
+        final Band band = product.getBand("rl_tosa_9");
+        assertNotNull(band);
+        assertEquals(0.005823937710374594f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.0057051461189985275f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.005722174886614084f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.006619449704885483f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Tosa_10(Product product) {
+        final Band band = product.getBand("rl_tosa_10");
+        assertNotNull(band);
+        assertEquals(0.004694788716733456f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.0046753049828112125f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.004643902648240328f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.005541970953345299f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Tosa_12(Product product) {
+        final Band band = product.getBand("rl_tosa_12");
+        assertNotNull(band);
+        assertEquals(0.004122256767004728f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.003998724278062582f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.004002106375992298f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0049418555572628975f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Tosa_13(Product product) {
+        final Band band = product.getBand("rl_tosa_13");
+        assertNotNull(band);
+        assertEquals(0.002986186882480979f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.0028321947902441025f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.0028659545350819826f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.003792061936110258f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Path_01(Product product) {
+        final Band band = product.getBand("rl_path_1");
+        assertNotNull(band);
+        assertEquals(0.1460312008857727f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.1418505311012268f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.1535067856311798f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.15570786595344543f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Path_02(Product product) {
+        final Band band = product.getBand("rl_path_2");
+        assertNotNull(band);
+        assertEquals(0.1123882606625557f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.10912559926509857f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.11868877708911896f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.12105292826890945f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Rl_Path_03(Product product) {
+        final Band band = product.getBand("rl_path_3");
+        assertNotNull(band);
+        assertEquals(0.07614742964506149f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.07401028275489807f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.08081348985433578f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.08320828527212143f, band.getSampleFloat(1, 1), 1e-8);
+    }
 }
 
-/*
-Product:	MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1
-
-        Longitude:	4°17'37" W	degree
-        Latitude:	17°05'53" S	degree
-
-        latitude:	-17.098043	deg
-        longitude:	-4.293637	deg
-        dem_alt:	-4659.4766	m
-        dem_rough:	0.0	m
-        lat_corr:	0.0	deg
-        lon_corr:	0.0	deg
-        rel_hum:	67.5875	%
-
-        l1_flags.COSMETIC:	false
-        l1_flags.DUPLICATED:	false
-        l1_flags.GLINT_RISK:	false
-        l1_flags.SUSPECT:	false
-        l1_flags.LAND_OCEAN:	false
-        l1_flags.BRIGHT:	false
-        l1_flags.COASTLINE:	false
-        l1_flags.INVALID:	false
-
-Product:	MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1
-
-Longitude:	3°54'51" W	degree
-Latitude:	17°22'17" S	degree
-
-
-latitude:	-17.371317	deg
-longitude:	-3.9141836	deg
-dem_alt:	-4728.5273	m
-dem_rough:	0.0	m
-lat_corr:	0.0	deg
-lon_corr:	0.0	deg
-rel_hum:	67.4375	%
-
-l1_flags.COSMETIC:	false
-l1_flags.DUPLICATED:	false
-l1_flags.GLINT_RISK:	false
-l1_flags.SUSPECT:	false
-l1_flags.LAND_OCEAN:	false
-l1_flags.BRIGHT:	false
-l1_flags.COASTLINE:	false
-l1_flags.INVALID:	false
-
-Product:	MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1
-
-Longitude:	6°15'48" W	degree
-Latitude:	17°28'56" S	degree
-
-latitude:	-17.482208	deg
-longitude:	-6.263358	deg
-dem_alt:	-4176.078	m
-dem_rough:	0.0	m
-lat_corr:	0.0	deg
-lon_corr:	0.0	deg
-rel_hum:	67.425	%
-
-l1_flags.COSMETIC:	false
-l1_flags.DUPLICATED:	false
-l1_flags.GLINT_RISK:	false
-l1_flags.SUSPECT:	false
-l1_flags.LAND_OCEAN:	false
-l1_flags.BRIGHT:	false
-l1_flags.COASTLINE:	false
-l1_flags.INVALID:	false
-
-Product:	MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1
-
-Longitude:	4°52'27" W	degree
-Latitude:	18°53'08" S	degree
-
-latitude:	-18.88558	deg
-longitude:	-4.874035	deg
-dem_alt:	-5137.375	m
-dem_rough:	0.0	m
-lat_corr:	0.0	deg
-lon_corr:	0.0	deg
-rel_hum:	68.425	%
-
-l1_flags.COSMETIC:	false
-l1_flags.DUPLICATED:	false
-l1_flags.GLINT_RISK:	false
-l1_flags.SUSPECT:	false
-l1_flags.LAND_OCEAN:	false
-l1_flags.BRIGHT:	false
-l1_flags.COASTLINE:	false
-l1_flags.INVALID:	false
-
-*/
