@@ -4,7 +4,10 @@ package org.esa.beam.waterradiance.realoptimizers;
 class NnWater {
 
     // todo 3 tb/tb duplicated all over the code :-(
-    private static int[] lam29_meris11_ix = {1, 2, 4, 6, 11, 12, 15, 20, 22, 24, 25};
+    private static final int[] lam29_meris11_ix = {1, 2, 4, 6, 11, 12, 15, 20, 22, 24, 25};
+    private static final int[] lam29_modis9_ix = {1, 2, 4, 8, 9, 15, 18, 21, 26};
+    private static final int[] lam29_seawifs8_ix = {1, 2, 4, 6, 10, 16, 23, 25};
+
     private final double[] innet;
     private double[] outnet;
 
@@ -46,6 +49,16 @@ class NnWater {
         if (n == 11) {
             for (int ilam = 0; ilam < n; ilam++) {
                 final int ix = lam29_meris11_ix[ilam];
+                rlw_nn[ilam] = outnet[ix];
+            }
+        } else if (n == 9) {
+            for (int ilam = 0; ilam < n; ilam++) {
+                final int ix = lam29_modis9_ix[ilam];
+                rlw_nn[ilam] = outnet[ix];
+            }
+        } else if (n == 8) {
+            for (int ilam = 0; ilam < n; ilam++) {
+                final int ix = lam29_seawifs8_ix[ilam];
                 rlw_nn[ilam] = outnet[ix];
             }
         } else {
