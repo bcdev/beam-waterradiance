@@ -10,6 +10,7 @@ class s_nn_atdata {
 
     private double sun_thet;    //   =nn_at_data[1];
     double view_zeni; //  =nn_at_data[2];
+    double view_azi;
     double azi_diff_hl; //=nn_at_data[3];
     double temperature; //=nn_at_data[4];
     double salinity; //   =nn_at_data[5];
@@ -37,6 +38,10 @@ class s_nn_atdata {
 
     public double getView_zeni() {
         return view_zeni;
+    }
+
+    public double getView_azi() {
+        return view_azi;
     }
 
     public void setView_zeni(double view_zeni) {

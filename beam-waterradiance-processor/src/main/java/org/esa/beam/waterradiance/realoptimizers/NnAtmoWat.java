@@ -85,10 +85,18 @@ class NnAtmoWat {
         final double elevation = DEG_2_RAD * view_zeni;
 
         final double sin_elevation = Math.sin(elevation);
-        final double x = sin_elevation * Math.cos(azimuth);
-        final double y = sin_elevation * Math.sin(azimuth);
-        final double z = Math.cos(elevation);
-
+        double x;
+        double y;
+        double z;
+        if (rtosa_nn.length != 9) {
+            x = sin_elevation * Math.cos(azimuth);
+            y = sin_elevation * Math.sin(azimuth);
+            z = Math.cos(elevation);
+        } else {
+            x = sin_elevation * Math.cos(DEG_2_RAD * nn_data.getView_azi());
+            y = sin_elevation * Math.sin(DEG_2_RAD * nn_data.getView_azi());
+            z = Math.cos(elevation);
+        }
 
         final double log_aot = conc_all[0];
         final double log_ang = conc_all[1];

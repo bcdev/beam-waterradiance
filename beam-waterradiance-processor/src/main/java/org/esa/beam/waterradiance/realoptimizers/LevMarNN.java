@@ -9,7 +9,11 @@ import org.esa.beam.siocs.abstractprocessor.ForwardModel;
 import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class LevMarNN {
 
@@ -256,6 +260,7 @@ public class LevMarNN {
         // nn_at_data[0]= -1.0; // prepare
         nn_at_data.setSun_thet(sun_zenith);
         nn_at_data.view_zeni = view_zeni = view_zenith;
+        nn_at_data.view_azi = view_azimuth;
         nn_at_data.azi_diff_hl = azi_diff_hl = delta_azimuth;
         nn_at_data.temperature = temperature;
         nn_at_data.salinity = salinity;
