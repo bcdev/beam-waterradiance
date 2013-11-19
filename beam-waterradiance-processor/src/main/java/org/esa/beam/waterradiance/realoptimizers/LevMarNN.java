@@ -26,7 +26,6 @@ public class LevMarNN {
     private double[][] rredtoa = new double[FR_TAB][15];
 
     private static final int NLAM = 40;
-    private static final int LM_INFO_SZ = 10;
 
     private static final double[] H_2_O_COR_POLY = new double[]{0.3832989, 1.6527957, -1.5635101, 0.5311913};
 
@@ -69,7 +68,6 @@ public class LevMarNN {
     private double[] p_init;
 
     private final double[] nn_in;
-    private final double[] info;
     private final double[] rlw1;
     private final double[] rlw2;
     private final double[] L_toa;
@@ -101,7 +99,6 @@ public class LevMarNN {
         rl_toa = new double[NLAM];
         nn_in = new double[NLAM];
         nn_out = new double[40];
-        info = new double[LM_INFO_SZ];
 
 //        double[] rwn1 = new double[40];
 //        double[] rwn2 = new double[40];
@@ -444,7 +441,6 @@ public class LevMarNN {
 
         } else if (sensorContext.getSensor() == Sensor.MODIS) {
             for (ilam = 0; ilam < nlam; ilam++) {
-                // @ todo 1 tb/tb discuss with TF, seemed to be a bug here tb 2013-11-14
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAU(), 2);
@@ -454,7 +450,6 @@ public class LevMarNN {
             }
         } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
             for (ilam = 0; ilam < nlam; ilam++) {
-                // @ todo 1 tb/tb discuss with TF, seemed to be a bug here tb 2013-11-14
                 L_tosa[ilam] = L_toa[ilam] / trans_ozon[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAU(), 2);
@@ -959,6 +954,5 @@ public class LevMarNN {
         public Matrix getJacobianMatrix() {
             return null;
         }
-
     }
 }

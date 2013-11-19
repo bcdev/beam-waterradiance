@@ -74,6 +74,11 @@ class ModisSensorContext implements SensorContext {
         return SPECTRAL_OUTPUT_INDEXES;
     }
 
+    /**
+     * Retrieves the center wavelengths for the output spectral bands in [nm]
+     *
+     * @return the array of wavelengths
+     */
     @Override
     public float[] getSpectralOutputWavelengths() {
         return SPECTRAL_OUTPUT_WAVELENGTHS;
@@ -100,12 +105,16 @@ class ModisSensorContext implements SensorContext {
         }
     }
 
+    /**
+     * Scales the input spectral data to be consistent with the MERIS case. Resulting data should be TOA radiance in
+     *      [mW/(m^2 * sr * nm)] or [LU], i.e. Luminance Unit
+     * Scaling is performed "in place", if necessary
+     *
+     * @param inputs input data vector
+     */
     @Override
     public void scaleInputSpectralData(double[] inputs) {
-        // @todo 1 tb/tb convert reflectances to radiances, following the equation
-        // rad = ref * solar_irradiance_over_pi / earth-sun-dist^2
-
-
+        // @todo 1 tb/** write test tb 2013-11-19
         final double oneDivEarthSunDistanceSquare = 1.0 / (earthSunDistance * earthSunDistance);
         for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             final int index = Constants.INPUT_RAD_OFFSET + i;

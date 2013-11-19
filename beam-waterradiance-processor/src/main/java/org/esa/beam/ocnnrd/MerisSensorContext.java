@@ -36,6 +36,11 @@ class MerisSensorContext implements SensorContext {
         return SPECTRAL_OUTPUT_INDEXES;
     }
 
+    /**
+     * Retrieves the center wavelengths for the output spectral bands in [nm]
+     *
+     * @return the array of wavelengths
+     */
     @Override
     public float[] getSpectralOutputWavelengths() {
         return SPECTRAL_OUTPUT_WAVELENGTHS;
@@ -78,6 +83,13 @@ class MerisSensorContext implements SensorContext {
         }
     }
 
+    /**
+     * Scales the input spectral data to be consistent with the MERIS case. Resulting data should be TOA radiance in
+     *      [mW/(m^2 * sr * nm)] or [LU], i.e. Luminance Unit
+     * Scaling is performed "in place", if necessary
+     *
+     * @param inputs input data vector
+     */
     @Override
     public void scaleInputSpectralData(double[] inputs) {
         // nothing to scale tb 2013-11-19

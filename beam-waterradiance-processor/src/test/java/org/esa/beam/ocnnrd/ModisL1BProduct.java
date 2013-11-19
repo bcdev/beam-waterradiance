@@ -19,7 +19,7 @@ class ModisL1BProduct {
     // [1] :    [545, 831]
     // [2] :    [693, 903]
     // [3] :    [808, 582]
-
+    //
     static Product create() {
         final Product modisL1BProduct = new Product("Modis L1B", "MODIS Level 1B", 2, 2);
 
