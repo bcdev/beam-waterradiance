@@ -73,7 +73,9 @@ $timeOzone1.add(5, 1)
 #set( $ozonePath0 = $GlobalFunctions.formatDate($ozonePathFormat, $timeOzone0.time) )
 #set( $ozonePath1 = $GlobalFunctions.formatDate($ozonePathFormat, $timeOzone1.time) )
 
-#if ( !($fs.exists($GlobalFunctions.createPath($ozonePath0)) || $fs.exist($GlobalFunctions.createPath($ozonePath1))) )
+#set( $ozone0Exists = $fs.exists($GlobalFunctions.createPath($ozonePath0)) )
+#set( $ozone1Exists = $fs.exists($GlobalFunctions.createPath($ozonePath1)) )
+#if ( !($ozone0Exists && $ozone1Exists) )
   ozonePath0=$ozonePath0
   ozonePath1=$ozonePath1
   CALVALUS_SKIP_PROCESSING yes
