@@ -39,14 +39,14 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     @Override
     public double getOzone(Date date, double lat, double lon) throws IOException {
         String id = null;
-        if (date.before(date_of_last_TOMS_product)) {
+        if (date.before(date_of_first_OMI_product)) {
             final int xPos = MathUtils.floorInt(lat * 0.8);
             final int yPos = MathUtils.floorInt(lon);
             id = date.toString() + xPos + yPos;
             if (ozoneMap.containsKey(id)) {
                 return ozoneMap.get(id);
             }
-        } else if (date.after(date_of_first_OMI_product)) {
+        } else if (date.after(date_of_last_TOMS_product)) {
             final int xPos = MathUtils.floorInt(lat);
             final int yPos = MathUtils.floorInt(lon);
             id = date.toString() + xPos + yPos;
@@ -106,7 +106,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     private double getOzone(float lat, float lon, Product product) throws IOException {
         final int xPos = MathUtils.floorInt(lat);
         final int yPos = MathUtils.floorInt(lon);
-        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(xPos, yPos);
+        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(xPos, yPos, true);
         if (product.getSceneRasterWidth() == 288) {
             pixelPos.setLocation(pixelPos.getX() * 0.8, pixelPos.getY());
         }
@@ -167,7 +167,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     private double getSurfacePressure(float lat, float lon, Product product) throws IOException {
         final int xPos = MathUtils.floorInt(lon);
         int yPos = MathUtils.floorInt(lat);
-        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(yPos, xPos);
+        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(yPos, xPos, false);
         return Double.parseDouble(product.getBand(SURFACE_PRESSURE_BAND_NAME).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
     }
 

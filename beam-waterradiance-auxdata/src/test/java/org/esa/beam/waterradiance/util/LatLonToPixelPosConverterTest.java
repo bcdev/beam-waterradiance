@@ -13,19 +13,38 @@ public class LatLonToPixelPosConverterTest {
 
     @Test
     public void testGetAuxPixelPos() {
-        PixelPos auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(88, -177);
+        PixelPos auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(88, -177, false);
         assertEquals(2.0, auxPixelPos.getY(), 1e-8);
         assertEquals(3.0, auxPixelPos.getX(), 1e-8);
 
-        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(87, 178);
+        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(87, 178, false);
         assertEquals(3.0, auxPixelPos.getY(), 1e-8);
         assertEquals(358.0, auxPixelPos.getX(), 1e-8);
 
-        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(-88, -178);
+        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(-88, -178, false);
         assertEquals(178.0, auxPixelPos.getY(), 1e-8);
         assertEquals(2.0, auxPixelPos.getX(), 1e-8);
 
-        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(-87, 177);
+        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(-87, 177, false);
+        assertEquals(177.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(357.0, auxPixelPos.getX(), 1e-8);
+    }
+
+    @Test
+    public void testGetAuxPixelPosWithVerticalFlip() {
+        PixelPos auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(-88, -177, true);
+        assertEquals(2.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(3.0, auxPixelPos.getX(), 1e-8);
+
+        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(-87, 178, true);
+        assertEquals(3.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(358.0, auxPixelPos.getX(), 1e-8);
+
+        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(88, -178, true);
+        assertEquals(178.0, auxPixelPos.getY(), 1e-8);
+        assertEquals(2.0, auxPixelPos.getX(), 1e-8);
+
+        auxPixelPos = LatLonToPixelPosConverter.getAuxPixelPos(87, 177, true);
         assertEquals(177.0, auxPixelPos.getY(), 1e-8);
         assertEquals(357.0, auxPixelPos.getX(), 1e-8);
     }

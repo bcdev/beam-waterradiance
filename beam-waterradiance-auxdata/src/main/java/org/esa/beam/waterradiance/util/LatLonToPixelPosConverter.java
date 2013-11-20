@@ -4,9 +4,14 @@ import org.esa.beam.framework.datamodel.PixelPos;
 
 public class LatLonToPixelPosConverter {
 
-    public static PixelPos getAuxPixelPos(int lat, int lon) {
+    public static PixelPos getAuxPixelPos(int lat, int lon, boolean flipVertical) {
         PixelPos pixelPos = new PixelPos();
-        float pixelY = 180 - (lat + 90);
+        float pixelY;
+        if(flipVertical) {
+            pixelY = lat + 90;
+        } else {
+            pixelY = 180 - (lat + 90);
+        }
         float pixelX = lon + 180;
         pixelPos.setLocation(pixelX, pixelY);
         return pixelPos;

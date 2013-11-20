@@ -77,7 +77,7 @@ public class NO2AuxdataImpl implements NO2Auxdata {
     public double getNO2Frac(double lat, double lon) throws Exception {
         final int xPos = MathUtils.floorInt(lat);
         final int yPos = MathUtils.floorInt(lon);
-        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(xPos, yPos);
+        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(xPos, yPos, false);
         return Double.parseDouble(fracProduct.getBand(fracBandName).getPixelString((int) pixelPos.getX() / 2, (int) pixelPos.getY() / 2));
     }
 

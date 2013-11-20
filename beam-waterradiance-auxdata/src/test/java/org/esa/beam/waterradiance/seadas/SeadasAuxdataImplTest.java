@@ -50,7 +50,7 @@ public class SeadasAuxdataImplTest {
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
 
         try {
-            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 38, -76);
+            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), -38, -76);
             assertEquals(297.0, ozone, 1e-8);
         } catch (Exception unexpected) {
             fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
@@ -65,7 +65,7 @@ public class SeadasAuxdataImplTest {
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
 
         try {
-            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), 38, -76);
+            final double ozone = seadasAuxdata.getOzone(calendar.getTime(), -38, -76);
             assertEquals(309.0, ozone, 1e-8);
         } finally {
             seadasAuxdata.dispose();
@@ -81,15 +81,15 @@ public class SeadasAuxdataImplTest {
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(tomsomiStartProduct, tomsomiEndProduct,
                 ncepStartProduct, ncepEndProduct);
         Calendar calendar = createCalendar(2005, Calendar.JUNE, 15, 12);
-        double ozone = seadasAuxdata.getOzone(calendar.getTime(), 2, 0);
+        double ozone = seadasAuxdata.getOzone(calendar.getTime(), -2, 0);
         Assert.assertEquals(261, ozone, 1e-8);
 
         calendar = createCalendar(2008, Calendar.NOVEMBER, 10, 0);
-        ozone = seadasAuxdata.getOzone(calendar.getTime(), 2, 0);
+        ozone = seadasAuxdata.getOzone(calendar.getTime(), -2, 0);
         Assert.assertEquals(260, ozone, 1e-8);
 
         calendar = createCalendar(2012, Calendar.APRIL, 6, 12);
-        ozone = seadasAuxdata.getOzone(calendar.getTime(), 2, 0);
+        ozone = seadasAuxdata.getOzone(calendar.getTime(), -2, 0);
         Assert.assertEquals(259, ozone, 1e-8);
     }
 
