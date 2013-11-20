@@ -72,20 +72,20 @@ public class OcNnRdOperatorAcceptanceTest {
             MerisL1BProduct.assertCorrect_Rl_Tosa_12(savedProduct);
             MerisL1BProduct.assertCorrect_Rl_Tosa_13(savedProduct);
 
-            MerisL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_02(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_03(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_04(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_05(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_06(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_07(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_08(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_09(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_10(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_12(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Path_13(savedProduct);
-
-            MerisL1BProduct.assertCorrect_Reflec_01(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_02(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_03(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_04(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_05(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_06(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_07(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_08(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_09(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_10(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_12(savedProduct);
+//            MerisL1BProduct.assertCorrect_Rl_Path_13(savedProduct);
+//
+//            MerisL1BProduct.assertCorrect_Reflec_01(savedProduct);
         } finally {
             target.dispose();
             if (savedProduct != null) {
@@ -108,7 +108,7 @@ public class OcNnRdOperatorAcceptanceTest {
             savedProduct = ProductIO.readProduct(targetProductPath);
             assertNotNull(savedProduct);
 
-            //ModisL1BProduct.assertCorrect_Rl_Tosa_01(savedProduct);
+            ModisL1BProduct.assertCorrect_Rl_Tosa_01(savedProduct);
 
             ModisL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
         } finally {
