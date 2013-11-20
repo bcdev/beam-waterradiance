@@ -55,7 +55,7 @@ public class SeadasAuxdataImplTest {
 
         try {
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), -38, -76);
-            assertEquals(299.1226806640625, ozone, 1e-8);
+            assertEquals(298.68766021728516, ozone, 1e-8);
         } catch (Exception unexpected) {
             fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
         } finally {
@@ -70,7 +70,7 @@ public class SeadasAuxdataImplTest {
 
         try {
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), -38, -76);
-            assertEquals(313.3702392578125, ozone, 1e-8);
+            assertEquals(312.5002975463867, ozone, 1e-8);
         } finally {
             seadasAuxdata.dispose();
         }
@@ -86,11 +86,11 @@ public class SeadasAuxdataImplTest {
                 ncepStartProduct, ncepEndProduct);
         Calendar calendar = createCalendar(2005, Calendar.JUNE, 15, 12);
         double ozone = seadasAuxdata.getOzone(calendar.getTime(), -2, 0);
-        Assert.assertEquals(261.4994201660156, ozone, 1e-8);
+        Assert.assertEquals(261.5, ozone, 1e-8);
 
         calendar = createCalendar(2008, Calendar.NOVEMBER, 10, 0);
         ozone = seadasAuxdata.getOzone(calendar.getTime(), -2, 0);
-        Assert.assertEquals(260.1247100830078, ozone, 1e-8);
+        Assert.assertEquals(260.125, ozone, 1e-8);
 
         calendar = createCalendar(2012, Calendar.APRIL, 6, 12);
         ozone = seadasAuxdata.getOzone(calendar.getTime(), -2, 0);
@@ -134,24 +134,24 @@ public class SeadasAuxdataImplTest {
         final SeadasAuxdataImpl seadasAuxdata = SeadasAuxdataImpl.create(auxDirectoryURL.getPath());
         try {
             Calendar calendar = createCalendar(2005, Calendar.JUNE, 16, 6);
-            double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 39, 2);
-            assertEquals(1021.36, surfacePressure, 1e-8);
+            double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 39.5, 2.5);
+            assertEquals(1021.364990234375, surfacePressure, 1e-8);
 
             calendar = createCalendar(2005, Calendar.JUNE, 16, 1);
             surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -8, -34);
-            assertEquals(1015.3233333333333, surfacePressure, 1e-8);
+            assertEquals(1015.249979654948, surfacePressure, 1e-8);
 
             calendar = createCalendar(2005, Calendar.JUNE, 15, 22);
             surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -8, -34);
-            assertEquals(1014.3233333333333, surfacePressure, 1e-8);
+            assertEquals(1014.1324564615885, surfacePressure, 1e-8);
 
             calendar = createCalendar(2005, Calendar.JUNE, 16, 10);
             surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -2, -21);
-            assertEquals(1014.1166666666667, surfacePressure, 1e-8);
+            assertEquals(1014.0233154296875, surfacePressure, 1e-8);
 
             calendar = createCalendar(2005, Calendar.JUNE, 16, 19);
             surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 4, -2);
-            assertEquals(1013.4466666666667, surfacePressure, 1e-8);
+            assertEquals(1013.5266723632812, surfacePressure, 1e-8);
         } finally {
             seadasAuxdata.dispose();
         }
@@ -163,7 +163,7 @@ public class SeadasAuxdataImplTest {
         try {
             Calendar calendar = createCalendar(2012, Calendar.APRIL, 6, 18);
             double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 57, -33);
-            assertEquals(1023.71218, surfacePressure, 1e-8);
+            assertEquals(1022.4712829589844, surfacePressure, 1e-8);
         } finally {
             seadasAuxdata.dispose();
         }
@@ -189,15 +189,15 @@ public class SeadasAuxdataImplTest {
         calendar.set(Calendar.MILLISECOND, 0);
         calendar.set(2005, Calendar.JUNE, 15, 21, 0, 0);
         double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 10, -9);
-        Assert.assertEquals(1012.17, surfacePressure, 1e-8);
+        Assert.assertEquals(1012.0399780273438, surfacePressure, 1e-8);
 
         calendar.set(2008, Calendar.NOVEMBER, 10, 6, 0, 0);
         surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 10, -9);
-        Assert.assertEquals(1011.17, surfacePressure, 1e-8);
+        Assert.assertEquals(1011.0234680175781, surfacePressure, 1e-8);
 
         calendar.set(2012, Calendar.APRIL, 6, 15, 0, 0);
         surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 10, -9);
-        Assert.assertEquals(1010.17, surfacePressure, 1e-8);
+        Assert.assertEquals(1010.0069580078125, surfacePressure, 1e-8);
     }
 
     @Test
@@ -340,11 +340,11 @@ public class SeadasAuxdataImplTest {
         }
         band.setSourceImage(sourceImage);
 
-        assertEquals(0, SeadasAuxdataImpl.interpolate(band, 0, 0, 0.5, 0.5), 1e-8);
-        assertEquals(9, SeadasAuxdataImpl.interpolate(band, 1, 2, 1.5, 2.5), 1e-8);
-        assertEquals(2.5, SeadasAuxdataImpl.interpolate(band, 0, 0, 1.0, 1.0), 1e-8);
-        assertEquals(5.5, SeadasAuxdataImpl.interpolate(band, 1, 1, 2.0, 1.5), 1e-8);
-        assertEquals(11.161919593811035, SeadasAuxdataImpl.interpolate(band, 2, 2, 2.75, 2.75), 1e-8);
+        assertEquals(0, SeadasAuxdataImpl.interpolate(band, 0.5, 0.5), 1e-8);
+        assertEquals(9, SeadasAuxdataImpl.interpolate(band, 1.5, 2.5), 1e-8);
+        assertEquals(2.5, SeadasAuxdataImpl.interpolate(band, 1.0, 1.0), 1e-8);
+        assertEquals(5.5, SeadasAuxdataImpl.interpolate(band, 2.0, 1.5), 1e-8);
+        assertEquals(11.161919593811035, SeadasAuxdataImpl.interpolate(band, 2.75, 2.75), 1e-8);
     }
 
     private Product getProduct(String productString) throws IOException {

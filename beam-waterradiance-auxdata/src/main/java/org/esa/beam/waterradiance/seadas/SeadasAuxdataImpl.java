@@ -19,7 +19,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     private static final long MILLI_SECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
     private final Calendar utcCalendar;
-    private final Map<String, Double> surfacePressureMap;
     private AuxProductsProvider auxProductsProvider;
     private static final int[] months = new int[]{Calendar.JANUARY, Calendar.FEBRUARY, Calendar.MARCH, Calendar.APRIL,
             Calendar.MAY, Calendar.JUNE, Calendar.JULY, Calendar.AUGUST, Calendar.SEPTEMBER, Calendar.OCTOBER,
@@ -47,79 +46,65 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     @Override
     public double getSurfacePressure(Date date, double lat, double lon) throws Exception {
-        final int xPos = MathUtils.floorInt(lon);
-        final int yPos = MathUtils.floorInt(lat);
-        String id = date.toString() + xPos + yPos;
-        if (surfacePressureMap.containsKey(id)) {
-            return surfacePressureMap.get(id);
-        }
-
         setCalendar(date);
-
         final SeadasAuxDataProducts ncepProducts = auxProductsProvider.getNCEPProducts(date);
         final double fraction = getDateFraction(utcCalendar, 0.125, ncepProducts.getStartProduct(),
                 ncepProducts.getEndProduct());
-
         final double startSurfacePressure = getSurfacePressure((float) lat, (float) lon, ncepProducts.getStartProduct());
         final double endSurfacePressure = getSurfacePressure((float) lat, (float) lon, ncepProducts.getEndProduct());
         final double surfacePressure = (1.0 - fraction) * startSurfacePressure + fraction * endSurfacePressure;
-
-        if (!surfacePressureMap.containsKey(id)) {
-            surfacePressureMap.put(id, surfacePressure);
-        }
-
         return surfacePressure;
     }
 
     @Override
     public void dispose() {
-        surfacePressureMap.clear();
+        auxProductsProvider.dispose();
     }
 
     private double getOzone(float lat, float lon, Product product) throws IOException {
-        final int xPos = MathUtils.floorInt(lat);
-        final int yPos = MathUtils.floorInt(lon);
-        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(xPos, yPos, true);
+        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(lat, lon, true);
         if (product.getSceneRasterWidth() == 288) {
             pixelPos.setLocation(pixelPos.getX() * 0.8, pixelPos.getY());
         }
         if (product.containsPixel(pixelPos)) {
             final Band ozoneBand = product.getBand(OZONE_BAND_NAME);
-            return interpolate(ozoneBand, (int)pixelPos.getX(), (int)pixelPos.getY(), lat, lon);
+            return interpolate(ozoneBand, pixelPos.getX(), pixelPos.getY());
         }
         return Double.NaN;
     }
 
     // package access for testing only tf 2013-11-20
-    static float interpolate(Band band, int pixelX, int pixelY, double lat, double lon) {
-        List<Float> ozoneValues = new ArrayList<Float>();
+    static float interpolate(Band band, double pixelX, double pixelY) {
+        List<Float> pixelValues = new ArrayList<Float>();
         List<Double> weights = new ArrayList<Double>();
-        int xStart = (lat - pixelX >= 0.5) ? 0 : -1;
-        int xEnd = (lat - pixelX <= 0.5) ? 0 : 1;
-        int yStart = (lon - pixelY >= 0.5) ? 0 : -1;
-        int yEnd = (lon - pixelY <= 0.5) ? 0 : 1;
+        final double xFloor = Math.floor(pixelX);
+        final double yFloor = Math.floor(pixelY);
+        int xStart = (pixelX - xFloor >= 0.5) ? 0 : -1;
+        int xEnd = (pixelX - xFloor <= 0.5) ? 0 : 1;
+        int yStart = (pixelY -yFloor >= 0.5) ? 0 : -1;
+        int yEnd = (pixelY - yFloor <= 0.5) ? 0 : 1;
         double maxDiff = Math.sqrt(1.5);
         double totalSumOfWeights = 0;
         for(int i = xStart; i <= xEnd; i++) {
-            int x = (pixelX + i) % band.getSceneRasterWidth();
+            int x = ((int) xFloor + i) % band.getSceneRasterWidth();
             if(x < 0) {
                 x = band.getSceneRasterWidth() - 1;
             }
             for(int j = yStart; j <= yEnd; j++) {
-                int y = pixelY + j;
+                int y = (int)yFloor + j;
                 if(y >= 0 && y < band.getSceneRasterHeight()) {
-                    ozoneValues.add(band.getSampleFloat(x, y));
-                    final double weight = maxDiff - Math.sqrt(Math.abs(lat - (x + 0.5)) + Math.abs(lon - (y + 0.5)));
+                    pixelValues.add(band.getSampleFloat(x, y));
+                    final double weight = maxDiff - Math.sqrt(Math.abs(pixelX - (x + 0.5)) + Math.abs(pixelY - (y + 0.5)));
                     weights.add(weight);
                     totalSumOfWeights += weight;
                 }
             }
         }
-        float ozoneValue = 0;
+        float interpolatedValue = 0;
         for(int i = 0; i < weights.size(); i++) {
-            ozoneValue += ozoneValues.get(i) * (weights.get(i) / totalSumOfWeights);
+            interpolatedValue += pixelValues.get(i) * (weights.get(i) / totalSumOfWeights);
         }
-        return ozoneValue;
+        return interpolatedValue;
     }
 
     private void setCalendar(Date date) {
@@ -170,10 +155,10 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     }
 
     private double getSurfacePressure(float lat, float lon, Product product) throws IOException {
-        final int xPos = MathUtils.floorInt(lon);
-        int yPos = MathUtils.floorInt(lat);
-        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(yPos, xPos, false);
-        return Double.parseDouble(product.getBand(SURFACE_PRESSURE_BAND_NAME).getPixelString((int) pixelPos.getX(), (int) pixelPos.getY()));
+        final PixelPos pixelPos = LatLonToPixelPosConverter.getAuxPixelPos(lat, lon, false);
+        final float surfacePressure = interpolate(product.getBand(SURFACE_PRESSURE_BAND_NAME),
+                                                  pixelPos.getX(), pixelPos.getY());
+        return surfacePressure;
     }
 
     // package access for testing only tb 2013-10-01
@@ -196,7 +181,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     private SeadasAuxdataImpl(String auxPath) throws IOException {
         auxProductsProvider = new PathAuxProductsProvider(auxPath);
         utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        surfacePressureMap = new HashMap<String, Double>();
     }
 
     private SeadasAuxdataImpl(Product tomsomiStartProduct, Product tomsomiEndProduct,
@@ -204,7 +188,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         auxProductsProvider = new ProductsAuxProductsProvider(tomsomiStartProduct, tomsomiEndProduct,
                 ncepStartProduct, ncepEndProduct);
         utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        surfacePressureMap = new HashMap<String, Double>();
     }
 
 }
