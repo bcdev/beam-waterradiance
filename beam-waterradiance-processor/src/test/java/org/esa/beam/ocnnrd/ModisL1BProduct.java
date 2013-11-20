@@ -179,9 +179,9 @@ class ModisL1BProduct {
     static void assertCorrect_Rl_Path_01(Product product) {
         final Band band = product.getBand("rl_path_1");
         assertNotNull(band);
-        assertEquals(0.1310219168663025f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.14602580666542053f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.12967641651630402f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.1798158884048462f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.13184520602226257f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.14615009725093842f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.13054795563220978f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.1806713491678238f, band.getSampleFloat(1, 1), 1e-8);
     }
 }
