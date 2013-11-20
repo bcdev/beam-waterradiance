@@ -4,10 +4,13 @@ package org.esa.beam.waterradiance.seadas;
 import junit.framework.Assert;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.VirtualBand;
 import org.junit.Test;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -15,6 +18,7 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.*;
@@ -51,7 +55,7 @@ public class SeadasAuxdataImplTest {
 
         try {
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), -38, -76);
-            assertEquals(297.0, ozone, 1e-8);
+            assertEquals(299.1226806640625, ozone, 1e-8);
         } catch (Exception unexpected) {
             fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
         } finally {
@@ -66,7 +70,7 @@ public class SeadasAuxdataImplTest {
 
         try {
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), -38, -76);
-            assertEquals(309.0, ozone, 1e-8);
+            assertEquals(313.3702392578125, ozone, 1e-8);
         } finally {
             seadasAuxdata.dispose();
         }
@@ -82,15 +86,15 @@ public class SeadasAuxdataImplTest {
                 ncepStartProduct, ncepEndProduct);
         Calendar calendar = createCalendar(2005, Calendar.JUNE, 15, 12);
         double ozone = seadasAuxdata.getOzone(calendar.getTime(), -2, 0);
-        Assert.assertEquals(261, ozone, 1e-8);
+        Assert.assertEquals(261.4994201660156, ozone, 1e-8);
 
         calendar = createCalendar(2008, Calendar.NOVEMBER, 10, 0);
         ozone = seadasAuxdata.getOzone(calendar.getTime(), -2, 0);
-        Assert.assertEquals(260, ozone, 1e-8);
+        Assert.assertEquals(260.1247100830078, ozone, 1e-8);
 
         calendar = createCalendar(2012, Calendar.APRIL, 6, 12);
         ozone = seadasAuxdata.getOzone(calendar.getTime(), -2, 0);
-        Assert.assertEquals(259, ozone, 1e-8);
+        Assert.assertEquals(258.75, ozone, 1e-8);
     }
 
     @Test
@@ -323,6 +327,24 @@ public class SeadasAuxdataImplTest {
         assertFalse(SeadasAuxdataImpl.isLeapYear(2006));
         assertFalse(SeadasAuxdataImpl.isLeapYear(2007));
         assertTrue(SeadasAuxdataImpl.isLeapYear(2008));
+    }
+
+    @Test
+    public void testLinearInterpolation() {
+        Band band = new Band("testBand", ProductData.TYPE_FLOAT32, 4, 4);
+        BufferedImage sourceImage = new BufferedImage(4, 4, BufferedImage.TYPE_USHORT_GRAY);
+        for (int y = 0; y < 4; y++) {
+            for (int x = 0; x < 4; x++) {
+                sourceImage.getRaster().setSample(x, y, 0, x + (y * 4));
+            }
+        }
+        band.setSourceImage(sourceImage);
+
+        assertEquals(0, SeadasAuxdataImpl.interpolate(band, 0, 0, 0.5, 0.5), 1e-8);
+        assertEquals(9, SeadasAuxdataImpl.interpolate(band, 1, 2, 1.5, 2.5), 1e-8);
+        assertEquals(2.5, SeadasAuxdataImpl.interpolate(band, 0, 0, 1.0, 1.0), 1e-8);
+        assertEquals(5.5, SeadasAuxdataImpl.interpolate(band, 1, 1, 2.0, 1.5), 1e-8);
+        assertEquals(11.161919593811035, SeadasAuxdataImpl.interpolate(band, 2, 2, 2.75, 2.75), 1e-8);
     }
 
     private Product getProduct(String productString) throws IOException {

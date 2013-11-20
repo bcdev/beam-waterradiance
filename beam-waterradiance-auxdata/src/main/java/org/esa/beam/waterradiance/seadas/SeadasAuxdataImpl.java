@@ -20,9 +20,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     private final Calendar utcCalendar;
     private final Map<String, Double> surfacePressureMap;
-    private final Map<String, Double> ozoneMap;
-    private Date date_of_last_TOMS_product = new GregorianCalendar(2005, 12, 31).getTime();
-    private Date date_of_first_OMI_product = new GregorianCalendar(2006, 1, 1).getTime();
     private AuxProductsProvider auxProductsProvider;
     private static final int[] months = new int[]{Calendar.JANUARY, Calendar.FEBRUARY, Calendar.MARCH, Calendar.APRIL,
             Calendar.MAY, Calendar.JUNE, Calendar.JULY, Calendar.AUGUST, Calendar.SEPTEMBER, Calendar.OCTOBER,
@@ -38,23 +35,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     @Override
     public double getOzone(Date date, double lat, double lon) throws IOException {
-        String id = null;
-        if (date.before(date_of_first_OMI_product)) {
-            final int xPos = MathUtils.floorInt(lat * 0.8);
-            final int yPos = MathUtils.floorInt(lon);
-            id = date.toString() + xPos + yPos;
-            if (ozoneMap.containsKey(id)) {
-                return ozoneMap.get(id);
-            }
-        } else if (date.after(date_of_last_TOMS_product)) {
-            final int xPos = MathUtils.floorInt(lat);
-            final int yPos = MathUtils.floorInt(lon);
-            id = date.toString() + xPos + yPos;
-            if (ozoneMap.containsKey(id)) {
-                return ozoneMap.get(id);
-            }
-        }
-
         setCalendar(date);
         final SeadasAuxDataProducts tomsomiProducts = auxProductsProvider.getTOMSOMIProducts(date);
         final double dateFraction = getDateFraction(utcCalendar, 0.5,
@@ -62,13 +42,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
         final double startOzone = getOzone((float) lat, (float) lon, tomsomiProducts.getStartProduct());
         final double endOzone = getOzone((float) lat, (float) lon, tomsomiProducts.getEndProduct());
-        final double ozone = (1.0 - dateFraction) * startOzone + dateFraction * endOzone;
-
-        if (id != null) {
-            ozoneMap.put(id, ozone);
-        }
-
-        return ozone;
+        return (1.0 - dateFraction) * startOzone + dateFraction * endOzone;
     }
 
     @Override
@@ -99,7 +73,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
     @Override
     public void dispose() {
-        ozoneMap.clear();
         surfacePressureMap.clear();
     }
 
@@ -112,9 +85,41 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         }
         if (product.containsPixel(pixelPos)) {
             final Band ozoneBand = product.getBand(OZONE_BAND_NAME);
-            return ozoneBand.getSampleFloat((int) pixelPos.getX(), (int) pixelPos.getY());
+            return interpolate(ozoneBand, (int)pixelPos.getX(), (int)pixelPos.getY(), lat, lon);
         }
         return Double.NaN;
+    }
+
+    // package access for testing only tf 2013-11-20
+    static float interpolate(Band band, int pixelX, int pixelY, double lat, double lon) {
+        List<Float> ozoneValues = new ArrayList<Float>();
+        List<Double> weights = new ArrayList<Double>();
+        int xStart = (lat - pixelX >= 0.5) ? 0 : -1;
+        int xEnd = (lat - pixelX <= 0.5) ? 0 : 1;
+        int yStart = (lon - pixelY >= 0.5) ? 0 : -1;
+        int yEnd = (lon - pixelY <= 0.5) ? 0 : 1;
+        double maxDiff = Math.sqrt(1.5);
+        double totalSumOfWeights = 0;
+        for(int i = xStart; i <= xEnd; i++) {
+            int x = (pixelX + i) % band.getSceneRasterWidth();
+            if(x < 0) {
+                x = band.getSceneRasterWidth() - 1;
+            }
+            for(int j = yStart; j <= yEnd; j++) {
+                int y = pixelY + j;
+                if(y >= 0 && y < band.getSceneRasterHeight()) {
+                    ozoneValues.add(band.getSampleFloat(x, y));
+                    final double weight = maxDiff - Math.sqrt(Math.abs(lat - (x + 0.5)) + Math.abs(lon - (y + 0.5)));
+                    weights.add(weight);
+                    totalSumOfWeights += weight;
+                }
+            }
+        }
+        float ozoneValue = 0;
+        for(int i = 0; i < weights.size(); i++) {
+            ozoneValue += ozoneValues.get(i) * (weights.get(i) / totalSumOfWeights);
+        }
+        return ozoneValue;
     }
 
     private void setCalendar(Date date) {
@@ -192,7 +197,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         auxProductsProvider = new PathAuxProductsProvider(auxPath);
         utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
         surfacePressureMap = new HashMap<String, Double>();
-        ozoneMap = new HashMap<String, Double>();
     }
 
     private SeadasAuxdataImpl(Product tomsomiStartProduct, Product tomsomiEndProduct,
@@ -201,7 +205,6 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
                 ncepStartProduct, ncepEndProduct);
         utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
         surfacePressureMap = new HashMap<String, Double>();
-        ozoneMap = new HashMap<String, Double>();
     }
 
 }
