@@ -72,7 +72,7 @@ public class OcNnRdOperatorAcceptanceTest {
             MerisL1BProduct.assertCorrect_Rl_Tosa_12(savedProduct);
             MerisL1BProduct.assertCorrect_Rl_Tosa_13(savedProduct);
 
-//            MerisL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
+            MerisL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
 //            MerisL1BProduct.assertCorrect_Rl_Path_02(savedProduct);
 //            MerisL1BProduct.assertCorrect_Rl_Path_03(savedProduct);
 //            MerisL1BProduct.assertCorrect_Rl_Path_04(savedProduct);
@@ -85,7 +85,14 @@ public class OcNnRdOperatorAcceptanceTest {
 //            MerisL1BProduct.assertCorrect_Rl_Path_12(savedProduct);
 //            MerisL1BProduct.assertCorrect_Rl_Path_13(savedProduct);
 //
-//            MerisL1BProduct.assertCorrect_Reflec_01(savedProduct);
+            MerisL1BProduct.assertCorrect_Reflec_01(savedProduct);
+
+            MerisL1BProduct.assertCorrect_Trans_Down_01(savedProduct);
+
+            MerisL1BProduct.assertCorrect_Trans_Up_01(savedProduct);
+
+            MerisL1BProduct.assertCorrect_Aot_550(savedProduct);
+            MerisL1BProduct.assertCorrect_Ang_864_443(savedProduct);
         } finally {
             target.dispose();
             if (savedProduct != null) {
@@ -111,6 +118,15 @@ public class OcNnRdOperatorAcceptanceTest {
             ModisL1BProduct.assertCorrect_Rl_Tosa_01(savedProduct);
 
             ModisL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
+
+            ModisL1BProduct.assertCorrect_Reflec_01(savedProduct);
+
+            ModisL1BProduct.assertCorrect_Trans_Down_01(savedProduct);
+
+            ModisL1BProduct.assertCorrect_Trans_Up_01(savedProduct);
+
+            ModisL1BProduct.assertCorrect_Aot_550(savedProduct);
+            ModisL1BProduct.assertCorrect_Ang_864_443(savedProduct);
         } finally {
             target.dispose();
             if (savedProduct != null) {

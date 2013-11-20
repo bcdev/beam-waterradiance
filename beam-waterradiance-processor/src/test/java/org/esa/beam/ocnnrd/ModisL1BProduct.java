@@ -184,4 +184,52 @@ class ModisL1BProduct {
         assertEquals(0.28996893763542175f, band.getSampleFloat(0, 1), 1e-8);
         assertEquals(0.23655562102794647f, band.getSampleFloat(1, 1), 1e-8);
     }
+
+    static void assertCorrect_Reflec_01(Product product) {
+        final Band band = product.getBand("reflec_1");
+        assertNotNull(band);
+        assertEquals(0.00019295819220133126f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.00019295040692668408f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.00019539278582669795f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.00019298683037050068f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** these values seem to be too small by a factor of 100 tb 2013-11-20
+    }
+
+    static void assertCorrect_Trans_Down_01(Product product) {
+        final Band band = product.getBand("trans_down_1");
+        assertNotNull(band);
+        assertEquals(0.8381531834602356f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.8373911380767822f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.8392000794410706f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.8358407020568848f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Trans_Up_01(Product product) {
+        final Band band = product.getBand("trans_up_1");
+        assertNotNull(band);
+        assertEquals(0.7576444745063782f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.7645459175109863f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.7160690426826477f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.739298939704895f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Aot_550(Product product) {
+        final Band band = product.getBand("aot_550");
+        assertNotNull(band);
+        assertEquals(0.01005183532834053f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.01005183532834053f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.01005183532834053f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.01005183532834053f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** all four aot values identical - should not be tb 2013-11-20
+    }
+
+    static void assertCorrect_Ang_864_443(Product product) {
+        final Band band = product.getBand("ang_864_443");
+        assertNotNull(band);
+        assertEquals(0.022370772436261177f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.022370772436261177f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.022370772436261177f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.022370772436261177f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** all four ang_864_443 values identical - should not be tb 2013-11-20
+    }
 }
