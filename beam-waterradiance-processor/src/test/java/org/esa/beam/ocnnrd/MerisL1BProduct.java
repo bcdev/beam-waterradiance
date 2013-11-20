@@ -11,11 +11,11 @@ class MerisL1BProduct {
     // creates an in memory product of Type MER_RR__1P with four pixels from the atlantic ocean, handpicked and cloud-free
     // Product: MER_RR__1PRACR20060511_094214_000026402047_00337_21934_0000.N1
     //
-    // px       original [x,y]
-    // [0] :    [787, 11409]
-    // [1] :    [831, 11427]
-    // [2] :    [599, 11482]
-    // [3] :    [769, 11584]
+    // px       original [x,y]  [lon, lat]
+    // [0] :    [787, 11409]    [-4.294, -17.098]
+    // [1] :    [831, 11427]    [-3.914, -17.371]
+    // [2] :    [599, 11482]    [-6.263, -17.482]
+    // [3] :    [769, 11584]    [-4.874, -18.886]
     //
     static Product create() {
         final Product merisL1BProduct = new Product("Meris L1B", "MER_RR__1P", 2, 2);
@@ -532,6 +532,15 @@ class MerisL1BProduct {
         assertEquals(0.00920199602842331f, band.getSampleFloat(0, 1), 1e-8);
         assertEquals(0.010582491755485535f, band.getSampleFloat(1, 0), 1e-8);
         assertEquals(0.012254506349563599f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Reflec_01(Product product) {
+        final Band band = product.getBand("reflec_1");
+        assertNotNull(band);
+        assertEquals(0.021449532359838486f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.03390747308731079f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.011685630306601524f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.013821746222674847f, band.getSampleFloat(1, 1), 1e-8);
     }
 }
 

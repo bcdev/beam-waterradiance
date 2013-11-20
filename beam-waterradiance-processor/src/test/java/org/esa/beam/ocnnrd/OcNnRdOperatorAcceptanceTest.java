@@ -84,6 +84,8 @@ public class OcNnRdOperatorAcceptanceTest {
             MerisL1BProduct.assertCorrect_Rl_Path_10(savedProduct);
             MerisL1BProduct.assertCorrect_Rl_Path_12(savedProduct);
             MerisL1BProduct.assertCorrect_Rl_Path_13(savedProduct);
+
+            MerisL1BProduct.assertCorrect_Reflec_01(savedProduct);
         } finally {
             target.dispose();
             if (savedProduct != null) {
