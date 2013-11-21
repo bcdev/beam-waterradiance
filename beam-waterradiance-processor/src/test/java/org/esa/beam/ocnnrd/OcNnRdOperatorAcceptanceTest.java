@@ -158,4 +158,39 @@ public class OcNnRdOperatorAcceptanceTest {
             }
         }
     }
+
+    @Test
+    public void testSeaWiFSL1B() throws IOException {
+        final Product seawifsL1BProduct = SeaWiFSL1BProduct.create();
+
+        Product savedProduct = null;
+        final Product target = GPF.createProduct("OCNNRD", GPF.NO_PARAMS, seawifsL1BProduct);
+
+        try {
+            final String targetProductPath = testOutDirectory.getAbsolutePath() + File.separator + "OcNnRd_modis.dim";
+            ProductIO.writeProduct(target, targetProductPath, "BEAM-DIMAP");
+
+            savedProduct = ProductIO.readProduct(targetProductPath);
+            assertNotNull(savedProduct);
+
+            SeaWiFSL1BProduct.assertCorrect_Rl_Tosa_01(savedProduct);
+
+            SeaWiFSL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
+
+            SeaWiFSL1BProduct.assertCorrect_Reflec_01(savedProduct);
+
+            SeaWiFSL1BProduct.assertCorrect_Trans_Down_01(savedProduct);
+
+            SeaWiFSL1BProduct.assertCorrect_Trans_Up_01(savedProduct);
+
+            SeaWiFSL1BProduct.assertCorrect_Aot_550(savedProduct);
+            SeaWiFSL1BProduct.assertCorrect_Ang_864_443(savedProduct);
+            SeaWiFSL1BProduct.assertCorrect_A_Pig(savedProduct);
+        } finally {
+            target.dispose();
+            if (savedProduct != null) {
+                savedProduct.dispose();
+            }
+        }
+    }
 }

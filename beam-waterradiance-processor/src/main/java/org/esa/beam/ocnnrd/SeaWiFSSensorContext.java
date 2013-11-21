@@ -98,7 +98,11 @@ class SeaWiFSSensorContext implements SensorContext {
      */
     @Override
     public void scaleInputSpectralData(double[] inputs) {
-        // @todo 1 tb/tb check if we need to scale here tb 2013-11-19
+        // @todo 1 tb/** write test tb 2013-11-21
+        for (int i = 0; i < SEAWIFS_L1B_NUM_SPECTRAL_BANDS; i++) {
+            final int index = Constants.INPUT_RAD_OFFSET + i;
+            inputs[index] *= 10.0;
+        }
     }
 
     @Override
