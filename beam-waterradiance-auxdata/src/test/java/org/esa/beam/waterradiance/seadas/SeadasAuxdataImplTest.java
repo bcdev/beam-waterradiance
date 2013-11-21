@@ -55,7 +55,7 @@ public class SeadasAuxdataImplTest {
 
         try {
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), -38, -76);
-            assertEquals(298.68766021728516, ozone, 1e-8);
+            assertEquals(298.42669677734375, ozone, 1e-8);
         } catch (Exception unexpected) {
             fail("Auxdata Impl was not created although auxdata path was valid!" + unexpected.getMessage());
         } finally {
@@ -70,7 +70,7 @@ public class SeadasAuxdataImplTest {
 
         try {
             final double ozone = seadasAuxdata.getOzone(calendar.getTime(), -38, -76);
-            assertEquals(312.5002975463867, ozone, 1e-8);
+            assertEquals(311.9783935546875, ozone, 1e-8);
         } finally {
             seadasAuxdata.dispose();
         }
@@ -135,7 +135,7 @@ public class SeadasAuxdataImplTest {
         try {
             Calendar calendar = createCalendar(2005, Calendar.JUNE, 16, 6);
             double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 39.5, 2.5);
-            assertEquals(1021.364990234375, surfacePressure, 1e-8);
+            assertEquals(1021.3695373535156, surfacePressure, 1e-8);
 
             calendar = createCalendar(2005, Calendar.JUNE, 16, 1);
             surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), -8, -34);
@@ -163,7 +163,7 @@ public class SeadasAuxdataImplTest {
         try {
             Calendar calendar = createCalendar(2012, Calendar.APRIL, 6, 18);
             double surfacePressure = seadasAuxdata.getSurfacePressure(calendar.getTime(), 57, -33);
-            assertEquals(1022.4712829589844, surfacePressure, 1e-8);
+            assertEquals(1022.4712524414062, surfacePressure, 1e-8);
         } finally {
             seadasAuxdata.dispose();
         }
@@ -340,11 +340,11 @@ public class SeadasAuxdataImplTest {
         }
         band.setSourceImage(sourceImage);
 
-        assertEquals(0, SeadasAuxdataImpl.interpolate(band, 0.5, 0.5), 1e-8);
+        assertEquals(0.13889460265636444, SeadasAuxdataImpl.interpolate(band, 0.5, 0.5), 1e-8);
         assertEquals(9, SeadasAuxdataImpl.interpolate(band, 1.5, 2.5), 1e-8);
         assertEquals(2.5, SeadasAuxdataImpl.interpolate(band, 1.0, 1.0), 1e-8);
-        assertEquals(5.5, SeadasAuxdataImpl.interpolate(band, 2.0, 1.5), 1e-8);
-        assertEquals(11.161919593811035, SeadasAuxdataImpl.interpolate(band, 2.75, 2.75), 1e-8);
+        assertEquals(5.499999523162842, SeadasAuxdataImpl.interpolate(band, 2.0, 1.5), 1e-8);
+        assertEquals(10.790887832641602, SeadasAuxdataImpl.interpolate(band, 2.75, 2.75), 1e-8);
     }
 
     private Product getProduct(String productString) throws IOException {

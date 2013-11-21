@@ -4,12 +4,17 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.waterradiance.AtmosphericAuxdata;
 import org.esa.beam.waterradiance.util.LatLonToPixelPosConverter;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
@@ -37,7 +42,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         setCalendar(date);
         final SeadasAuxDataProducts tomsomiProducts = auxProductsProvider.getTOMSOMIProducts(date);
         final double dateFraction = getDateFraction(utcCalendar, 0.5,
-                tomsomiProducts.getStartProduct(), tomsomiProducts.getEndProduct());
+                                                    tomsomiProducts.getStartProduct(), tomsomiProducts.getEndProduct());
 
         final double startOzone = getOzone((float) lat, (float) lon, tomsomiProducts.getStartProduct());
         final double endOzone = getOzone((float) lat, (float) lon, tomsomiProducts.getEndProduct());
@@ -49,7 +54,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         setCalendar(date);
         final SeadasAuxDataProducts ncepProducts = auxProductsProvider.getNCEPProducts(date);
         final double fraction = getDateFraction(utcCalendar, 0.125, ncepProducts.getStartProduct(),
-                ncepProducts.getEndProduct());
+                                                ncepProducts.getEndProduct());
         final double startSurfacePressure = getSurfacePressure((float) lat, (float) lon, ncepProducts.getStartProduct());
         final double endSurfacePressure = getSurfacePressure((float) lat, (float) lon, ncepProducts.getEndProduct());
         final double surfacePressure = (1.0 - fraction) * startSurfacePressure + fraction * endSurfacePressure;
@@ -79,29 +84,31 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
         List<Double> weights = new ArrayList<Double>();
         final double xFloor = Math.floor(pixelX);
         final double yFloor = Math.floor(pixelY);
-        int xStart = (pixelX - xFloor >= 0.5) ? 0 : -1;
-        int xEnd = (pixelX - xFloor <= 0.5) ? 0 : 1;
-        int yStart = (pixelY -yFloor >= 0.5) ? 0 : -1;
-        int yEnd = (pixelY - yFloor <= 0.5) ? 0 : 1;
-        double maxDiff = Math.sqrt(1.5);
+        int xStart = -1;
+        int xEnd = 1;
+        int yStart = -1;
+        int yEnd = 1;
         double totalSumOfWeights = 0;
-        for(int i = xStart; i <= xEnd; i++) {
-            int x = ((int) xFloor + i) % band.getSceneRasterWidth();
-            if(x < 0) {
+        for (int i = xStart; i <= xEnd; i++) {
+            int origX = (int) xFloor + i;
+            int x = origX % band.getSceneRasterWidth();
+            if (x < 0) {
                 x = band.getSceneRasterWidth() - 1;
             }
-            for(int j = yStart; j <= yEnd; j++) {
-                int y = (int)yFloor + j;
-                if(y >= 0 && y < band.getSceneRasterHeight()) {
+            for (int j = yStart; j <= yEnd; j++) {
+                int y = (int) yFloor + j;
+                if (y >= 0 && y < band.getSceneRasterHeight()) {
                     pixelValues.add(band.getSampleFloat(x, y));
-                    final double weight = maxDiff - Math.sqrt(Math.abs(pixelX - (x + 0.5)) + Math.abs(pixelY - (y + 0.5)));
+                    final double distanceToPixelCenter = Math.pow(pixelX - (origX + 0.5), 2) +
+                            Math.pow(pixelY - (y + 0.5), 2);
+                    final double weight = Math.exp(-Math.pow(distanceToPixelCenter / 0.5, 2));
                     weights.add(weight);
                     totalSumOfWeights += weight;
                 }
             }
         }
         float interpolatedValue = 0;
-        for(int i = 0; i < weights.size(); i++) {
+        for (int i = 0; i < weights.size(); i++) {
             interpolatedValue += pixelValues.get(i) * (weights.get(i) / totalSumOfWeights);
         }
         return interpolatedValue;
@@ -186,7 +193,7 @@ public class SeadasAuxdataImpl implements AtmosphericAuxdata {
     private SeadasAuxdataImpl(Product tomsomiStartProduct, Product tomsomiEndProduct,
                               Product ncepStartProduct, Product ncepEndProduct) throws IOException {
         auxProductsProvider = new ProductsAuxProductsProvider(tomsomiStartProduct, tomsomiEndProduct,
-                ncepStartProduct, ncepEndProduct);
+                                                              ncepStartProduct, ncepEndProduct);
         utcCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
     }
 
