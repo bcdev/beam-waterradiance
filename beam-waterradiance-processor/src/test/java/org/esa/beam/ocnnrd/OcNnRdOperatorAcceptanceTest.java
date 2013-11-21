@@ -93,6 +93,18 @@ public class OcNnRdOperatorAcceptanceTest {
 
             MerisL1BProduct.assertCorrect_Aot_550(savedProduct);
             MerisL1BProduct.assertCorrect_Ang_864_443(savedProduct);
+            MerisL1BProduct.assertCorrect_A_Pig(savedProduct);
+            MerisL1BProduct.assertCorrect_A_Ys(savedProduct);
+            MerisL1BProduct.assertCorrect_A_Part(savedProduct);
+            MerisL1BProduct.assertCorrect_B_Part(savedProduct);
+            MerisL1BProduct.assertCorrect_B_Wit(savedProduct);
+
+            MerisL1BProduct.assertCorrect_Sum_Sq(savedProduct);
+            MerisL1BProduct.assertCorrect_Num_Iter(savedProduct);
+            MerisL1BProduct.assertCorrect_Temperature(savedProduct);
+            MerisL1BProduct.assertCorrect_Salinity(savedProduct);
+            MerisL1BProduct.assertCorrect_Atm_Press_2(savedProduct);
+            MerisL1BProduct.assertCorrect_Ozone_2(savedProduct);
         } finally {
             target.dispose();
             if (savedProduct != null) {
@@ -127,6 +139,18 @@ public class OcNnRdOperatorAcceptanceTest {
 
             ModisL1BProduct.assertCorrect_Aot_550(savedProduct);
             ModisL1BProduct.assertCorrect_Ang_864_443(savedProduct);
+            ModisL1BProduct.assertCorrect_A_Pig(savedProduct);
+            ModisL1BProduct.assertCorrect_A_Ys(savedProduct);
+            ModisL1BProduct.assertCorrect_A_Part(savedProduct);
+            ModisL1BProduct.assertCorrect_B_Part(savedProduct);
+            ModisL1BProduct.assertCorrect_B_Wit(savedProduct);
+
+            ModisL1BProduct.assertCorrect_Sum_Sq(savedProduct);
+            ModisL1BProduct.assertCorrect_Num_Iter(savedProduct);
+            ModisL1BProduct.assertCorrect_Temperature(savedProduct);
+            ModisL1BProduct.assertCorrect_Salinity(savedProduct);
+            ModisL1BProduct.assertCorrect_Atm_Press_2(savedProduct);
+            ModisL1BProduct.assertCorrect_Ozone_2(savedProduct);
         } finally {
             target.dispose();
             if (savedProduct != null) {

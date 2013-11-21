@@ -232,4 +232,111 @@ class ModisL1BProduct {
         assertEquals(0.022370772436261177f, band.getSampleFloat(1, 1), 1e-8);
         // @todo 1 tb/** all four ang_864_443 values identical - should not be tb 2013-11-20
     }
+
+    static void assertCorrect_A_Pig(Product product) {
+        final Band band = product.getBand("a_pig");
+        assertNotNull(band);
+        assertEquals(0.19569338858127594f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.19686447083950043f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.10373834520578384f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.17077577114105225f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** values too high? tb 2013-11-20
+    }
+
+    static void assertCorrect_A_Ys(Product product) {
+        final Band band = product.getBand("a_ys");
+        assertNotNull(band);
+        assertEquals(2.2994587421417236f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(2.295915126800537f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.3746907114982605f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(2.218794584274292f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** values way too high? tb 2013-11-20
+    }
+
+    static void assertCorrect_A_Part(Product product) {
+        final Band band = product.getBand("a_part");
+        assertNotNull(band);
+        assertEquals(4.953032493591309f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(4.953032493591309f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(3.703138828277588f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(4.953032493591309f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** values way too high? tb 2013-11-20
+    }
+
+    static void assertCorrect_B_Part(Product product) {
+        final Band band = product.getBand("b_part");
+        assertNotNull(band);
+        assertEquals(0.0021979084704071283f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.002229316858574748f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0028780174907296896f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.0024275830946862698f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_B_Wit(Product product) {
+        final Band band = product.getBand("b_wit");
+        assertNotNull(band);
+        assertEquals(0.004169657360762358f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.0041372040286660194f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0065795923583209515f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.004631435498595238f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Sum_Sq(Product product) {
+        final Band band = product.getBand("sum_sq");
+        assertNotNull(band);
+        assertEquals(0.026977771893143654f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.026720445603132248f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.03158491477370262f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.02893969975411892f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Num_Iter(Product product) {
+        final Band band = product.getBand("num_iter");
+        assertNotNull(band);
+        assertEquals(150.f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(150.f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(150.f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(150.f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** no convergence tb 2013-11-21
+    }
+
+    static void assertCorrect_Temperature(Product product) {
+        final Band band = product.getBand("temperature");
+        assertNotNull(band);
+        assertEquals(15.f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(15.f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(15.f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(15.f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** does this make sense? tb 2013-11-21
+    }
+
+    static void assertCorrect_Salinity(Product product) {
+        final Band band = product.getBand("salinity");
+        assertNotNull(band);
+        assertEquals(35.f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(35.f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(35.f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(35.f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** does this make sense? tb 2013-11-21
+    }
+
+    static void assertCorrect_Atm_Press_2(Product product) {
+        final Band band = product.getBand("atm_press_2");
+        assertNotNull(band);
+        assertEquals(1019.0f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(1019.0f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(1019.0f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(1019.0f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** default values? tb 2013-11-21
+    }
+
+    static void assertCorrect_Ozone_2(Product product) {
+        final Band band = product.getBand("ozone_2");
+        assertNotNull(band);
+        assertEquals(330.f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(330.f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(330.f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(330.f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** default values? tb 2013-11-21
+    }
 }
