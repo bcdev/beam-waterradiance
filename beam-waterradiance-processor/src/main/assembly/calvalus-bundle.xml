@@ -12,7 +12,7 @@
             <source>src/main/assembly/bundle-descriptor.xml</source>
         </file>
         <file>
-            <source>src/main/assembly/ocnnrd-ncep-graph.xml</source>
+            <source>src/main/assembly/ocnnrd-ncep-graph.xml.vm</source>
         </file>
     </files>
 
