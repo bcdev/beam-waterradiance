@@ -450,7 +450,7 @@ public class LevMarNN {
                 L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAU(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
-                rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
+                rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
                 x[ilam] = rho_tosa_corr[ilam];
             }
         } else if (sensorContext.getSensor() == Sensor.SEAWIFS) {
@@ -459,7 +459,7 @@ public class LevMarNN {
                 L_tosa[ilam] = L_tosa[ilam] / trans_no2[ilam];//-L_rayl_toa_tosa[ilam]-L_rayl_smile[ilam];
                 L_tosa[ilam] *= Math.pow(sensorContext.getEarthSunDistanceInAU(), 2);
                 Ed_tosa[ilam] = Ed_toa[ilam];
-                rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam];
+                rho_tosa_corr[ilam] = L_tosa[ilam] / Ed_tosa[ilam] * M_PI;
                 x[ilam] = rho_tosa_corr[ilam];
             }
         }
