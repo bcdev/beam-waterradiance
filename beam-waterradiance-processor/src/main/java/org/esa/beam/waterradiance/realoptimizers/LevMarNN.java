@@ -196,7 +196,7 @@ public class LevMarNN {
         optimizer = new LevenbergMarquardtOptimizer(p.length, x11.length);
         optimizer.init(model, costFunction, breakingCriterion);
 
-        nnAtmoWat = new NnAtmoWat(alphaTab);
+        nnAtmoWat = new NnAtmoWat(alphaTab, sensorContext.getSensor());
         nn_at_data = new s_nn_atdata();
         nn_at_data.prepare = -1;
     }

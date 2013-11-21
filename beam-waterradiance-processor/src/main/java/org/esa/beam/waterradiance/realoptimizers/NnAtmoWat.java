@@ -1,5 +1,7 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
+import org.esa.beam.ocnnrd.Sensor;
+
 import java.io.IOException;
 
 class NnAtmoWat {
@@ -36,6 +38,7 @@ class NnAtmoWat {
     private final double[] rpath_nn;
     private final double[] tup_nn;
     private final double[] rw_nn;
+    private final Sensor sensor;
 
     private double[] outnet1;
     private double[] outnet2;
@@ -43,8 +46,9 @@ class NnAtmoWat {
     private double[] rlw_nn;
     private final NnWater nnWater;
 
-    NnAtmoWat(AlphaTab alphaTab) throws IOException {
+    NnAtmoWat(AlphaTab alphaTab, Sensor sensor) throws IOException {
         this.alphaTab = alphaTab;
+        this.sensor = sensor;
         final NnResources nnResources = new NnResources();
         rhopath_net = LevMarNN.prepare_a_nn(nnResources.getAcForwardNetPath(rhopath_net_name));
         tdown_net = LevMarNN.prepare_a_nn(nnResources.getAcForwardNetPath(tdown_net_name));
@@ -88,7 +92,7 @@ class NnAtmoWat {
         double x;
         double y;
         double z;
-        if (rtosa_nn.length != 9) {
+        if (sensor != Sensor.MODIS) {
             x = sin_elevation * Math.cos(azimuth);
             y = sin_elevation * Math.sin(azimuth);
             z = Math.cos(elevation);
