@@ -13,27 +13,27 @@ import static org.junit.Assert.assertNotNull;
 
 public class SeaWiFSSensorContextTest {
 
-    private SeaWiFSSensorContext seaWiFSSensorConfig;
+    private SeaWiFSSensorContext seaWiFSSensorContext;
 
     @Before
     public void setUp() throws Exception {
-        seaWiFSSensorConfig = new SeaWiFSSensorContext();
+        seaWiFSSensorContext = new SeaWiFSSensorContext();
     }
 
     @Test
     public void testGetNumSpectralInputBands() {
-        assertEquals(8, seaWiFSSensorConfig.getNumSpectralInputBands());
+        assertEquals(8, seaWiFSSensorContext.getNumSpectralInputBands());
     }
 
     @Test
     public void testGetNumSpectralOutputBands() {
-        assertEquals(8, seaWiFSSensorConfig.getNumSpectralOutputBands());
+        assertEquals(8, seaWiFSSensorContext.getNumSpectralOutputBands());
     }
 
     @Test
     public void testGetSpectralOutputBandIndices() {
         final int[] expectedIndices = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
-        final int[] indices = seaWiFSSensorConfig.getSpectralOutputBandIndices();
+        final int[] indices = seaWiFSSensorContext.getSpectralOutputBandIndices();
 
         assertArrayEquals(expectedIndices, indices);
     }
@@ -42,13 +42,13 @@ public class SeaWiFSSensorContextTest {
     public void testGetSpectralOutputWavelengths() {
         final float[] expectedWavelengths = new float[]{412.f, 443.f, 490.f, 510.f, 555.f, 670.f, 765.f, 865.f};
 
-        final float[] wavelengths = seaWiFSSensorConfig.getSpectralOutputWavelengths();
+        final float[] wavelengths = seaWiFSSensorContext.getSpectralOutputWavelengths();
         assertArrayEquals(expectedWavelengths, wavelengths, 1e-8f);
     }
 
     @Test
     public void testGetSpectralInputBandNames() {
-        final String[] spectralBandNames = seaWiFSSensorConfig.getSpectralInputBandNames();
+        final String[] spectralBandNames = seaWiFSSensorContext.getSpectralInputBandNames();
         assertNotNull(spectralBandNames);
         assertEquals(8, spectralBandNames.length);
 
@@ -66,19 +66,19 @@ public class SeaWiFSSensorContextTest {
     public void testGetNnOutputIndices() {
         final int[] expectedIndices = new int[]{1, 2, 4, 6, 10, 16, 23, 25};
 
-        assertArrayEquals(expectedIndices, seaWiFSSensorConfig.getNnOutputIndices());
+        assertArrayEquals(expectedIndices, seaWiFSSensorContext.getNnOutputIndices());
     }
 
     @Test
     public void testGetSensorType() {
-        assertEquals(Sensor.SEAWIFS, seaWiFSSensorConfig.getSensor());
+        assertEquals(Sensor.SEAWIFS, seaWiFSSensorContext.getSensor());
     }
 
     @Test
     public void testConfigureSourceSamples() {
         final TestSampleConfigurer testSampleConfigurer = new TestSampleConfigurer();
 
-        seaWiFSSensorConfig.configureSourceSamples(testSampleConfigurer, false);
+        seaWiFSSensorContext.configureSourceSamples(testSampleConfigurer, false);
 
         assertEquals("solz", testSampleConfigurer.get(0));
         assertEquals("sola", testSampleConfigurer.get(1));
@@ -108,7 +108,7 @@ public class SeaWiFSSensorContextTest {
             sourceSamples[i].set((double) i);
         }
 
-        seaWiFSSensorConfig.copyTiePointData(inputs, sourceSamples);
+        seaWiFSSensorContext.copyTiePointData(inputs, sourceSamples);
 
         for (int i = 0; i < sourceSamples.length; i++) {
             assertEquals(i, inputs[i], 1e-8);
@@ -120,7 +120,7 @@ public class SeaWiFSSensorContextTest {
     @Test
     public void testGetSolarFluxes() {
         final Product product = new Product("test", "type", 5, 5);
-        final double[] solarFluxes = seaWiFSSensorConfig.getSolarFluxes(product);
+        final double[] solarFluxes = seaWiFSSensorContext.getSolarFluxes(product);
         assertEquals(8, solarFluxes.length);
         final double[] expectedSolarFluxes = {171.18, 188.76, 193.38, 192.56, 183.76, 151.22, 123.91, 95.965};
         for (int i = 0; i < expectedSolarFluxes.length; i++) {
@@ -136,7 +136,7 @@ public class SeaWiFSSensorContextTest {
             solarFluxes[i] = i;
         }
 
-        input = seaWiFSSensorConfig.copySolarFluxes(input, solarFluxes);
+        input = seaWiFSSensorContext.copySolarFluxes(input, solarFluxes);
         for (int i = 0; i < solarFluxes.length; i++) {
             assertEquals(solarFluxes[i], input[i + 25], 1e-8);
         }
@@ -144,33 +144,33 @@ public class SeaWiFSSensorContextTest {
 
     @Test
     public void testGetSurfacePressure() {
-        Assert.assertEquals(1019.0, seaWiFSSensorConfig.getSurfacePressure(), 1e-8);
+        Assert.assertEquals(1019.0, seaWiFSSensorContext.getSurfacePressure(), 1e-8);
     }
 
     @Test
     public void testGetOzone() {
-        Assert.assertEquals(330.0, seaWiFSSensorConfig.getOzone(), 1e-8);
+        Assert.assertEquals(330.0, seaWiFSSensorContext.getOzone(), 1e-8);
     }
 
     @Test
     public void testGetDetectorIndex() {
-        assertEquals(-1, seaWiFSSensorConfig.getDetectorIndex(new Sample[0]));
+        assertEquals(-1, seaWiFSSensorContext.getDetectorIndex(new Sample[0]));
     }
 
     @Test
     public void testGetTargetSampleOffset() {
-        assertEquals(2, seaWiFSSensorConfig.getTargetSampleOffset());
+        assertEquals(2, seaWiFSSensorContext.getTargetSampleOffset());
     }
 
     @Test
     public void testCorrectSunAzimuth() {
-        assertEquals(180.0 + 13.8, seaWiFSSensorConfig.correctSunAzimuth(13.8), 1e-8);
-        assertEquals(-35.88 + 360.0 + 180.0, seaWiFSSensorConfig.correctSunAzimuth(-35.88), 1e-8);
+        assertEquals(180.0 + 13.8, seaWiFSSensorContext.correctSunAzimuth(13.8), 1e-8);
+        assertEquals(-35.88 + 360.0 + 180.0, seaWiFSSensorContext.correctSunAzimuth(-35.88), 1e-8);
     }
 
     @Test
     public void testCorrectViewAzimuth() {
-        assertEquals(3.7, seaWiFSSensorConfig.correctViewAzimuth(3.7), 1e-8);
-        assertEquals(-45.43 + 360.0, seaWiFSSensorConfig.correctViewAzimuth(-45.43), 1e-8);
+        assertEquals(3.7, seaWiFSSensorContext.correctViewAzimuth(3.7), 1e-8);
+        assertEquals(-45.43 + 360.0, seaWiFSSensorContext.correctViewAzimuth(-45.43), 1e-8);
     }
 } 
