@@ -69,17 +69,50 @@ $timeOzone0.set(5, $calendar.get(5))
 $timeOzone1.setTimeInMillis($timeOzone0.timeInMillis)
 $timeOzone1.add(5, 1)
 
-#set( $ozonePathFormat = "'hdfs://master00:9000/calvalus/auxiliary/seadas/anc/'yyyy'/'DDD'/N'yyyyDDD'00_O3_TOMSOMI_24h.hdf'" )
-#set( $ozonePath0 = $GlobalFunctions.formatDate($ozonePathFormat, $timeOzone0.time) )
-#set( $ozonePath1 = $GlobalFunctions.formatDate($ozonePathFormat, $timeOzone1.time) )
+#set( $ozonePathFormatA = "'hdfs://master00:9000/calvalus/auxiliary/seadas/anc/'yyyy'/'DDD'/N'yyyyDDD'00_O3_TOMSOMI_24h.hdf'" )
+#set( $ozonePathFormatB = "'hdfs://master00:9000/calvalus/auxiliary/seadas/anc/'yyyy'/'DDD'/S'yyyyDDD'00'DDD'23_TOVS.OZONE'" )
+#set( $ozonePathFormatC = "'hdfs://master00:9000/calvalus/auxiliary/seadas/anc/'yyyy'/'DDD'/S'yyyyDDD'00'DDD'23_TOAST.OZONE'" )
+#set( $ozonePath0A = $GlobalFunctions.formatDate($ozonePathFormatA, $timeOzone0.time) )
+#set( $ozonePath1A = $GlobalFunctions.formatDate($ozonePathFormatA, $timeOzone1.time) )
+#set( $ozonePath0B = $GlobalFunctions.formatDate($ozonePathFormatB, $timeOzone0.time) )
+#set( $ozonePath1B = $GlobalFunctions.formatDate($ozonePathFormatB, $timeOzone1.time) )
+#set( $ozonePath0C = $GlobalFunctions.formatDate($ozonePathFormatC, $timeOzone0.time) )
+#set( $ozonePath1C = $GlobalFunctions.formatDate($ozonePathFormatC, $timeOzone1.time) )
 
-#set( $ozone0Exists = $fs.exists($GlobalFunctions.createPath($ozonePath0)) )
-#set( $ozone1Exists = $fs.exists($GlobalFunctions.createPath($ozonePath1)) )
-#if ( !($ozone0Exists && $ozone1Exists) )
-  ozonePath0=$ozonePath0
-  ozonePath1=$ozonePath1
-  CALVALUS_SKIP_PROCESSING yes
-  #stop
+#if ( $fs.exists($GlobalFunctions.createPath($ozonePath0A)) )
+  #set( $ozonePath0 = $ozonePath0A )
+#else
+  #if ( $fs.exists($GlobalFunctions.createPath($ozonePath0B)) )
+    #set( $ozonePath0 = $ozonePath0B )
+  #else
+    #if ( $fs.exists($GlobalFunctions.createPath($ozonePath0C)) )
+      #set( $ozonePath0 = $ozonePath0C )
+    #else
+      ozonePath0A=$ozonePath0A
+      ozonePath0B=$ozonePath0B
+      ozonePath0C=$ozonePath0C
+      CALVALUS_SKIP_PROCESSING yes
+      #stop
+    #end
+  #end
+#end
+
+#if ( $fs.exists($GlobalFunctions.createPath($ozonePath1A)) )
+  #set( $ozonePath1 = $ozonePath1A )
+#else
+  #if ( $fs.exists($GlobalFunctions.createPath($ozonePath1B)) )
+    #set( $ozonePath1 = $ozonePath1B )
+  #else
+    #if ( $fs.exists($GlobalFunctions.createPath($ozonePath1C)) )
+      #set( $ozonePath1 = $ozonePath1C )
+    #else
+      ozonePath1A=$ozonePath1A
+      ozonePath1B=$ozonePath1B
+      ozonePath1C=$ozonePath1C
+      CALVALUS_SKIP_PROCESSING yes
+      #stop
+    #end
+  #end
 #end
 
 <graph id="g">
