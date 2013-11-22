@@ -186,7 +186,17 @@ class SeaWiFSL1BProduct {
         assertEquals(0.10385504364967346f, band.getSampleFloat(0, 0), 1e-8);
         assertEquals(0.10318049043416977f, band.getSampleFloat(1, 0), 1e-8);
         assertEquals(0.1117851510643959f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.10466671735048294f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.10466671735048294, band.getSampleFloat(1, 1), 1e-8);
+    }
+
+    static void assertCorrect_Reflec_05(Product product) {
+        final Band band = product.getBand("reflec_5");
+        assertNotNull(band);
+        assertEquals(0.32121706008911133f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.012361404486000538f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.3216427266597748f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.3221534788608551f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** too high, inconsistent results! tb 2013-11-21
     }
 
     static void assertCorrect_Trans_Down_01(Product product) {

@@ -543,6 +543,15 @@ class MerisL1BProduct {
         assertEquals(0.016659658402204514f, band.getSampleFloat(1, 1), 1e-8);
     }
 
+    static void assertCorrect_Reflec_05(Product product) {
+        final Band band = product.getBand("reflec_5");
+        assertNotNull(band);
+        assertEquals(0.0022052698768675327f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.0020553304348140955f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.004143865779042244f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.0024014271330088377f, band.getSampleFloat(1, 1), 1e-8);
+    }
+
     static void assertCorrect_Trans_Down_01(Product product) {
         final Band band = product.getBand("trans_down_1");
         assertNotNull(band);

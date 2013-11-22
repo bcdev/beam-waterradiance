@@ -194,7 +194,14 @@ class ModisL1BProduct {
         assertEquals(0.045590344816446304f, band.getSampleFloat(1, 1), 1e-8);
     }
 
-    // @todo 1 tb /tb add 560 nm Band test
+    static void assertCorrect_Reflec_05(Product product) {
+        final Band band = product.getBand("reflec_5");
+        assertNotNull(band);
+        assertEquals(0.005650154314935207f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.005759026855230331f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0055337511003017426f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.005777978338301182f, band.getSampleFloat(1, 1), 1e-8);
+    }
 
     static void assertCorrect_Trans_Down_01(Product product) {
         final Band band = product.getBand("trans_down_1");

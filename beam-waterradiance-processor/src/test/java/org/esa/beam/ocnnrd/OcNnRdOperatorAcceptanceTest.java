@@ -86,6 +86,7 @@ public class OcNnRdOperatorAcceptanceTest {
 //            MerisL1BProduct.assertCorrect_Rl_Path_13(savedProduct);
 //
             MerisL1BProduct.assertCorrect_Reflec_01(savedProduct);
+            MerisL1BProduct.assertCorrect_Reflec_05(savedProduct);
 
             MerisL1BProduct.assertCorrect_Trans_Down_01(savedProduct);
 
@@ -132,6 +133,7 @@ public class OcNnRdOperatorAcceptanceTest {
             ModisL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
 
             ModisL1BProduct.assertCorrect_Reflec_01(savedProduct);
+            ModisL1BProduct.assertCorrect_Reflec_05(savedProduct);
 
             ModisL1BProduct.assertCorrect_Trans_Down_01(savedProduct);
 
@@ -178,6 +180,7 @@ public class OcNnRdOperatorAcceptanceTest {
             SeaWiFSL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
 
             SeaWiFSL1BProduct.assertCorrect_Reflec_01(savedProduct);
+            SeaWiFSL1BProduct.assertCorrect_Reflec_05(savedProduct);
 
             SeaWiFSL1BProduct.assertCorrect_Trans_Down_01(savedProduct);
 
