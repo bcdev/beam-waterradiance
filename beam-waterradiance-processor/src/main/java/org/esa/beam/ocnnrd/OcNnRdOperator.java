@@ -244,13 +244,10 @@ public class OcNnRdOperator extends PixelOperator {
             if (isCsvMode(sourceProduct)) {
                 csvMode = true;
                 maskExpression = "true";
-            } else {
-                solarFluxes = sensorContext.getSolarFluxes(sourceProduct);
             }
             sourceProduct.addBand("_mask_", maskExpression);
-        } else if (sensorContext.getSensor() == Sensor.MODIS || sensorContext.getSensor() == Sensor.SEAWIFS) {
-            solarFluxes = sensorContext.getSolarFluxes(sourceProduct);
         }
+        solarFluxes = sensorContext.getSolarFluxes(sourceProduct);
 
         final ProductData.UTC startTime = sourceProduct.getStartTime();
         if (startTime != null && useClimatology) {
@@ -330,7 +327,7 @@ public class OcNnRdOperator extends PixelOperator {
     String getSensorTypeString() {
         if (StringUtils.isNotNullAndNotEmpty(sensorTypeString)) {
             return sensorTypeString;
-        }else {
+        } else {
             return sourceProduct.getProductType();
         }
     }

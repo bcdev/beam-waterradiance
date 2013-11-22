@@ -11,7 +11,11 @@ class SeaWiFSSensorContext implements SensorContext {
     private static final int[] NN_OUTPUT_INDICES = new int[]{1, 2, 4, 6, 10, 16, 23, 25};
     // @todo 2 tb/tb ask RD - out indices are not exactly matching input WLs: 4-> 489nm
 
-    private static final double[] defaultNasaSolarFluxes = {171.18, 188.76, 193.38, 192.56, 183.76, 151.22, 123.91, 95.965};
+    // those are definitely provided in the worn physical unit
+    // private static final double[] defaultNasaSolarFluxes = {171.18, 188.76, 193.38, 192.56, 183.76, 151.22, 123.91, 95.965};
+
+    // derived from cahalan table from Kerstin tb 2013-11-22
+    private static final double[] defaultNasaSolarFluxes = {1735.518167, 1858.404314, 1981.076667, 1881.566829, 1874.005, 1537.254783, 1230.04, 957.6122143};
 
     private static final String SEAWIFS_L1B_RADIANCE_1_BAND_NAME = "L_412";
     private static final String SEAWIFS_L1B_RADIANCE_2_BAND_NAME = "L_443";
