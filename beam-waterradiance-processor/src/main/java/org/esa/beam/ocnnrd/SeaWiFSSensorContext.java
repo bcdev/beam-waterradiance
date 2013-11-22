@@ -158,7 +158,13 @@ class SeaWiFSSensorContext implements SensorContext {
 
     @Override
     public double correctSunAzimuth(double sunAzimuth) {
-        return correctAzimuthAngle(sunAzimuth);
+        // according to a discussion in the OceanCOlor forum at NASA, the relative azimuth angle for SeaWiFS is calculated according t0:
+        //      Relative Azimuth = Sensor Azimuth - 180.0 - Solar azimuth
+        // as the NN code calculates a mere difference, we add 180 degrees at this point to come to the same definition of
+        // relative azimuth angle.
+        // http://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?pid=12696;hl=azimuth#pid12696
+        final double correctedAzimuth = correctAzimuthAngle(sunAzimuth);
+        return correctedAzimuth + 180.0;
     }
 
     @Override

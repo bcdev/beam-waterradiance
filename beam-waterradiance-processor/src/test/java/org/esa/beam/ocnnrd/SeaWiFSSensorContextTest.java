@@ -164,8 +164,8 @@ public class SeaWiFSSensorContextTest {
 
     @Test
     public void testCorrectSunAzimuth() {
-        assertEquals(13.8, seaWiFSSensorConfig.correctSunAzimuth(13.8), 1e-8);
-        assertEquals(-35.88 + 360.0, seaWiFSSensorConfig.correctSunAzimuth(-35.88), 1e-8);
+        assertEquals(180.0 + 13.8, seaWiFSSensorConfig.correctSunAzimuth(13.8), 1e-8);
+        assertEquals(-35.88 + 360.0 + 180.0, seaWiFSSensorConfig.correctSunAzimuth(-35.88), 1e-8);
     }
 
     @Test
