@@ -174,7 +174,7 @@ public class LevMarNnL1BPerformanceTest {
         assertNotNull(band);
 
         band.loadRasterData();
-        final double pixelDouble = band.getPixelDouble(x, y);
+        final float pixelDouble = band.getSampleFloat(x, y);
         assertEquals(expected, pixelDouble, 1e-7);
     }
 

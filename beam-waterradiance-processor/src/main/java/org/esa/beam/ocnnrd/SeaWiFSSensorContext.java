@@ -157,12 +157,14 @@ class SeaWiFSSensorContext implements SensorContext {
 
     @Override
     public int getTargetSampleOffset() {
+        // SeaWiFS uses a pixel geo-coding. The framework automatically copies the longitude and latitude bands to
+        // the target product. We need to skip overwriting these bands, therefore add an offset of 2. tb 2013-11-27
         return 2;
     }
 
     @Override
     public double correctSunAzimuth(double sunAzimuth) {
-        // according to a discussion in the OceanCOlor forum at NASA, the relative azimuth angle for SeaWiFS is calculated according t0:
+        // according to a discussion in the OceanColor forum at NASA, the relative azimuth angle for SeaWiFS is calculated according t0:
         //      Relative Azimuth = Sensor Azimuth - 180.0 - Solar azimuth
         // as the NN code calculates a mere difference, we add 180 degrees at this point to come to the same definition of
         // relative azimuth angle.

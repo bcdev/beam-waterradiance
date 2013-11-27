@@ -1,6 +1,7 @@
 package org.esa.beam.ocnnrd;
 
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.PixelGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
@@ -31,10 +32,15 @@ class SeaWiFSL1BProduct {
         addL_765(seawifsL1BProduct);
         addL_865(seawifsL1BProduct);
 
+        addLongitude(seawifsL1BProduct);
+        addLatitude(seawifsL1BProduct);
         addSolz(seawifsL1BProduct);
         addSola(seawifsL1BProduct);
         addSenz(seawifsL1BProduct);
         addSena(seawifsL1BProduct);
+
+        final PixelGeoCoding pixelGeoCoding = new PixelGeoCoding(seawifsL1BProduct.getBand("latitude"), seawifsL1BProduct.getBand("longitude"), "", 1);
+        seawifsL1BProduct.setGeoCoding(pixelGeoCoding);
 
         return seawifsL1BProduct;
     }
@@ -119,6 +125,26 @@ class SeaWiFSL1BProduct {
         band.setData(rasterData);
     }
 
+    private static void addLongitude(Product merisL1BProduct) {
+        final Band band = merisL1BProduct.addBand("longitude", ProductData.TYPE_FLOAT32);
+        final ProductData rasterData = band.createCompatibleRasterData();
+        rasterData.setElemFloatAt(0, -4.251f);
+        rasterData.setElemFloatAt(1, -3.943f);
+        rasterData.setElemFloatAt(2, -6.234f);
+        rasterData.setElemFloatAt(3, -4.867f);
+        band.setData(rasterData);
+    }
+
+    private static void addLatitude(Product merisL1BProduct) {
+        final Band band = merisL1BProduct.addBand("latitude", ProductData.TYPE_FLOAT32);
+        final ProductData rasterData = band.createCompatibleRasterData();
+        rasterData.setElemFloatAt(0, -17.088f);
+        rasterData.setElemFloatAt(1, -17.381f);
+        rasterData.setElemFloatAt(2, -17.474f);
+        rasterData.setElemFloatAt(3, -18.872f);
+        band.setData(rasterData);
+    }
+
     private static void addSolz(Product merisL1BProduct) {
         final Band band = merisL1BProduct.addBand("solz", ProductData.TYPE_FLOAT32);
         final ProductData rasterData = band.createCompatibleRasterData();
@@ -163,87 +189,84 @@ class SeaWiFSL1BProduct {
     static void assertCorrect_Rl_Tosa_01(Product product) {
         final Band band = product.getBand("rl_tosa_1");
         assertNotNull(band);
-        assertEquals(0.f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.f, band.getSampleFloat(1, 1), 1e-8);
-        // @todo 1 tb/** not what we want! tb 2013-11-21
+        assertEquals(0.05482029542326927f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.05420253425836563f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0555356927216053f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.055078815668821335f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Rl_Path_01(Product product) {
         final Band band = product.getBand("rl_path_1");
         assertNotNull(band);
-        assertEquals(0.0038101505488157272f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.003856460563838482f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.003888737643137574f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.003830398665741086f, band.getSampleFloat(1, 1), 1e-8);
-        // @todo 1 tb/** too low! tb 2013-11-21
+        assertEquals(0.15172167122364044f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.15015892684459686f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.1545717418193817f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.1521068662405014f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Reflec_01(Product product) {
         final Band band = product.getBand("reflec_1");
         assertNotNull(band);
-        assertEquals(0.013262005522847176f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.012986714951694012f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.014198416844010353f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.013018537312746048f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.028195686638355255f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.028843343257904053f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.027871686965227127f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.03022538684308529f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Reflec_05(Product product) {
         final Band band = product.getBand("reflec_5");
         assertNotNull(band);
-        assertEquals(0.01773720420897007f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.018196403980255127f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.016621369868516922f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.019210578873753548f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.004554662387818098f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.005389802623540163f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0034011811949312687f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.005292304791510105f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Trans_Down_01(Product product) {
         final Band band = product.getBand("trans_down_1");
         assertNotNull(band);
-        assertEquals(0.00004605270078172907f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.00005253469498711638f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.00003079828093177639f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.000051871687901439145f, band.getSampleFloat(1, 1), 1e-8);
-        // @todo 1 tb/** too low! tb 2013-11-21
+        assertEquals(0.8417088985443115f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.8424979448318481f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.8413354754447937f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.840110182762146f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Trans_Up_01(Product product) {
         final Band band = product.getBand("trans_up_1");
         assertNotNull(band);
-        assertEquals(0.9828861355781555f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.9835160970687866f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.9828794598579407f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.9834886789321899f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.8371795415878296f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.8417350053787231f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.8165712356567383f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.8368776440620422f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Aot_550(Product product) {
         final Band band = product.getBand("aot_550");
         assertNotNull(band);
-        assertEquals(0.9825534820556641f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.9838225841522217f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.9797084927558899f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.9834264516830444f, band.getSampleFloat(1, 1), 1e-8);
-        // @todo 1 tb/** too high! Variables mapping error? tb 2013-11-21
+        assertEquals(0.02175370790064335f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.012118607759475708f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.021470965817570686f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.011611931957304478f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Ang_864_443(Product product) {
         final Band band = product.getBand("ang_864_443");
         assertNotNull(band);
-        assertEquals(0.988713800907135f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.98944491147995f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.9866451025009155f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.9893500208854675f, band.getSampleFloat(1, 1), 1e-8);
-        // @todo 1 tb/** too high! tb 2013-11-21
+        assertEquals(2.0081160068511963f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.08352840691804886f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(1.219462513923645f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.8114418983459473f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** too high and inconsistent values! tb 2013-11-26
     }
 
     static void assertCorrect_A_Pig(Product product) {
         final Band band = product.getBand("a_pig");
         assertNotNull(band);
-        assertEquals(0.02175370790064335f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.012118607759475708f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.021470965817570686f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.011611931957304478f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.0001492759765824303f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(3.816504889897487E-9f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0004800829046871513f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(4.890403459967274E-8f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** too low and inconsistent values! tb 2013-11-26
     }
 }
 
