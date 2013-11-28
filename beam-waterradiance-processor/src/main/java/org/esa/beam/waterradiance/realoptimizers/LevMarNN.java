@@ -532,7 +532,6 @@ public class LevMarNN {
 //        ; // without Jacobian
 
         model.init(nn_at_data);
-        model.setReferenceSignal(x11);
         costFunction.setReferenceSignal(x11);
         p = optimizer.optimize(p, x11, lb, ub);
 
@@ -552,29 +551,29 @@ public class LevMarNN {
         /* normalize water leaving radiance reflectances */
 
         // requires first to make RLw again
-        for (int i = 0; i < 12; i++) {
-            rlw1[i] = 0.0;
-            rlw2[i] = 0.0;
-        }
-
-        nn_in[0] = sun_zenith;
-        nn_in[1] = view_zeni;
-        nn_in[2] = azi_diff_hl;
-        nn_in[3] = temperature;
-        nn_in[4] = salinity;
-        System.arraycopy(rlw1, 0, nn_in, 5, 12);
-
-//        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
-        nn_out = nn_in;    // requested by CB, 20130517
-
 //        for (int i = 0; i < 12; i++) {
-//            rwn1[i] = nn_out[i] * M_PI;
+//            rlw1[i] = 0.0;
+//            rlw2[i] = 0.0;
 //        }
-
-        System.arraycopy(rlw2, 0, nn_in, 5, 12);
-
-//        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
-        nn_out = nn_in;    // requested by CB, 20130517
+//
+//        nn_in[0] = sun_zenith;
+//        nn_in[1] = view_zeni;
+//        nn_in[2] = azi_diff_hl;
+//        nn_in[3] = temperature;
+//        nn_in[4] = salinity;
+//        System.arraycopy(rlw1, 0, nn_in, 5, 12);
+//
+////        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
+//        nn_out = nn_in;    // requested by CB, 20130517
+//
+////        for (int i = 0; i < 12; i++) {
+////            rwn1[i] = nn_out[i] * M_PI;
+////        }
+//
+//        System.arraycopy(rlw2, 0, nn_in, 5, 12);
+//
+////        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
+//        nn_out = nn_in;    // requested by CB, 20130517
 
 //        for (int i = 0; i < 12; i++) {
 //            rwn2[i] = nn_out[i] * M_PI;
@@ -603,8 +602,8 @@ public class LevMarNN {
         output[offset + 2] = Math.exp(p[3]);    // a_pig
         output[offset + 3] = Math.exp(p[4]);    // a_part
         output[offset + 4] = Math.exp(p[5]);    // a_gelb
-        output[offset + 5] = Math.exp(p[6]);    // b_part
-        output[offset + 6] = Math.exp(p[7]);    // b_part
+        output[offset + 5] = Math.exp(p[6]);    // b_spm
+        output[offset + 6] = Math.exp(p[7]);    // b_wit
         output[offset + 7] = optimizer.getCost();  // sum_sq
         output[offset + 8] = optimizer.getNumberOfIterations();
 

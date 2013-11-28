@@ -92,7 +92,7 @@ class NnAtmoWat {
         double x;
         double y;
         double z;
-        if (sensor != Sensor.MODIS) {
+       if (sensor != Sensor.MODIS) {
             x = sin_elevation * Math.cos(azimuth);
             y = sin_elevation * Math.sin(azimuth);
             z = Math.cos(elevation);
