@@ -164,24 +164,15 @@ class SeaWiFSSensorContext implements SensorContext {
 
     @Override
     public double correctSunAzimuth(double sunAzimuth) {
-        // according to a discussion in the OceanColor forum at NASA, the relative azimuth angle for SeaWiFS is calculated according t0:
-        //      Relative Azimuth = Sensor Azimuth - 180.0 - Solar azimuth
-        // as the NN code calculates a mere difference, we add 180 degrees at this point to come to the same definition of
-        // relative azimuth angle.
-        // http://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?pid=12696;hl=azimuth#pid12696
-        final double correctedAzimuth = correctAzimuthAngle(sunAzimuth);
-        return correctedAzimuth + 180.0;
+        // after lengthy discussion with Tonio, we came to the conclusion that the solar azimuth for SeaWiFS is defined
+        // the same way as for MERIS, i.e. 0 is north, 90 east, 180 south, 270 west. So, nothing to correct. tb 2013-11-28
+        return sunAzimuth;
     }
 
     @Override
     public double correctViewAzimuth(double viewAzimuth) {
-        return correctAzimuthAngle(viewAzimuth);
-    }
-
-    private double correctAzimuthAngle(double azimuth) {
-        if (azimuth < 0.0) {
-            return azimuth + 360.0;
-        }
-        return azimuth;
+        // after lengthy discussion with Tonio, we came to the conclusion that the viewing azimuth for SeaWiFS is defined
+        // the same way as for MERIS, i.e. 0 is north, 90 east, 180 south, 270 west. So, nothing to correct. tb 2013-11-28
+        return viewAzimuth;
     }
 }

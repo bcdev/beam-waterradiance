@@ -198,75 +198,75 @@ class SeaWiFSL1BProduct {
     static void assertCorrect_Rl_Path_01(Product product) {
         final Band band = product.getBand("rl_path_1");
         assertNotNull(band);
-        assertEquals(0.15172167122364044f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.15015892684459686f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.1545717418193817f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.1521068662405014f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.18819469213485718f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.18701453506946564f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.19626247882843018f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.19777140021324158f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Reflec_01(Product product) {
         final Band band = product.getBand("reflec_1");
         assertNotNull(band);
-        assertEquals(0.028195686638355255f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.028843343257904053f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.027871686965227127f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.03022538684308529f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.018103178590536118f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.018857283517718315f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.021525856107473373f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.014629479497671127f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Reflec_05(Product product) {
         final Band band = product.getBand("reflec_5");
         assertNotNull(band);
-        assertEquals(0.004554662387818098f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.005389802623540163f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.0034011811949312687f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.005292304791510105f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.001866591046564281f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.0018462436273694038f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.001965941861271858f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.0018152230186387897f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Trans_Down_01(Product product) {
         final Band band = product.getBand("trans_down_1");
         assertNotNull(band);
-        assertEquals(0.8417088985443115f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.8424979448318481f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.8413354754447937f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.840110182762146f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.8284952640533447f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.8074647784233093f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.8324240446090698f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.7909423112869263f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Trans_Up_01(Product product) {
         final Band band = product.getBand("trans_up_1");
         assertNotNull(band);
-        assertEquals(0.8371795415878296f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.8417350053787231f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.8165712356567383f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.8368776440620422f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.8233382701873779f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.8063345551490784f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.80462646484375f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.7863488793373108f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Aot_550(Product product) {
         final Band band = product.getBand("aot_550");
         assertNotNull(band);
-        assertEquals(0.02175370790064335f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.012118607759475708f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.021470965817570686f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.011611931957304478f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.117086261510849f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.24799126386642456f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.08833273500204086f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.3352779448032379f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** too high and inconsistent values! tb 2013-11-28
     }
 
     static void assertCorrect_Ang_864_443(Product product) {
         final Band band = product.getBand("ang_864_443");
         assertNotNull(band);
-        assertEquals(2.0081160068511963f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.08352840691804886f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(1.219462513923645f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.8114418983459473f, band.getSampleFloat(1, 1), 1e-8);
-        // @todo 1 tb/** too high and inconsistent values! tb 2013-11-26
+        assertEquals(1.1420060396194458f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(1.71399986743927f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.966321587562561f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(1.6586097478866577f, band.getSampleFloat(1, 1), 1e-8);
+        // @todo 1 tb/** too high! tb 2013-11-28
     }
 
     static void assertCorrect_A_Pig(Product product) {
         final Band band = product.getBand("a_pig");
         assertNotNull(band);
-        assertEquals(0.0001492759765824303f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(3.816504889897487E-9f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.0004800829046871513f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(4.890403459967274E-8f, band.getSampleFloat(1, 1), 1e-8);
-        // @todo 1 tb/** too low and inconsistent values! tb 2013-11-26
+        assertEquals(0.003869724227115512f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.00391016760841012f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0033779277000576258f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.004845717456191778f, band.getSampleFloat(1, 1), 1e-8);
     }
 }
 
