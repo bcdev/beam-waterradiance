@@ -71,7 +71,7 @@ public class LevMarNN {
     private double[] p;
     private double[] p_init;
 
-    private final double[] nn_in;
+    //private final double[] nn_in;
     private final double[] rlw1;
     private final double[] rlw2;
     private final double[] L_toa;
@@ -101,7 +101,7 @@ public class LevMarNN {
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
         rl_toa = new double[NLAM];
-        nn_in = new double[NLAM];
+        //nn_in = new double[NLAM];
         nn_out = new double[40];
 
 //        double[] rwn1 = new double[40];
@@ -196,7 +196,7 @@ public class LevMarNN {
         optimizer = new LevenbergMarquardtOptimizer(p.length, x11.length);
         optimizer.init(model, costFunction, breakingCriterion);
 
-        nnAtmoWat = new NnAtmoWat(alphaTab, sensorContext.getSensor());
+        nnAtmoWat = new NnAtmoWat(alphaTab, sensorContext);
         nn_at_data = new s_nn_atdata();
         nn_at_data.prepare = -1;
     }

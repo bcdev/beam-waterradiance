@@ -1,6 +1,7 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
 import org.esa.beam.ocnnrd.Sensor;
+import org.esa.beam.ocnnrd.SensorContext;
 
 import java.io.IOException;
 
@@ -38,7 +39,7 @@ class NnAtmoWat {
     private final double[] rpath_nn;
     private final double[] tup_nn;
     private final double[] rw_nn;
-    private final Sensor sensor;
+    private final SensorContext sensorContext;
 
     private double[] outnet1;
     private double[] outnet2;
@@ -46,9 +47,9 @@ class NnAtmoWat {
     private double[] rlw_nn;
     private final NnWater nnWater;
 
-    NnAtmoWat(AlphaTab alphaTab, Sensor sensor) throws IOException {
+    NnAtmoWat(AlphaTab alphaTab, SensorContext sensorContext) throws IOException {
         this.alphaTab = alphaTab;
-        this.sensor = sensor;
+        this.sensorContext = sensorContext;
         final NnResources nnResources = new NnResources();
         rhopath_net = LevMarNN.prepare_a_nn(nnResources.getAcForwardNetPath(rhopath_net_name));
         tdown_net = LevMarNN.prepare_a_nn(nnResources.getAcForwardNetPath(tdown_net_name));
@@ -85,22 +86,19 @@ class NnAtmoWat {
         final double temperature = nn_data.getTemperature();
         final double salinity = nn_data.getSalinity();
 
-        final double azimuth = DEG_2_RAD * azi_diff_hl;
+        double azimuth;
+        if (sensorContext.getSensor() == Sensor.MODIS) {
+            azimuth = DEG_2_RAD * nn_data.getView_azi();
+        } else {
+            azimuth = DEG_2_RAD * azi_diff_hl;
+        }
         final double elevation = DEG_2_RAD * view_zeni;
 
         final double sin_elevation = Math.sin(elevation);
-        double x;
-        double y;
-        double z;
-       if (sensor != Sensor.MODIS) {
-            x = sin_elevation * Math.cos(azimuth);
-            y = sin_elevation * Math.sin(azimuth);
-            z = Math.cos(elevation);
-        } else {
-            x = sin_elevation * Math.cos(DEG_2_RAD * nn_data.getView_azi());
-            y = sin_elevation * Math.sin(DEG_2_RAD * nn_data.getView_azi());
-            z = Math.cos(elevation);
-        }
+        final double x = sin_elevation * Math.cos(azimuth);
+        final double y = sin_elevation * Math.sin(azimuth);
+        final double z = Math.cos(elevation);
+
 
         final double log_aot = conc_all[0];
         final double log_ang = conc_all[1];
@@ -135,7 +133,9 @@ class NnAtmoWat {
         outnet2 = LevMarNN.use_the_nn(tdown_net, innet, outnet2, alphaTab);
         outnet3 = LevMarNN.use_the_nn(tup_net, innet, outnet3, alphaTab);
 
-        int nlam = rtosa_nn.length; // if n == 11, then iteration for LM fit, if > 11, then computation for full spectrum
+//        final int[] nnOutputIndices = sensorContext.getNnOutputIndices();
+         int nlam = rtosa_nn.length; // if n == 11, then iteration for LM fit, if > 11, then computation for full spectrum
+        //int nlam = nnOutputIndices.length; // if n == 11, then iteration for LM fit, if > 11, then computation for full spectrum
         if (nlam == 11) {
             for (int ilam = 0; ilam < nlam; ilam++) {
                 final int ix = lam29_meris11_ix[ilam];
