@@ -102,6 +102,21 @@ public class OcNnRdOperatorTest {
     }
 
     @Test
+    public void testAddBand() {
+        final TestProductConfigurer productConfigurer = new TestProductConfigurer();
+
+        OcNnRdOperator.addBand(productConfigurer, "testBand", ProductData.TYPE_FLOAT32, "meter", "describe me");
+
+        final Band band = productConfigurer.getBand("testBand");
+        assertNotNull(band);
+        assertEquals("testBand", band.getName());
+        assertEquals(ProductData.TYPE_FLOAT32, band.getDataType());
+        assertEquals("meter", band.getUnit());
+        assertEquals("describe me", band.getDescription());
+        assertEquals(Float.NaN, band.getNoDataValue(), 1e-8);
+    }
+
+    @Test
     public void testGetProductType_fromParameter() {
         final OcNnRdOperator ocNnRdOperator = new OcNnRdOperator();
         ocNnRdOperator.sensorTypeString = "MODIS_CSV";

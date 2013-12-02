@@ -211,8 +211,8 @@ public class OcNnRdOperator extends PixelOperator {
         }
     }
 
-    //@todo 4 tb/** make static and add test
-    private void addBand(ProductConfigurer productConfigurer, String name, int type, String unit, String description) {
+    // package access for testing only tb 2013-12-02
+    static void addBand(ProductConfigurer productConfigurer, String name, int type, String unit, String description) {
         Band band = productConfigurer.addBand(name, type);
         band.setDescription(description);
         band.setUnit(unit);
