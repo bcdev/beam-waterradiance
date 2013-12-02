@@ -559,7 +559,6 @@ class MerisL1BProduct {
         assertEquals(15.f, band.getSampleFloat(1, 0), 1e-8);
         assertEquals(15.f, band.getSampleFloat(0, 1), 1e-8);
         assertEquals(15.f, band.getSampleFloat(1, 1), 1e-8);
-        // @todo 1 tb/** does this make sense? tb 2013-11-21
     }
 
     static void assertCorrect_Salinity(Product product) {
@@ -569,7 +568,6 @@ class MerisL1BProduct {
         assertEquals(35.f, band.getSampleFloat(1, 0), 1e-8);
         assertEquals(35.f, band.getSampleFloat(0, 1), 1e-8);
         assertEquals(35.f, band.getSampleFloat(1, 1), 1e-8);
-        // @todo 1 tb/** does this make sense? tb 2013-11-21
     }
 
     static void assertCorrect_Atm_Press_2(Product product) {
