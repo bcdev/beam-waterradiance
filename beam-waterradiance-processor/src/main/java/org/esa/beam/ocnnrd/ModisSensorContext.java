@@ -41,11 +41,7 @@ class ModisSensorContext implements SensorContext {
     private final static int MODIS_L1B_NUM_SPECTRAL_BANDS = MODIS_L1B_SPECTRAL_BAND_NAMES.length;
     private final static double surfacePressureDefaultValue = 1019.0;
     private final static double ozoneDefaultValue = 330.0;
-    //    private final static double[] defaultSolarFluxes = {556.3234802246094, 606.7602844238281, 629.3416137695312,
-//            600.0957214355469, 602.5105712890625, 492.57408142089844, 479.41172790527344, 412.11121520996096,
-//            309.7836883544922};
-    // @todo 1 tb/tf where do these vaules originate from. I doubt that they are correct - or that they have the correct physical unit
-    //private final static double[] defaultSolarFluxes = {171.18, 188.76, 194.18, 185.94, 187.00, 152.44, 148.14, 127.60, 94.874};
+
     // derived from cahalan table from Kerstin tb 2013-11-15
     private final static double[] defaultSolarFluxes = new double[]{1740.458085, 1844.698571, 1949.723913, 1875.394737, 1882.428333, 1545.183846, 1507.529167, 1277.037, 945.3382727};
     private static final String globalMetadataName = "GLOBAL_METADATA";
@@ -114,7 +110,6 @@ class ModisSensorContext implements SensorContext {
      */
     @Override
     public void scaleInputSpectralData(double[] inputs) {
-        // @todo 1 tb/** write test tb 2013-11-19
         final double oneDivEarthSunDistanceSquare = 1.0 / (earthSunDistance * earthSunDistance);
         for (int i = 0; i < MODIS_L1B_NUM_SPECTRAL_BANDS; i++) {
             final int index = Constants.INPUT_RAD_OFFSET + i;

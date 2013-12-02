@@ -19,6 +19,7 @@ public class ModisSensorContextTest {
     @Before
     public void setUp() throws Exception {
         modisSensorContext = new ModisSensorContext();
+        modisSensorContext.init(new Product("dont", "care", 2, 2));
     }
 
     @Test
@@ -186,6 +187,16 @@ public class ModisSensorContextTest {
     public void testCorrectViewAzimuth() {
         assertEquals(43.9, modisSensorContext.correctViewAzimuth(43.9), 1e-8);
         assertEquals(-55.13 + 360.0, modisSensorContext.correctViewAzimuth(-55.13), 1e-8);
+    }
+
+    @Test
+    public void testScaleInputSpectralData() {
+        final double[] input = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+
+        modisSensorContext.scaleInputSpectralData(input);
+
+        final double[] expetcted = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 554.0050149440083, 1174.3715843568225, 1861.8491905105352, 2387.8267411366005, 2995.9777421318645, 2951.0837649197515, 3359.030062965603, 3251.9480169799162, 2708.194661894864};
+        assertArrayEquals(expetcted, input, 1e-8);
     }
 
     private Product createProductWithSolarFluxMetadata() {
