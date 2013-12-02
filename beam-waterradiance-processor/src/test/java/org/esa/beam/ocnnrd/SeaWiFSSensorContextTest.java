@@ -173,4 +173,14 @@ public class SeaWiFSSensorContextTest {
         assertEquals(3.7, seaWiFSSensorContext.correctViewAzimuth(3.7), 1e-8);
         assertEquals(-45.43, seaWiFSSensorContext.correctViewAzimuth(-45.43), 1e-8);
     }
+
+    @Test
+    public void testScaleInputSpectralData() {
+        final double[] input = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+
+        seaWiFSSensorContext.scaleInputSpectralData(input);
+
+        final double[] expected = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0};
+        assertArrayEquals(expected, input, 1e-8);
+    }
 } 

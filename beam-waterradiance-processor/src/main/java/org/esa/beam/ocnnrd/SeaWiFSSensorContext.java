@@ -95,14 +95,13 @@ class SeaWiFSSensorContext implements SensorContext {
 
     /**
      * Scales the input spectral data to be consistent with the MERIS case. Resulting data should be TOA radiance in
-     *      [mW/(m^2 * sr * nm)] or [LU], i.e. Luminance Unit
+     * [mW/(m^2 * sr * nm)] or [LU], i.e. Luminance Unit
      * Scaling is performed "in place", if necessary
      *
      * @param inputs input data vector
      */
     @Override
     public void scaleInputSpectralData(double[] inputs) {
-        // @todo 1 tb/** write test tb 2013-11-21
         for (int i = 0; i < SEAWIFS_L1B_NUM_SPECTRAL_BANDS; i++) {
             final int index = Constants.INPUT_RAD_OFFSET + i;
             inputs[index] *= 10.0;

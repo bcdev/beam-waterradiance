@@ -195,8 +195,8 @@ public class ModisSensorContextTest {
 
         modisSensorContext.scaleInputSpectralData(input);
 
-        final double[] expetcted = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 554.0050149440083, 1174.3715843568225, 1861.8491905105352, 2387.8267411366005, 2995.9777421318645, 2951.0837649197515, 3359.030062965603, 3251.9480169799162, 2708.194661894864};
-        assertArrayEquals(expetcted, input, 1e-8);
+        final double[] expected = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 554.0050149440083, 1174.3715843568225, 1861.8491905105352, 2387.8267411366005, 2995.9777421318645, 2951.0837649197515, 3359.030062965603, 3251.9480169799162, 2708.194661894864};
+        assertArrayEquals(expected, input, 1e-8);
     }
 
     private Product createProductWithSolarFluxMetadata() {
