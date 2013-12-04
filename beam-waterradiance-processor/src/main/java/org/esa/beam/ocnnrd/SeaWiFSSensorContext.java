@@ -9,7 +9,6 @@ class SeaWiFSSensorContext implements SensorContext {
     private static final int[] SPECTRAL_OUTPUT_INDEXES = new int[]{1, 2, 3, 4, 5, 6, 7, 8};
     private static final float[] SPECTRAL_OUTPUT_WAVELENGTHS = new float[]{412.f, 443.f, 490.f, 510.f, 555.f, 670.f, 765.f, 865.f};
     private static final int[] NN_OUTPUT_INDICES = new int[]{1, 2, 4, 6, 10, 16, 23, 25};
-    // @todo 2 tb/tb ask RD - out indices are not exactly matching input WLs: 4-> 489nm
 
     // those are definitely provided in the worn physical unit
     // private static final double[] defaultNasaSolarFluxes = {171.18, 188.76, 193.38, 192.56, 183.76, 151.22, 123.91, 95.965};

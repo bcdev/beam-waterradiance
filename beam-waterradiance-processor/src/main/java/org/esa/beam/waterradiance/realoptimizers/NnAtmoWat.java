@@ -149,6 +149,7 @@ class NnAtmoWat {
 //                final double rlwnn = rlw_nn[ilam];
                 final double rlwnn = Math.exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517
                 rw_nn[ilam] = rlwnn;//M_PI;
+                // @todo 1 tb/tb - check with nns if we need to multiply by Pi here
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
             }
         } else if (nlam == 9) {
