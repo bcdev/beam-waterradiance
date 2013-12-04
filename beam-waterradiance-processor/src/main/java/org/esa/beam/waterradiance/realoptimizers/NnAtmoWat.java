@@ -1,6 +1,5 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
-import org.esa.beam.ocnnrd.Sensor;
 import org.esa.beam.ocnnrd.SensorContext;
 
 import java.io.IOException;
@@ -85,13 +84,7 @@ class NnAtmoWat {
         //azi_diff_hl=180.0-azi_diff_hl;
         final double temperature = nn_data.getTemperature();
         final double salinity = nn_data.getSalinity();
-
-        double azimuth;
-        if (sensorContext.getSensor() == Sensor.MODIS) {
-            azimuth = DEG_2_RAD * nn_data.getView_azi();
-        } else {
-            azimuth = DEG_2_RAD * azi_diff_hl;
-        }
+        final double azimuth = DEG_2_RAD * azi_diff_hl;
         final double elevation = DEG_2_RAD * view_zeni;
 
         final double sin_elevation = Math.sin(elevation);
@@ -134,7 +127,7 @@ class NnAtmoWat {
         outnet3 = LevMarNN.use_the_nn(tup_net, innet, outnet3, alphaTab);
 
 //        final int[] nnOutputIndices = sensorContext.getNnOutputIndices();
-         int nlam = rtosa_nn.length; // if n == 11, then iteration for LM fit, if > 11, then computation for full spectrum
+        int nlam = rtosa_nn.length; // if n == 11, then iteration for LM fit, if > 11, then computation for full spectrum
         //int nlam = nnOutputIndices.length; // if n == 11, then iteration for LM fit, if > 11, then computation for full spectrum
         if (nlam == 11) {
             for (int ilam = 0; ilam < nlam; ilam++) {
