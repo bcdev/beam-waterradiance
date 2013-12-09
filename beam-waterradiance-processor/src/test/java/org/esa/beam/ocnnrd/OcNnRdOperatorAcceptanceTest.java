@@ -60,30 +60,9 @@ public class OcNnRdOperatorAcceptanceTest {
             assertNotNull(savedProduct);
 
             MerisL1BProduct.assertCorrect_Rl_Tosa_01(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_02(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_03(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_04(savedProduct);
             MerisL1BProduct.assertCorrect_Rl_Tosa_05(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_06(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_07(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_08(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_09(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_10(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_12(savedProduct);
-            MerisL1BProduct.assertCorrect_Rl_Tosa_13(savedProduct);
 
             MerisL1BProduct.assertCorrect_Rl_Path_01(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_02(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_03(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_04(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_05(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_06(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_07(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_08(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_09(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_10(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_12(savedProduct);
-//            MerisL1BProduct.assertCorrect_Rl_Path_13(savedProduct);
 //
             MerisL1BProduct.assertCorrect_Reflec_01(savedProduct);
             MerisL1BProduct.assertCorrect_Reflec_05(savedProduct);

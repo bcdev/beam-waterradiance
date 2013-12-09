@@ -31,7 +31,7 @@ public class NnResourcesTest {
     public void testGetNetWaterPath() {
         final String netWaterPath = nnResources.getNetWaterPath();
         assertNotNull(netWaterPath);
-        assertTrue(netWaterPath.contains("37x77x97_86.7.net"));
+        assertTrue(netWaterPath.contains("17x97x47_292.6.net"));
         assertTrue(new File(netWaterPath).isFile());
     }
 
@@ -77,9 +77,9 @@ public class NnResourcesTest {
 
     @Test
     public void testGetAcForwardNetPath() {
-        final String acForwardNetPath = nnResources.getAcForwardNetPath("ac_rhopath_b29/17x37x31_121.8.net");
+        final String acForwardNetPath = nnResources.getAcForwardNetPath("ac_rhopath_b29/17x37x31_51.9.net");
         assertNotNull(acForwardNetPath);
-        assertTrue(acForwardNetPath.contains("ac_rhopath_b29/17x37x31_121.8.net"));
+        assertTrue(acForwardNetPath.contains("ac_rhopath_b29/17x37x31_51.9.net"));
         assertTrue(new File(acForwardNetPath).isFile());
     }
 }

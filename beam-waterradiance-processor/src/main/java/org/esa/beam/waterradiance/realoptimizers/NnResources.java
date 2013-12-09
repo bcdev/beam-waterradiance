@@ -7,14 +7,14 @@ public class NnResources {
 
     private static final String AUXDATA_PATH = "auxdata/";
     private static final String SMILE_CORR_PATH = "auxdata/smile/";
-    private static final String AC_FWD_PATH = "auxdata/oc_cci_20121127/ac_forward_all/";
+    private static final String AC_FWD_PATH = "auxdata/oc_cci_20131206/ac_forward_all/";
 
     public String getNormNetPath() {
         return getResourcePath(AUXDATA_PATH + "27x41x27_23.3.net");
     }
 
     public String getNetWaterPath() {
-        return getResourcePath(AUXDATA_PATH + "for_water_rw29_20120318/37x77x97_86.7.net");
+        return getResourcePath(AUXDATA_PATH + "for_water_logrw29_20121206/17x97x47_292.6.net");
     }
 
     public String getCentralWavelengthFrPath() {

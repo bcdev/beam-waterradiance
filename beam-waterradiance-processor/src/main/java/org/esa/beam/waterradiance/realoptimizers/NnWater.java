@@ -49,20 +49,22 @@ class NnWater {
         if (n == 11) {
             for (int ilam = 0; ilam < n; ilam++) {
                 final int ix = lam29_meris11_ix[ilam];
-                rlw_nn[ilam] = outnet[ix];
+                rlw_nn[ilam] = Math.exp(outnet[ix]);
             }
         } else if (n == 9) {
             for (int ilam = 0; ilam < n; ilam++) {
                 final int ix = lam29_modis9_ix[ilam];
-                rlw_nn[ilam] = outnet[ix];
+                rlw_nn[ilam] = Math.exp(outnet[ix]);
             }
         } else if (n == 8) {
             for (int ilam = 0; ilam < n; ilam++) {
                 final int ix = lam29_seawifs8_ix[ilam];
-                rlw_nn[ilam] = outnet[ix];
+                rlw_nn[ilam] = Math.exp(outnet[ix]);
             }
         } else {
-            System.arraycopy(outnet, 0, rlw_nn, 0, 29);
+            for (int i = 0; i < 29; i++) {
+                rlw_nn[i] = Math.exp(outnet[i]);
+            }
         }
 
         nnReturnData.setOutputValues(rlw_nn);

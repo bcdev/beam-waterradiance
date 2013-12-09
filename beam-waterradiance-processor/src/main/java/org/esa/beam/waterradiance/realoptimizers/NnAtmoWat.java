@@ -19,9 +19,14 @@ class NnAtmoWat {
     //char *tup_net_name    ={"./neural_nets/oc_cci_20120222/ac_forward_all/ac_tup_b29/27x27_75.4.net"};
 
     // new nets, RD 20130308:
-    private static final String rhopath_net_name = "ac_rhopath_b29/17x37x31_121.8.net";
-    private static final String tdown_net_name = "t_down_b29/17x37x31_89.4.net";
-    private static final String tup_net_name = "ac_tup_b29/17x37x31_83.8.net";
+//    private static final String rhopath_net_name = "ac_rhopath_b29/17x37x31_121.8.net";
+//    private static final String tdown_net_name = "t_down_b29/17x37x31_89.4.net";
+//    private static final String tup_net_name = "ac_tup_b29/17x37x31_83.8.net";
+
+    // new nets tb 2013-12-06
+    private static final String rhopath_net_name = "ac_rhopath_b29/17x37x31_51.9.net";
+    private static final String tdown_net_name = "t_down_b29/17x37x31_132.6.net";
+    private static final String tup_net_name = "ac_tup_b29/17x37x31_118.5.net";
 
     private static final double DEG_2_RAD = (3.1415927 / 180.0);
     private static final int[] lam29_meris11_ix = {1, 2, 4, 6, 11, 12, 15, 20, 22, 24, 25};
@@ -110,12 +115,7 @@ class NnAtmoWat {
         innet[2] = y;
         innet[3] = z;
 
-        //innet[4] = log_aot;
-        //innet[5] = log_ang;
-        //innet[6] = log_wind;
-
-        // CHANGED for new nets, RD 20130308:
-        innet[4] = Math.exp(log_aot);
+        innet[4] = log_aot;
         innet[5] = Math.exp(log_ang);
         innet[6] = Math.exp(log_wind);
 
@@ -139,10 +139,8 @@ class NnAtmoWat {
             nnReturnData = nnWater.nn_water(conc_all, rlw_nn, rtosa_nn.length, nn_data, wat_net_for, alphaTab, nnReturnData);
             rlw_nn = nnReturnData.getOutputValues();
             for (int ilam = 0; ilam < 11; ilam++) {
-//                final double rlwnn = rlw_nn[ilam];
-                final double rlwnn = Math.exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517
-                rw_nn[ilam] = rlwnn;//M_PI;
                 // @todo 1 tb/tb - check with nns if we need to multiply by Pi here
+                rw_nn[ilam] = rlw_nn[ilam];
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
             }
         } else if (nlam == 9) {
@@ -155,9 +153,7 @@ class NnAtmoWat {
             nnReturnData = nnWater.nn_water(conc_all, rlw_nn, rtosa_nn.length, nn_data, wat_net_for, alphaTab, nnReturnData);
             rlw_nn = nnReturnData.getOutputValues();
             for (int ilam = 0; ilam < nlam; ilam++) {
-//                final double rlwnn = rlw_nn[ilam];
-                final double rlwnn = Math.exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517
-                rw_nn[ilam] = rlwnn;//M_PI;
+                rw_nn[ilam] = rlw_nn[ilam];
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
             }
         } else if (nlam == 8) {
@@ -170,9 +166,7 @@ class NnAtmoWat {
             nnReturnData = nnWater.nn_water(conc_all, rlw_nn, rtosa_nn.length, nn_data, wat_net_for, alphaTab, nnReturnData);
             rlw_nn = nnReturnData.getOutputValues();
             for (int ilam = 0; ilam < nlam; ilam++) {
-//                final double rlwnn = rlw_nn[ilam];
-                final double rlwnn = Math.exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517
-                rw_nn[ilam] = rlwnn;//M_PI;
+                rw_nn[ilam] = rlw_nn[ilam];
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
             }
         } else {
@@ -186,9 +180,7 @@ class NnAtmoWat {
             rlw_nn = nnReturnData.getOutputValues();
             nn_data = nnReturnData.getNn_atdata();
             for (int ilam = 0; ilam < nlam; ilam++) {
-//                final double rlwnn = rlw_nn[ilam];
-                final double rlwnn = Math.exp(rlw_nn[ilam]);  // new net 27x17_754.1 --> 37x77x97_86.7.net, 20130517
-                rw_nn[ilam] = rlwnn;//*M_PI;// ! with pi included, 21 bands
+                rw_nn[ilam] = rlw_nn[ilam];
                 rtosa_nn[ilam] = rpath_nn[ilam] + rw_nn[ilam] * tdown_nn[ilam] * tup_nn[ilam];
                 nn_data.setTdown_nn(ilam, tdown_nn[ilam]);
                 nn_data.setTup_nn(ilam, tup_nn[ilam]);
