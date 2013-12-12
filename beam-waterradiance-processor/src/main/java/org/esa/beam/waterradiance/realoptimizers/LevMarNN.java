@@ -9,11 +9,7 @@ import org.esa.beam.siocs.abstractprocessor.ForwardModel;
 import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
 import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 public class LevMarNN {
 
@@ -71,7 +67,7 @@ public class LevMarNN {
     private double[] p;
     private double[] p_init;
 
-    //private final double[] nn_in;
+    private final double[] nn_in;
     private final double[] rlw1;
     private final double[] rlw2;
     private final double[] L_toa;
@@ -93,6 +89,7 @@ public class LevMarNN {
     private double[] nn_out;
     private final NnAtmoWat nnAtmoWat;
     private s_nn_atdata nn_at_data;
+    private a_nn norm_net;
     private double[] x11;
 
 
@@ -101,8 +98,8 @@ public class LevMarNN {
         trans_ozon = new double[NLAM];
         solar_flux = new double[NLAM];
         rl_toa = new double[NLAM];
-        //nn_in = new double[NLAM];
-        nn_out = new double[40];
+        nn_in = new double[NLAM];
+        nn_out = new double[NLAM];
 
 //        double[] rwn1 = new double[40];
 //        double[] rwn2 = new double[40];
@@ -187,7 +184,7 @@ public class LevMarNN {
         nnResources = new NnResources();
         alphaTab = new AlphaTab();
 
-        //norm_net = prepare_a_nn(nnResources.getNormNetPath());
+        norm_net = prepare_a_nn(nnResources.getNormNetPath());
 
         smile_tab_ini();
         model = new nn_atmo_watForwardModel();
@@ -556,14 +553,18 @@ public class LevMarNN {
 //            rlw2[i] = 0.0;
 //        }
 //
-//        nn_in[0] = sun_zenith;
-//        nn_in[1] = view_zeni;
-//        nn_in[2] = azi_diff_hl;
-//        nn_in[3] = temperature;
-//        nn_in[4] = salinity;
-//        System.arraycopy(rlw1, 0, nn_in, 5, 12);
+        nn_in[0] = sun_zenith;
+        nn_in[1] = view_zeni;
+        nn_in[2] = azi_diff_hl;
+        nn_in[3] = temperature;
+        nn_in[4] = salinity;
+        int offset = 5;
+        for (int n = 0; n < 29; n++) {
+            nn_in[offset] = Math.log(nn_at_data.rw_nn[n]);
+            ++offset;
+        }
 //
-////        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
+        nn_out = use_the_nn(norm_net, nn_in, nn_out, alphaTab);
 //        nn_out = nn_in;    // requested by CB, 20130517
 //
 ////        for (int i = 0; i < 12; i++) {
@@ -591,11 +592,11 @@ public class LevMarNN {
             ix = sensorLambdas[i];
             output[i] = rho_tosa_corr[i] / M_PI;
             output[i + nlam] = nn_at_data.rpath_nn[ix];
-            output[i + nlam * 2] = nn_at_data.rw_nn[ix];
+            output[i + nlam * 2] = Math.exp(nn_out[ix]);
             output[i + nlam * 3] = nn_at_data.tdown_nn[ix];
             output[i + nlam * 4] = nn_at_data.tup_nn[ix];
         }
-        int offset = 5 * nlam;
+        offset = 5 * nlam;
 
         output[offset] = Math.exp(p[0]);        // aot_550
         output[offset + 1] = Math.exp(p[1]);    // ang_865_443
@@ -730,14 +731,14 @@ public class LevMarNN {
                     double[][][] wgt = make_mtxv(numberOfPlanes, size);
                     double[][] act = make_vecv(numberOfPlanes, size);
                     for (int i = 0; i < numberOfPlanes - 1; i++) {
-                        line = reader.readLine();
+                        reader.readLine();
                         for (int j = 0; j < subSize[i]; j++) {
                             line = reader.readLine();
                             bias[i][j] = Double.parseDouble(line);
                         }
                     }
                     for (int i = 0; i < numberOfPlanes - 1; i++) {
-                        line = reader.readLine();
+                        reader.readLine();
                         for (int j = 0; j < size[i + 1]; j++) {
                             for (int k = 0; k < size[i]; k++) {
                                 line = reader.readLine();

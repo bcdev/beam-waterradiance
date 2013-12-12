@@ -205,21 +205,21 @@ class SeaWiFSL1BProduct {
     }
 
     static void assertCorrect_Reflec_01(Product product) {
-        final Band band = product.getBand("reflec_1");
+        final Band band = product.getBand("reflec_norm_1");
         assertNotNull(band);
-        assertEquals(0.015515714883804321f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.004886335227638483f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.0224558524787426f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.011900518089532852f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.013814096339046955f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.004273548722267151f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.01936478726565838f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.010517437011003494f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Reflec_05(Product product) {
-        final Band band = product.getBand("reflec_5");
+        final Band band = product.getBand("reflec_norm_5");
         assertNotNull(band);
-        assertEquals(0.0028499718755483627f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.0026150501798838377f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.0027648936957120895f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.0029598036780953407f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.0025192261673510075f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.002271969337016344f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.002355903387069702f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.002618898870423436f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Trans_Down_01(Product product) {

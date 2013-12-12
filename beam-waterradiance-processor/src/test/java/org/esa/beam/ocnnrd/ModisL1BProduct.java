@@ -186,21 +186,21 @@ class ModisL1BProduct {
     }
 
     static void assertCorrect_Reflec_01(Product product) {
-        final Band band = product.getBand("reflec_1");
+        final Band band = product.getBand("reflec_norm_1");
         assertNotNull(band);
-        assertEquals(0.019238732755184174f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.019177831709384918f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.014506546780467033f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.00010744801693363115f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.015177609398961067f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.01519598625600338f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.011117346584796906f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.00017023543477989733f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Reflec_05(Product product) {
-        final Band band = product.getBand("reflec_5");
+        final Band band = product.getBand("reflec_norm_5");
         assertNotNull(band);
-        assertEquals(0.0029749656096100807f, band.getSampleFloat(0, 0), 1e-8);
-        assertEquals(0.0029740675818175077f, band.getSampleFloat(1, 0), 1e-8);
-        assertEquals(0.0028877146542072296f, band.getSampleFloat(0, 1), 1e-8);
-        assertEquals(0.0003765206492971629f, band.getSampleFloat(1, 1), 1e-8);
+        assertEquals(0.0023378152400255203f, band.getSampleFloat(0, 0), 1e-8);
+        assertEquals(0.002348458394408226f, band.getSampleFloat(1, 0), 1e-8);
+        assertEquals(0.0022205067798495293f, band.getSampleFloat(0, 1), 1e-8);
+        assertEquals(0.00038845211383886635f, band.getSampleFloat(1, 1), 1e-8);
     }
 
     static void assertCorrect_Trans_Down_01(Product product) {

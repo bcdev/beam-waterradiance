@@ -6,7 +6,6 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
@@ -23,7 +22,7 @@ public class NnResourcesTest {
     public void testGetNormNetPath() {
         final String normNetPath = nnResources.getNormNetPath();
         assertNotNull(normNetPath);
-        assertTrue(normNetPath.contains("27x41x27_23.3.net"));
+        assertTrue(normNetPath.contains("27x19x27_416.2.net"));
         assertTrue(new File(normNetPath).isFile());
     }
 

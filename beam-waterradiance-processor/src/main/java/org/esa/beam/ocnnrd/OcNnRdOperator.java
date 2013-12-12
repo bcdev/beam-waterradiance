@@ -161,7 +161,7 @@ public class OcNnRdOperator extends PixelOperator {
         /*12-23*/
         addSpectralBands(productConfigurer, "rl_path_%d", "dxd", "Water leaving radiance reflectance path at %d nm");
         /*24-35*/
-        addSpectralBands(productConfigurer, "reflec_%d", "sr^-1", "Water leaving radiance reflectance at %d nm");
+        addSpectralBands(productConfigurer, "reflec_norm_%d", "sr^-1", "Normalized water leaving radiance reflectance at %d nm");
         /*36-47*/
         addSpectralBands(productConfigurer, "trans_down_%d", "dl", "Downwelling radiance transmittance at %d nm");
         /*48-59*/

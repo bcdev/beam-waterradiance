@@ -10,7 +10,7 @@ public class NnResources {
     private static final String AC_FWD_PATH = "auxdata/oc_cci_20131206/ac_forward_all/";
 
     public String getNormNetPath() {
-        return getResourcePath(AUXDATA_PATH + "27x41x27_23.3.net");
+        return getResourcePath(AUXDATA_PATH + "27x19x27_416.2.net");
     }
 
     public String getNetWaterPath() {
