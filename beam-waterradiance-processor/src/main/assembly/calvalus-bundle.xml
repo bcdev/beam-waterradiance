@@ -23,7 +23,8 @@
             <includes>
                 <include>org.esa.beam:beam-waterradiance-processor</include>
                 <include>org.esa.beam:beam-waterradiance-auxdata</include>
-                <include>org.esa.beam:abstract-processor</include>
+                <include>org.esa.beam.siocs:abstract-processor</include>
+                <include>org.apache.commons:commons-lang3</include>
             </includes>
         </dependencySet>
     </dependencySets>
