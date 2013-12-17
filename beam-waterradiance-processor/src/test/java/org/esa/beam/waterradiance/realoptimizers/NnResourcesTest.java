@@ -6,8 +6,8 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class NnResourcesTest {
 

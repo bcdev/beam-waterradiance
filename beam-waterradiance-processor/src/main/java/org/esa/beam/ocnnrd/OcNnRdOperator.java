@@ -121,7 +121,12 @@ public class OcNnRdOperator extends PixelOperator {
             final int detectorIndex = sensorContext.getDetectorIndex(sourceSamples);
             final double[] output_local = output.get();
             final LevMarNN levMarNN_local = levMarNN.get();
-            levMarNN_local.levmar_nn(detectorIndex, input_local, output_local);
+            try {
+                levMarNN_local.levmar_nn(detectorIndex, input_local, output_local);
+            } catch (Exception e) {
+                // @todo 2 improve error handling tb 2013-12-17
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
 
             // @todo 2 tb/tb extract method and test tb 2013-05-13
 //            for (int i = 0; i < output_local.length; i++) {

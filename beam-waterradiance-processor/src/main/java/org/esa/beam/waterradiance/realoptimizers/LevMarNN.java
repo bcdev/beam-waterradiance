@@ -203,7 +203,7 @@ public class LevMarNN {
 //        return Math.acos(Math.cos((a - b) * pifak)) / pifak;
 //    }
 
-    public int levmar_nn(int detector, double[] input, double[] output) {
+    public int levmar_nn(int detector, double[] input, double[] output) throws Exception {
         double view_zeni, azi_diff_hl, temperature, salinity, ozone;
 
         // @todo 2 tb/** can this be a field - check when all tests run green tb 2013-05-14
