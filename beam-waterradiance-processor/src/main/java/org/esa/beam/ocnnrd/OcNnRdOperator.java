@@ -16,6 +16,7 @@ import org.esa.beam.waterradiance.AtmosphericAuxdata;
 import org.esa.beam.waterradiance.AuxdataProviderFactory;
 import org.esa.beam.waterradiance.NO2Auxdata;
 import org.esa.beam.waterradiance.SalinityTemperatureAuxdata;
+import org.esa.beam.waterradiance.erainterim.EraInterimAuxdataImpl;
 import org.esa.beam.waterradiance.realoptimizers.LevMarNN;
 
 import java.io.File;
@@ -29,8 +30,8 @@ import java.util.Date;
  * @author Tom Block
  */
 @OperatorMetadata(alias = "OCNNRD", version = "1.0",
-        authors = "Tom Block, Tonio Fincke, Roland Doerffer",
-        description = "An operator computing water IOPs starting from radiances.")
+                  authors = "Tom Block, Tonio Fincke, Roland Doerffer",
+                  description = "An operator computing water IOPs starting from radiances.")
 public class OcNnRdOperator extends PixelOperator {
 
     private int NUM_OUTPUTS;
@@ -79,28 +80,38 @@ public class OcNnRdOperator extends PixelOperator {
     private double salinity;
 
     @Parameter(description = "Path to the atmospheric auxiliary data directory.Use either this or tomsomiStartProduct, " +
-            "tomsomiEndProduct, ncepStartProduct, and ncepEndProduct to use ozone auxiliary data.")
+                             "tomsomiEndProduct, ncepStartProduct, and ncepEndProduct to use ozone auxiliary data.")
     private String atmosphericAuxDataPath;
 
     @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiEndProduct," +
-            "ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
-            optional = true)
+                                 "ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
     private Product tomsomiStartProduct;
 
     @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and " +
-            "tomsomiStartProduct, ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
-            optional = true)
+                                 "tomsomiStartProduct, ncepStartProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
     private Product tomsomiEndProduct;
 
-    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
-            "tomsomiEndProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
-            optional = true)
+    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct, " +
+                                 "tomsomiEndProduct, and ncepEndProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
     private Product ncepStartProduct;
 
-    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct" +
-            "tomsomiEndProduct, and ncepStartProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
-            optional = true)
+    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and tomsomiStartProduct, " +
+                                 "tomsomiEndProduct, and ncepStartProduct or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
     private Product ncepEndProduct;
+
+    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and eraInterimEndProduct " +
+                                 "or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
+    private Product eraInterimStartProduct;
+
+    @SourceProduct(description = "A product which is used for derivation of ozone values. Use either this and eraInterimStartProduct " +
+                                 "or atmosphericAuxdataPath to use ozone auxiliary data.",
+                   optional = true)
+    private Product eraInterimEndProduct;
 
     @Parameter(description = "Defines the sensor type to use. If the parameter is not set, the product type defined by the input file is used.")
     String sensorTypeString;
@@ -212,7 +223,7 @@ public class OcNnRdOperator extends PixelOperator {
         targetProduct.setAutoGrouping(autoGrouping);
         if (csvMode) {
             targetProduct.setPreferredTileSize(targetProduct.getSceneRasterWidth(),
-                    targetProduct.getSceneRasterHeight());
+                                               targetProduct.getSceneRasterHeight());
         }
     }
 
@@ -360,12 +371,16 @@ public class OcNnRdOperator extends PixelOperator {
                 getLogger().severe(e.getMessage());
                 no2Auxdata = null;
             }
+        } else if (eraInterimStartProduct != null && eraInterimEndProduct != null) {
+            atmosphericAuxdata = new EraInterimAuxdataImpl(date,
+                                                           eraInterimStartProduct,
+                                                           eraInterimEndProduct);
         } else {
             try {
-                atmosphericAuxdata = AuxdataProviderFactory.createAtmosphericDataProvider(tomsomiStartProduct,
-                        tomsomiEndProduct,
-                        ncepStartProduct,
-                        ncepEndProduct);
+                atmosphericAuxdata = AuxdataProviderFactory.createNcepTomsDataProvider(tomsomiStartProduct,
+                                                                                       tomsomiEndProduct,
+                                                                                       ncepStartProduct,
+                                                                                       ncepEndProduct);
             } catch (IOException e) {
                 getLogger().severe("Unable to create provider for atmospheric auxiliary data.");
                 getLogger().severe(e.getMessage());

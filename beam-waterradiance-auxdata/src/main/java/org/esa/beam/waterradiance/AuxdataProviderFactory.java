@@ -17,7 +17,7 @@ public class AuxdataProviderFactory {
         return SeadasAuxdataImpl.create(auxPath);
     }
 
-    public static AtmosphericAuxdata createAtmosphericDataProvider(Product tomsomiStartProduct,
+    public static AtmosphericAuxdata createNcepTomsDataProvider(Product tomsomiStartProduct,
                                                                    Product tomsomiEndProduct,
                                                                    Product ncepStartProduct,
                                                                    Product ncepEndProduct) throws IOException {
