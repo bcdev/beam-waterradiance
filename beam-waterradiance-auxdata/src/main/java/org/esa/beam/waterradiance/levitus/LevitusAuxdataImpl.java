@@ -101,7 +101,8 @@ public class LevitusAuxdataImpl implements SalinityTemperatureAuxdata {
     private static void initializeResourceAccess() {
         AUXDATA_DIR = new File(SystemUtils.getApplicationDataDir(), "beam-waterradiance-auxdata/auxdata");
         final URL sourceUrl = ResourceInstaller.getSourceUrl(LevitusAuxdataImpl.class);
-        final ResourceInstaller installer = new ResourceInstaller(sourceUrl, "../auxdata/", AUXDATA_DIR);
+        final ResourceInstaller installer = new ResourceInstaller(sourceUrl, "auxdata/", AUXDATA_DIR);
+//        final ResourceInstaller installer = new ResourceInstaller(sourceUrl, "../auxdata/", AUXDATA_DIR);
         try {
             installer.install(".*.nc", ProgressMonitor.NULL);
         } catch (IOException e) {

@@ -1,15 +1,24 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
 import Jama.Matrix;
+import com.bc.ceres.binding.PropertyContainer;
+import com.bc.ceres.binding.PropertySet;
+import com.bc.ceres.binding.ValidationException;
+import com.bc.siocs.core.CostFunction;
+import com.bc.siocs.core.ForwardModel;
+import com.bc.siocs.core.Optimizer;
+import com.bc.siocs.core.StopCriterion;
+import com.bc.siocs.core.registry.OptimizerRegistry;
+import com.bc.siocs.core.registry.StopCriteriaRegistry;
+import com.bc.siocs.core.support.ForwardModelAdapter;
+import com.bc.siocs.core.support.LevenbergMarquardtOptimizer;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.ocnnrd.Sensor;
 import org.esa.beam.ocnnrd.SensorContext;
-import org.esa.beam.siocs.abstractprocessor.BreakingCriterion;
-import org.esa.beam.siocs.abstractprocessor.CostFunction;
-import org.esa.beam.siocs.abstractprocessor.ForwardModel;
-import org.esa.beam.siocs.abstractprocessor.support.DefaultBreakingCriterion;
-import org.esa.beam.siocs.abstractprocessor.support.LevenbergMarquardtOptimizer;
 
+import java.awt.image.RenderedImage;
 import java.io.*;
+import java.util.Arrays;
 
 public class LevMarNN {
 
@@ -61,9 +70,9 @@ public class LevMarNN {
     private final AlphaTab alphaTab;
     private final double[] lb;
     private final double[] ub;
-    private final BreakingCriterion breakingCriterion;
+    private final StopCriterion breakingCriterion;
     private final nn_atmo_watForwardModel model;
-    private final LevenbergMarquardtOptimizer optimizer;
+    private final Optimizer optimizer;
     private double[] p;
     private double[] p_init;
 
@@ -188,10 +197,24 @@ public class LevMarNN {
 
         smile_tab_ini();
         model = new nn_atmo_watForwardModel();
-        breakingCriterion = new DefaultBreakingCriterion(150, 1e-10);
-        costFunction = new OcNnRdCostFunction();
-        optimizer = new LevenbergMarquardtOptimizer(p.length, x11.length);
-        optimizer.init(model, costFunction, breakingCriterion);
+        breakingCriterion = StopCriteriaRegistry.getInstance().get("Default");
+        final PropertySet breakingCriterionConfig = breakingCriterion.getConfig();
+        breakingCriterionConfig.setValue("maximumNumberOfIterations", 150);
+        breakingCriterionConfig.setValue("threshold", 1e-10);
+        breakingCriterion.setConfig(breakingCriterionConfig);
+        final double[] weights = new double[x11.length];
+        Arrays.fill(weights, 1.0);
+        costFunction = new OcNnRdCostFunction(weights);
+        optimizer = OptimizerRegistry.getInstance().get("LevenbergMarquardt");
+        final PropertySet optimizerConfig = optimizer.getConfig();
+        optimizerConfig.setValue("lowerBounds", lb);
+        optimizerConfig.setValue("upperBounds", ub);
+        optimizer.setConfig(optimizerConfig);
+        try {
+            this.optimizer.init(model, costFunction, breakingCriterion);
+        } catch (ValidationException e) {
+            e.printStackTrace();
+        }
 
         nnAtmoWat = new NnAtmoWat(alphaTab, sensorContext);
         nn_at_data = new s_nn_atdata();
@@ -925,7 +948,7 @@ public class LevMarNN {
         return sum;
     }
 
-    private class nn_atmo_watForwardModel implements ForwardModel {
+    private class nn_atmo_watForwardModel extends ForwardModelAdapter {
         private double[] rtosa_nn;
         private s_nn_atdata nn_data;
         private NNReturnData nnReturnData;
@@ -938,10 +961,15 @@ public class LevMarNN {
             return nn_data;
         }
 
-        @Override
-        public void init(Object o) {
-            this.nn_data = (s_nn_atdata) o;
+//        @Override
+        public void init(s_nn_atdata nn_data) {
+            this.nn_data = nn_data;
         }
+
+//        @Override
+//        public void init(RasterDataNode[] bandsForForwardModelInitialization, double[] constantValues, RenderedImage validMaskImage) throws Exception {
+//
+//        }
 
         @Override
         public void setReferenceSignal(double[] doubles) {
@@ -956,7 +984,51 @@ public class LevMarNN {
         }
 
         @Override
-        public Matrix getJacobianMatrix() {
+        public int getNumberOfSignalBands() {
+            return x11.length;
+        }
+
+        @Override
+        public double[] getWavelengths() {
+            final float[] spectralOutputWavelengths = sensorContext.getSpectralOutputWavelengths();
+            double[] wavelengths = new double[spectralOutputWavelengths.length];
+            System.arraycopy(spectralOutputWavelengths, 0, wavelengths, 0, wavelengths.length);
+            return wavelengths;
+        }
+
+        @Override
+        public int[] getSpectralBandIndices() {
+            return sensorContext.getSpectralOutputBandIndices();
+        }
+
+        @Override
+        public double[] processAuxdata(double[] auxdata, double[] estimates) {
+            return new double[0];
+        }
+
+        @Override
+        public int getVariableCount() {
+            return p.length;
+        }
+
+        @Override
+        public boolean returnsIrradianceReflectances() {
+            //todo check
+            return false;
+        }
+
+        @Override
+        public String getName() {
+            return "LevMarNN";
+        }
+
+        @Override
+        public double[] getLowerBounds() {
+            return null;
+        }
+
+        @Override
+        public double[] getUpperBounds() {
             return null;
         }
     }

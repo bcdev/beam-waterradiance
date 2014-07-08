@@ -18,8 +18,8 @@ import java.util.TimeZone;
 
 public class SeadasAuxdataImpl implements AtmosphericAuxdata {
 
-    private static final String OZONE_BAND_NAME = "Geophysical_Data/ozone";
-    private static final String SURFACE_PRESSURE_BAND_NAME = "Geophysical_Data/press";
+    private static final String OZONE_BAND_NAME = "ozone";
+    private static final String SURFACE_PRESSURE_BAND_NAME = "press";
 
     private static final long MILLI_SECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 

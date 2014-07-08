@@ -19,11 +19,11 @@ public class NO2AuxdataImpl implements NO2Auxdata {
 
     private final File auxDataDirectory;
     private final static String fracProductName = "trop_f_no2_200m.hdf";
-    private final static String fracBandName = "Geophysical_Data/f_no2_200m";
+    private final static String fracBandName = "f_no2_200m";
     private Product fracProduct;
     private final static String climatologyProductName = "no2_climatology.hdf";
-    private final static String tropoBandNameStem = "Geophysical_Data/trop_no2_";
-    private final static String totBandNameStem = "Geophysical_Data/tot_no2_";
+    private final static String tropoBandNameStem = "trop_no2_";
+    private final static String totBandNameStem = "tot_no2_";
     private Product climatologyProduct;
 
     public static NO2AuxdataImpl create(String auxPath) throws IOException {
