@@ -1,22 +1,16 @@
 package org.esa.beam.waterradiance.realoptimizers;
 
-import Jama.Matrix;
-import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.binding.ValidationException;
 import com.bc.siocs.core.CostFunction;
-import com.bc.siocs.core.ForwardModel;
 import com.bc.siocs.core.Optimizer;
 import com.bc.siocs.core.StopCriterion;
 import com.bc.siocs.core.registry.OptimizerRegistry;
 import com.bc.siocs.core.registry.StopCriteriaRegistry;
 import com.bc.siocs.core.support.ForwardModelAdapter;
-import com.bc.siocs.core.support.LevenbergMarquardtOptimizer;
-import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.ocnnrd.Sensor;
 import org.esa.beam.ocnnrd.SensorContext;
 
-import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.Arrays;
 
@@ -199,8 +193,8 @@ public class LevMarNN {
         model = new nn_atmo_watForwardModel();
         breakingCriterion = StopCriteriaRegistry.getInstance().get("Default");
         final PropertySet breakingCriterionConfig = breakingCriterion.getConfig();
-        breakingCriterionConfig.setValue("maximumNumberOfIterations", 150);
-        breakingCriterionConfig.setValue("threshold", 1e-10);
+        breakingCriterionConfig.setValue("maximumNumberOfIterations", 30);
+        breakingCriterionConfig.setValue("threshold", 1e-8);
         breakingCriterion.setConfig(breakingCriterionConfig);
         final double[] weights = new double[x11.length];
         Arrays.fill(weights, 1.0);
