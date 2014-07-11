@@ -14,6 +14,9 @@
         <file>
             <source>src/main/assembly/ocnnrd-ncep-graph.xml.vm</source>
         </file>
+        <file>
+            <source>src/main/assembly/ocnnrd-erainterim-graph.xml.vm</source>
+        </file>
     </files>
 
     <dependencySets>
@@ -23,8 +26,7 @@
             <includes>
                 <include>org.esa.beam:beam-waterradiance-processor</include>
                 <include>org.esa.beam:beam-waterradiance-auxdata</include>
-                <include>org.esa.beam.siocs:abstract-processor</include>
-                <include>org.apache.commons:commons-lang3</include>
+                <include>com.bc.siocs:siocs-core</include>
             </includes>
         </dependencySet>
     </dependencySets>
