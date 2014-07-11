@@ -8,14 +8,14 @@
   #stop
 #end
 
-#set( $timeMeteo0 = $GlobalFunctions.getCalendar() )
-$timeMeteo0.setTime($productDate)
+#set( $time0 = $GlobalFunctions.getCalendar() )
+$time0.setTime($productDate)
 
-#set( $timeMeteo1 = $GlobalFunctions.getCalendar() )
-$timeMeteo1.setTime($productDate)
-$timeMeteo1.add(6, 1)
+#set( $time1 = $GlobalFunctions.getCalendar() )
+$time1.setTime($productDate)
+$time1.add(6, 1)
 
-#set( $eraPathFormat = "'hdfs://master00:9000/calvalus/auxiliary/era_interim/'yyyy'/era_interim_'yyyyMMdd'.grib" )
+#set( $eraPathFormat = "'hdfs://master00:9000/calvalus/auxiliary/era_interim/'yyyy'/era_interim_'yyyyMMdd'.grib'" )
 #set( $eraPath0 = $GlobalFunctions.formatDate($eraPathFormat, $time0.time) )
 #set( $eraPath1 = $GlobalFunctions.formatDate($eraPathFormat, $time1.time) )
 
