@@ -193,7 +193,7 @@ public class LevMarNN {
         model = new nn_atmo_watForwardModel();
         breakingCriterion = StopCriteriaRegistry.getInstance().get("Default");
         final PropertySet breakingCriterionConfig = breakingCriterion.getConfig();
-        breakingCriterionConfig.setValue("maximumNumberOfIterations", 30);
+        breakingCriterionConfig.setValue("maximumNumberOfIterations", 70);
         breakingCriterionConfig.setValue("threshold", 1e-8);
         breakingCriterion.setConfig(breakingCriterionConfig);
         final double[] weights = new double[x11.length];
