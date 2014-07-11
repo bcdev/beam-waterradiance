@@ -1,12 +1,12 @@
 <bundleDescriptor>
     <bundleName>ocnnrd</bundleName>
-    <bundleVersion>1.0</bundleVersion>
+    <bundleVersion>1.1</bundleVersion>
 
     <processorDescriptors>
         <processorDescriptor>
             <executableName>OCNNRD</executableName>
             <processorName>OcNnRd (Meris with ECMWF Auxdata) processor</processorName>
-            <processorVersion>1.0</processorVersion>
+            <processorVersion>1.1</processorVersion>
             <defaultParameters></defaultParameters>
             <outputFormats>BEAM-DIMAP</outputFormats>
             <descriptionHtml>
@@ -15,12 +15,87 @@
             <inputProductTypes>MERIS_L1B</inputProductTypes>
             <outputProductType>OCNNRD_L2</outputProductType>
             <validMaskExpression>true</validMaskExpression>
+
+            <outputVariables>
+                <outputVariable>
+                    <name>reflec_norm_1</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_2</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_3</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_4</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_5</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_6</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_7</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_8</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_9</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_10</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_12</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_13</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>aot_550</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>a_pig</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>a_ys</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>a_part</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>b_part</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>b_wit</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>sum_sq</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>num_iter</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>temperature</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>salinity</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>atm_press_2</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>ozone_2</name>
+                </outputVariable>
+            </outputVariables>
         </processorDescriptor>
 
         <processorDescriptor>
             <executableName>ocnnrd-ncep</executableName>
             <processorName>OcNnRd (Meris, MODIS, SeaWIFS with NCEP Auxdata) processor</processorName>
-            <processorVersion>1.0</processorVersion>
+            <processorVersion>1.1</processorVersion>
             <defaultParameters></defaultParameters>
             <outputFormats>BEAM-DIMAP</outputFormats>
             <descriptionHtml>
@@ -29,6 +104,170 @@
             <inputProductTypes>MERIS_L1B,MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
             <outputProductType>OCNNRD_L2</outputProductType>
             <validMaskExpression>true</validMaskExpression>
+
+            <outputVariables>
+                <outputVariable>
+                    <name>reflec_norm_1</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_2</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_3</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_4</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_5</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_6</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_7</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_8</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_9</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_10</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_12</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_13</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>aot_550</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>a_pig</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>a_ys</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>a_part</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>b_part</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>b_wit</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>sum_sq</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>num_iter</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>temperature</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>salinity</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>atm_press_2</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>ozone_2</name>
+                </outputVariable>
+            </outputVariables>
+        </processorDescriptor>
+
+        <processorDescriptor>
+            <executableName>ocnnrd-erainterim</executableName>
+            <processorName>OcNnRd (Meris, MODIS, SeaWIFS with era_interim Auxdata) processor</processorName>
+            <processorVersion>1.1</processorVersion>
+            <defaultParameters></defaultParameters>
+            <outputFormats>BEAM-DIMAP</outputFormats>
+            <descriptionHtml>
+                <![CDATA[<p>OcNnRd processor using neural networks.</p>]]>
+            </descriptionHtml>
+            <inputProductTypes>MERIS_L1B,MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
+            <outputProductType>OCNNRD_L2</outputProductType>
+            <validMaskExpression>true</validMaskExpression>
+
+            <outputVariables>
+                <outputVariable>
+                    <name>reflec_norm_1</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_2</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_3</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_4</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_5</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_6</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_7</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_8</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_9</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_10</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_12</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflec_norm_13</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>aot_550</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>a_pig</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>a_ys</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>a_part</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>b_part</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>b_wit</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>sum_sq</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>num_iter</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>temperature</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>salinity</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>atm_press_2</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>ozone_2</name>
+                </outputVariable>
+            </outputVariables>
         </processorDescriptor>
 
     </processorDescriptors>

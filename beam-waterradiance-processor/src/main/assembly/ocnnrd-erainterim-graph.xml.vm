@@ -1,0 +1,43 @@
+#set( $productName = $inputPath.name )
+#if ( $productName.startsWith("MER_") )
+  #set( $productDate = $GlobalFunctions.parseDate("yyyyMMdd_HHmmss", $productName.substring(14, 29)) )
+#elseif( $productName.startsWith("A") || $productName.startsWith("S") )
+  #set( $productDate = $GlobalFunctions.parseDate("yyyyDDDHHmmss", $productName.substring(1, 14)) )
+#else
+  CALVALUS_SKIP_PROCESSING yes
+  #stop
+#end
+
+#set( $timeMeteo0 = $GlobalFunctions.getCalendar() )
+$timeMeteo0.setTime($productDate)
+
+#set( $timeMeteo1 = $GlobalFunctions.getCalendar() )
+$timeMeteo1.setTime($productDate)
+$timeMeteo1.add(6, 1)
+
+#set( $eraPathFormat = "'hdfs://master00:9000/calvalus/auxiliary/era_interim/'yyyy'/era_interim_'yyyyMMdd'.grib" )
+#set( $eraPath0 = $GlobalFunctions.formatDate($eraPathFormat, $time0.time) )
+#set( $eraPath1 = $GlobalFunctions.formatDate($eraPathFormat, $time1.time) )
+
+
+<graph id="g">
+    <version>1.0</version>
+
+    <header>
+      <target refid="ocnnrd" />
+      <source name="input" description="Meris, MODIS, SeaWIFS">${inputPath}</source>
+
+      <source name="era1">$eraPath0</source>
+      <source name="era2">$eraPath1</source>
+    </header>
+
+    <node id="ocnnrd">
+        <operator>OCNNRD</operator>
+        <sources>
+            <sourceProduct>input</sourceProduct>
+
+            <eraInterimStartProduct>era1</eraInterimStartProduct>
+            <eraInterimEndProduct>era2</eraInterimEndProduct>
+        </sources>
+    </node>
+</graph>
