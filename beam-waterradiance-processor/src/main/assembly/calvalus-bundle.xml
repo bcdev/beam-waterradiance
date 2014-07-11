@@ -27,6 +27,7 @@
                 <include>org.esa.beam:beam-waterradiance-processor</include>
                 <include>org.esa.beam:beam-waterradiance-auxdata</include>
                 <include>com.bc.siocs:siocs-core</include>
+                <include>edu.ucar:grib</include>
             </includes>
         </dependencySet>
     </dependencySets>
