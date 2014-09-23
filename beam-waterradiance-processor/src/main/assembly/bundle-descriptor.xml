@@ -90,6 +90,17 @@
                     <name>ozone_2</name>
                 </outputVariable>
             </outputVariables>
+
+            <jobConfig>
+                <jobParameter>
+                    <name>calvalus.system.beam.reader.tileHeight</name>
+                    <value>2</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.reader.tileWidth</name>
+                    <value>*</value>
+                </jobParameter>
+            </jobConfig>
         </processorDescriptor>
 
         <processorDescriptor>
@@ -179,6 +190,17 @@
                     <name>ozone_2</name>
                 </outputVariable>
             </outputVariables>
+
+            <jobConfig>
+                <jobParameter>
+                    <name>calvalus.system.beam.reader.tileHeight</name>
+                    <value>2</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.reader.tileWidth</name>
+                    <value>*</value>
+                </jobParameter>
+            </jobConfig>
         </processorDescriptor>
 
         <processorDescriptor>
@@ -268,6 +290,17 @@
                     <name>ozone_2</name>
                 </outputVariable>
             </outputVariables>
+
+            <jobConfig>
+                <jobParameter>
+                    <name>calvalus.system.beam.reader.tileHeight</name>
+                    <value>2</value>
+                </jobParameter>
+                <jobParameter>
+                    <name>calvalus.system.beam.reader.tileWidth</name>
+                    <value>*</value>
+                </jobParameter>
+            </jobConfig>
         </processorDescriptor>
 
     </processorDescriptors>
