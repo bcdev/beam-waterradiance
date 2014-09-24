@@ -27,7 +27,6 @@ public class OcNnRdCostFunction extends AbstractCostFunction {
     @Override
     public CostFunction clone() {
         OcNnRdCostFunction function = new OcNnRdCostFunction(getWeights());
-        function.init(productHasIrradianceReflectances(), forwardModelReturnsIrradianceReflectances());
         return function;
     }
 
